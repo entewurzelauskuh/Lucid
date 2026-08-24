@@ -67,9 +67,15 @@ namespace Lucid.Tests.EditMode.Core
 
             (l, d) = TestLattice.Explore(l, d, reg, new Coord(0, 1, 0));
 
-            Assert.That(d.StateOf(new ConnectorRef(new Coord(0, 1, 0), Face.North)),
-                Is.EqualTo(ConnectorState.Attached),
+            var door = new ConnectorRef(new Coord(0, 1, 0), Face.North);
+            Assert.That(d.StateOf(door), Is.EqualTo(ConnectorState.Attached),
                 "exploration had nothing to solidify on that face");
+
+            // The state alone proves little: Deriver reports Attached from the
+            // neighbour existing, so this would hold even if ApplyExplore had
+            // wrongly added the door to Solidified. Check the set itself.
+            Assert.That(l.IsSolidified(door), Is.False,
+                "a passage must never end up in Solidified (invariant 3)");
         }
     }
 }

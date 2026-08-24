@@ -8,7 +8,9 @@ namespace Lucid.Core
     /// </summary>
     public readonly struct PlaceVerdict : IEquatable<PlaceVerdict>
     {
-        public static readonly PlaceVerdict Ok = new PlaceVerdict(PlaceError.None);
+        /// <summary>A passing verdict. Named Pass so the instance predicate
+        /// can keep the name Ok that docs/CORE-API.md §5 and §10 use.</summary>
+        public static readonly PlaceVerdict Pass = new PlaceVerdict(PlaceError.None);
 
         public PlaceVerdict(PlaceError error, int trappedSleeper = -1)
         {
@@ -19,7 +21,13 @@ namespace Lucid.Core
         public PlaceError Error { get; }
         public int TrappedSleeper { get; }
 
-        public bool IsOk => Error == PlaceError.None;
+        public bool Ok => Error == PlaceError.None;
+
+        public void Deconstruct(out PlaceError error, out int trappedSleeper)
+        {
+            error = Error;
+            trappedSleeper = TrappedSleeper;
+        }
 
         public bool Equals(PlaceVerdict other) =>
             Error == other.Error && TrappedSleeper == other.TrappedSleeper;

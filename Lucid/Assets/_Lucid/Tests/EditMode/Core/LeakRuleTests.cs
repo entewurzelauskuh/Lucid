@@ -45,7 +45,7 @@ namespace Lucid.Tests.EditMode.Core
             (Lattice l, Derived d, CubeRegistry reg) = AlmostClosedLoop();
 
             PlaceVerdict v = TestLattice.Validate(l, d, reg, new Coord(0, 1, 0), Face.North,
-                TestLattice.Corner, Rotation.R90, sleepers: new SleeperState[0]);
+                TestLattice.Corner, Rotation.R90, sleepers: null);
 
             Assert.That(v.Error, Is.EqualTo(PlaceError.WouldTrap));
         }
@@ -87,6 +87,24 @@ namespace Lucid.Tests.EditMode.Core
         }
 
         [Test]
+        public void AClimbableCubeLetsYouBackUp()
+        {
+            // The other half of the movement law: a ladder in the cube you are
+            // standing in gets you out, where a pit does not. Without this,
+            // CanPass could return a hard false for Up and nothing would notice.
+            (Lattice l, Derived d, CubeRegistry reg) = TestLattice.Fresh();
+            (l, d) = TestLattice.Place(l, d, reg, l.Start, Face.North, TestLattice.Ledge, Rotation.R180);
+            (l, d) = TestLattice.Place(l, d, reg, new Coord(0, 1, 0), Face.Down, TestLattice.Ladder, Rotation.R0);
+
+            var below = new Coord(0, 1, -1);
+            Assert.That(reg.Get(TestLattice.Ladder).Climbable, Is.True, "fixture precondition");
+            Assert.That(Traversal.Reachable(l, reg, d, below), Does.Contain(new Coord(0, 1, 0)),
+                "a climbable cube lets a Sleeper climb back to the cube above");
+            Assert.That(Traversal.Reachable(l, reg, d, below), Does.Contain(l.Start),
+                "and on out through the rest of the dream");
+        }
+
+        [Test]
         public void StrandingASleeperBelowADropIsRejectedAndNamesThem()
         {
             (Lattice l, Derived d, CubeRegistry reg) = PitBelowALedge();
@@ -117,7 +135,7 @@ namespace Lucid.Tests.EditMode.Core
                 PlaceVerdict v = TestLattice.Validate(l, d, reg, new Coord(-1, 1, 0), Face.West,
                     TestLattice.Straight, Rotation.R90, sleepers: sleepers);
 
-                Assert.That(v.IsOk, Is.True, $"a {status} Sleeper is not the leak rule's concern, got {v}");
+                Assert.That(v.Ok, Is.True, $"a {status} Sleeper is not the leak rule's concern, got {v}");
             }
         }
 
@@ -131,7 +149,7 @@ namespace Lucid.Tests.EditMode.Core
             PlaceVerdict v = TestLattice.Validate(l, d, reg, new Coord(0, 1, 0), Face.North,
                 TestLattice.Straight, Rotation.R0, sleepers: sleepers);
 
-            Assert.That(v.IsOk, Is.True, $"the corridor still leads somewhere, got {v}");
+            Assert.That(v.Ok, Is.True, $"the corridor still leads somewhere, got {v}");
         }
     }
 }

@@ -27,13 +27,21 @@ namespace Lucid.Core
                     var door = new ConnectorRef(c, f);
                     Coord n = c.Offset(f);
 
-                    if (!l.Has(n))
+                    // A condensed door is wall, whether or not something was
+                    // later built on the other side of it.
+                    if (l.IsSolidified(door))
                     {
-                        connectors[door] = l.IsSolidified(door) ? ConnectorState.Solid : ConnectorState.Fog;
+                        connectors[door] = ConnectorState.Solid;
                         continue;
                     }
 
-                    if (!l.HasConnector(n, Faces.Opposite(f), reg))
+                    if (!l.Has(n))
+                    {
+                        connectors[door] = ConnectorState.Fog;
+                        continue;
+                    }
+
+                    if (!l.HasOpenConnector(n, Faces.Opposite(f), reg))
                     {
                         throw new LatticeInvariantViolation(
                             $"doorway {door} faces the wall of {n}; the fit rule should have prevented this");

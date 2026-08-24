@@ -26,13 +26,22 @@ namespace Lucid.Tests.EditMode.Core
         {
             (Lattice l, Derived d, CubeRegistry reg) = TestLattice.Fresh();
             (l, d) = TestLattice.Place(l, d, reg, l.Start, Face.North, TestLattice.Tee, Rotation.R0);
+            (l, d) = TestLattice.Place(l, d, reg, new Coord(0, 1, 0), Face.East, TestLattice.Straight, Rotation.R90);
+            (l, d) = TestLattice.Place(l, d, reg, new Coord(0, 1, 0), Face.North, TestLattice.Corner, Rotation.R90);
 
-            // (1,1,0) sits beside the start cube. Its South face is a wall and
-            // the start cube's East face is a wall, so they may touch.
-            PlaceVerdict v = TestLattice.Validate(l, d, reg, new Coord(0, 1, 0), Face.East,
+            // The contact under test is (1,2,0)'s south face against (1,1,0)'s
+            // north face. Assert the geometry first: a fixture that drifts into
+            // having no such contact would leave this test asserting nothing.
+            Assert.That(l.Has(new Coord(1, 1, 0)), Is.True, "the south neighbour must exist");
+            Assert.That(l.HasConnector(new Coord(1, 1, 0), Face.North, reg), Is.False,
+                "and must present a wall to it");
+
+            // A straight running east-west has no south door either, so wall
+            // meets wall (docs/SPEC.md §7, fit rule).
+            PlaceVerdict v = TestLattice.Validate(l, d, reg, new Coord(0, 2, 0), Face.East,
                 TestLattice.Straight, Rotation.R90);
 
-            Assert.That(v.IsOk, Is.True, $"expected a legal placement, got {v}");
+            Assert.That(v.Ok, Is.True, $"wall against wall is a legal contact, got {v}");
         }
 
         /// <summary>
@@ -82,7 +91,7 @@ namespace Lucid.Tests.EditMode.Core
             // still leaves itself a fog door to the north.
             PlaceVerdict tee = TestLattice.Validate(l, d, reg, new Coord(0, 2, 0), Face.East,
                 TestLattice.Tee, Rotation.R180);
-            Assert.That(tee.IsOk, Is.True, $"expected a two-sided fit to be legal, got {tee}");
+            Assert.That(tee.Ok, Is.True, $"expected a two-sided fit to be legal, got {tee}");
         }
 
         // ---- Frontier ------------------------------------------------------
@@ -148,7 +157,7 @@ namespace Lucid.Tests.EditMode.Core
             Assert.That(d.StateOf(startDoor), Is.EqualTo(ConnectorState.Exit));
 
             PlaceVerdict v = TestLattice.Validate(l, d, reg, l.Start, Face.North, TestLattice.Straight);
-            Assert.That(v.IsOk, Is.True, $"building on the exit is how the dream grows, got {v}");
+            Assert.That(v.Ok, Is.True, $"building on the exit is how the dream grows, got {v}");
 
             (l, d) = TestLattice.Place(l, d, reg, l.Start, Face.North, TestLattice.Straight);
             Assert.That(d.ExitDepth, Is.EqualTo(1));
@@ -198,7 +207,7 @@ namespace Lucid.Tests.EditMode.Core
 
             PlaceVerdict flush = TestLattice.Validate(l, d, reg, l.Start, Face.North,
                 TestLattice.Straight, Rotation.R0, budget: new Budget(5, 0));
-            Assert.That(flush.IsOk, Is.True);
+            Assert.That(flush.Ok, Is.True);
         }
 
         [Test]

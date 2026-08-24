@@ -42,7 +42,8 @@ namespace Lucid.Core
             if (ctx.Lattice.Has(at)) return new PlaceVerdict(PlaceError.DoorOccupied);
 
             // 5. The dream has edges.
-            if (!ctx.Settings.EffectiveLimits.Contains(at))
+            Limits limits = ctx.Settings?.EffectiveLimits ?? Limits.Default;
+            if (!limits.Contains(at))
                 return new PlaceVerdict(PlaceError.OutOfBounds);
 
             // 6. Fit: connector to connector, wall to wall, nothing else.
@@ -56,7 +57,9 @@ namespace Lucid.Core
                 if (!ctx.Lattice.Has(neighbour)) continue;
 
                 bool mine = Faces.Has(mask, f);
-                bool theirs = ctx.Lattice.HasConnector(neighbour, Faces.Opposite(f), ctx.Registry);
+                // HasOpenConnector, not HasConnector: a neighbour's condensed
+                // door counts as wall, so the new cube must present a wall to it.
+                bool theirs = ctx.Lattice.HasOpenConnector(neighbour, Faces.Opposite(f), ctx.Registry);
                 if (mine != theirs) return new PlaceVerdict(PlaceError.DoesNotFit);
             }
 
@@ -84,7 +87,7 @@ namespace Lucid.Core
             // is empty.
             if (after.Exits.Count == 0) return new PlaceVerdict(PlaceError.WouldTrap);
 
-            if (ctx.Sleepers == null) return PlaceVerdict.Ok;
+            if (ctx.Sleepers == null) return PlaceVerdict.Pass;
 
             foreach (SleeperState s in ctx.Sleepers)
             {
@@ -93,7 +96,7 @@ namespace Lucid.Core
                     return new PlaceVerdict(PlaceError.WouldTrap, s.Id);
             }
 
-            return PlaceVerdict.Ok;
+            return PlaceVerdict.Pass;
         }
 
         public static ExploreError ValidateExplore(RuleContext ctx, Coord cube)
