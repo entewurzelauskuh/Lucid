@@ -12,6 +12,20 @@ Reason: why this over the alternatives.
 Spec: sections changed.
 ```
 
+## 2026-08-25 — Core value types are hand-written structs, not record structs
+
+Context: #32. `docs/CORE-API.md` §2 declares `Coord`, `ConnectorRef` and `PlaceVerdict` as `readonly record struct`, and uses file-scoped namespaces throughout. Unity 6000.3 compiles at **C# 9.0** (`<LangVersion>9.0</LangVersion>` in the generated projects); record structs and file-scoped namespaces are C# 10.
+Decision: value types are hand-written `readonly struct`s implementing `IEquatable<T>`, `==`, `!=`, `GetHashCode`, `Deconstruct` and `ToString` — exactly what the compiler would have generated. Namespaces are block-scoped. Reference records (`CubeType`, `Derived`, the events) stay records, which C# 9 does support.
+Reason: semantics are unchanged — these remain value types with value equality, which matters because `Coord` is a dictionary key on every hot path. Making them classes instead would have changed allocation and equality behaviour throughout Core. Raising the language version is not supported by Unity and would risk the IL2CPP and Burst toolchains for a syntactic convenience.
+Spec: none. `docs/CORE-API.md` §2's listings are illustrative of shape, not of syntax; the API surface is identical.
+
+## 2026-08-25 — IsExternalInit is declared per assembly
+
+Context: #32. C# 9 records compile positional members to `init`-only setters, which require `System.Runtime.CompilerServices.IsExternalInit`. That type arrived with .NET 5; Unity's .NET Standard 2.1 profile predates it, so every record in `Lucid.Core` failed with CS0518.
+Decision: declare an internal `IsExternalInit` in each assembly that defines records. `Lucid.Core/IsExternalInit.cs` is the first.
+Reason: the documented workaround for this exact combination. The alternative — abandoning records for plain classes with hand-written equality — would cost value semantics that the event log's round-trip test and the rules' comparisons depend on.
+Spec: none.
+
 ## 2026-08-24 — MCP for Unity bridge added, pinned to v10.1.2
 
 Context: issue #29. Driving the editor only through `-batchmode` makes small round trips (reading the console, running one test) cost a full editor launch. Spec §17 already allows "a Unity MCP bridge if editor round trips get tedious".
