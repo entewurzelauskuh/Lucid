@@ -23,6 +23,17 @@ ALLOWED = re.compile(r"\bCC0\b|\bCC-?BY\b", re.IGNORECASE)
 EXEMPT = {"LICENSES.md"}
 
 
+def repo_root() -> Path | None:
+    try:
+        out = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        return Path(out) if out else None
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+
+
 def staged_paths() -> list[str]:
     out = subprocess.run(
         ["git", "diff", "--cached", "--name-only", "--diff-filter=ACMR"],
@@ -31,12 +42,31 @@ def staged_paths() -> list[str]:
     return [line for line in out.splitlines() if line.strip()]
 
 
+def absolute(path: str, base: Path | None) -> Path:
+    """Anchor a path so sibling lookups do not depend on the caller's cwd.
+
+    git reports staged paths relative to the repo root, which is only the
+    working directory by luck; arguments on the command line are relative to
+    wherever the user is standing.
+    """
+    p = Path(path)
+    if p.is_absolute():
+        return p
+    return (base / p) if base is not None else (Path.cwd() / p).resolve()
+
+
 def ledger_entry(ledger: Path, name: str) -> str | None:
-    """The first line of the ledger naming this file, if any."""
+    """The first line of the ledger naming this file, if any.
+
+    The filename must appear as a whole token. A substring test would let
+    an unlisted wall.png match a ledger line for stonewall.png and sail
+    through the gate.
+    """
     if not ledger.is_file():
         return None
+    token = re.compile(rf"(?<![\w.\-]){re.escape(name)}(?![\w.\-])")
     for line in ledger.read_text(encoding="utf-8", errors="replace").splitlines():
-        if name in line:
+        if token.search(line):
             return line
     return None
 
@@ -62,10 +92,11 @@ def manifest_names(cube: Path) -> set[str]:
     return names
 
 
-def check(paths: list[str]) -> list[str]:
+def check(paths: list[str], base: Path | None = None) -> list[str]:
     problems: list[str] = []
     for path in paths:
-        match = ASSET_DIR.match(path)
+        resolved = absolute(path, base)
+        match = ASSET_DIR.match(resolved.as_posix())
         if not match:
             continue
 
@@ -103,8 +134,13 @@ def check(paths: list[str]) -> list[str]:
 
 
 def main() -> int:
-    paths = sys.argv[1:] or staged_paths()
-    problems = check(paths)
+    root = repo_root()
+    if sys.argv[1:]:
+        # Command-line paths are relative to the caller, not the repo root.
+        paths, base = sys.argv[1:], None
+    else:
+        paths, base = staged_paths(), root
+    problems = check(paths, base)
     if problems:
         print("Asset rule violations (CLAUDE.md rule 5):\n", file=sys.stderr)
         for problem in problems:

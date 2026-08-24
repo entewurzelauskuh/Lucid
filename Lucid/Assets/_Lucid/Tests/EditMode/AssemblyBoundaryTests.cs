@@ -28,7 +28,14 @@ namespace Lucid.Tests.EditMode
         [Test]
         public void CoreReferencesNoUnityAssemblies()
         {
-            var offenders = Core.GetReferencedAssemblies()
+            // Guard the precondition rather than dereferencing: if Lucid.Core
+            // failed to compile, a NullReferenceException here would say far
+            // less than the message below.
+            var core = Core;
+            Assert.That(core, Is.Not.Null,
+                "Lucid.Core is not loaded, so its references cannot be checked.");
+
+            var offenders = core.GetReferencedAssemblies()
                 .Select(a => a.Name)
                 .Where(n => n.StartsWith("UnityEngine", StringComparison.Ordinal)
                          || n.StartsWith("UnityEditor", StringComparison.Ordinal))
