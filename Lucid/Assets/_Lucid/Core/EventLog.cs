@@ -13,7 +13,10 @@ namespace Lucid.Core
     /// </summary>
     public sealed class EventLog
     {
-        const uint Magic = 0x4C554345;   // "LUCE"
+        // Written and read as four bytes, so the header reads "LUCE" in a hex
+        // dump regardless of the platform's endianness. Writing it as a uint
+        // put "ECUL" on disk.
+        static readonly byte[] Magic = { (byte)'L', (byte)'U', (byte)'C', (byte)'E' };
         const ushort Version = 1;
 
         readonly List<LatticeEvent> _events = new List<LatticeEvent>();
@@ -71,7 +74,7 @@ namespace Lucid.Core
         {
             using (var w = new BinaryWriter(s, Encoding.UTF8, leaveOpen: true))
             {
-                w.Write(Magic);
+                w.Write(Magic, 0, Magic.Length);
                 w.Write(Version);
                 w.Write(_events.Count);
 
@@ -105,7 +108,12 @@ namespace Lucid.Core
             var log = new EventLog();
             using (var r = new BinaryReader(s, Encoding.UTF8, leaveOpen: true))
             {
-                if (r.ReadUInt32() != Magic) throw new InvalidDataException("not a Lucid event log");
+byte[] magic = r.ReadBytes(Magic.Length);
+                if (magic.Length != Magic.Length) throw new InvalidDataException("not a Lucid event log");
+                for (int i = 0; i < Magic.Length; i++)
+                {
+                    if (magic[i] != Magic[i]) throw new InvalidDataException("not a Lucid event log");
+                }
 
                 ushort version = r.ReadUInt16();
                 if (version != Version)

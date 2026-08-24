@@ -13,6 +13,7 @@ namespace Lucid.Core
         int ExitHysteresis = 0,
         Limits Limits = null)
     {
-        public Limits EffectiveLimits => Limits ?? Core.Limits.Default;
+        // Fully qualified: the Limits property shadows the Limits type here.
+        public Limits EffectiveLimits => Limits ?? Lucid.Core.Limits.Default;
     }
 }

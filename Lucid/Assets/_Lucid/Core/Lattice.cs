@@ -91,6 +91,15 @@ namespace Lucid.Core
         /// </summary>
         internal Lattice WithCube(Coord c, CubeInstance instance)
         {
+            if (_cubes.ContainsKey(c))
+            {
+                // Add only: cubes are never removed or swapped (docs/SPEC.md §7).
+                // Validation catches this in play, but replay runs unvalidated,
+                // so a corrupt log would otherwise rewrite history in silence.
+                throw new LatticeInvariantViolation(
+                    $"a cube already stands at {c}; cubes are never replaced");
+            }
+
             Lattice next = Clone();
             next._cubes[c] = instance;
             return next;

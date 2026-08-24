@@ -44,6 +44,42 @@ namespace Lucid.Tests.EditMode.Core
         }
 
         [Test]
+        public void TheHeaderReadsLUCEOnDisk()
+        {
+            // A .lucidlog gets attached to bug reports, so the first four bytes
+            // should be recognisable in a hex dump on any platform. Writing the
+            // magic as a uint put "ECUL" there instead.
+            var log = new EventLog();
+            using (var ms = new MemoryStream())
+            {
+                log.Write(ms);
+                byte[] bytes = ms.ToArray();
+                Assert.That(bytes.Length, Is.GreaterThanOrEqualTo(4));
+                Assert.That(new[] { bytes[0], bytes[1], bytes[2], bytes[3] },
+                    Is.EqualTo(new byte[] { (byte)'L', (byte)'U', (byte)'C', (byte)'E' }));
+            }
+        }
+
+        [Test]
+        public void ReplayRefusesToOverwriteACube()
+        {
+            // Replay runs unvalidated, so a corrupt log must fail loudly rather
+            // than silently rewrite history into a different but plausible dream
+            // (docs/SPEC.md §7, "add only").
+            // The same type twice, so the overwritten cube has an identical
+            // connector mask. A different type would leave the start's door
+            // facing a wall and trip the doorway check instead, which would let
+            // this test pass even with the guard removed.
+            var log = new EventLog();
+            log.Append(new CubePlaced(0, new Coord(0, 1, 0), TestLattice.Straight, Rotation.R0, null));
+            log.Append(new CubePlaced(1, new Coord(0, 1, 0), TestLattice.Straight, Rotation.R0, null));
+
+            Assert.That(() => EventLog.Replay(
+                    log, TestLattice.Registry(), TestLattice.Start, Rotation.R0, new RoundSettings()),
+                Throws.TypeOf<LatticeInvariantViolation>());
+        }
+
+        [Test]
         public void ReadRejectsSomethingThatIsNotALog()
         {
             using (var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }))
