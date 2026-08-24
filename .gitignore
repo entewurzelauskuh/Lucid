@@ -53,6 +53,9 @@ crashlytics-build.properties
 # Steam — the app id is the owner's, dev builds carry their own (spec §14)
 steam_appid.txt
 
+# Test output from tools/run-tests.sh
+.test-results/
+
 # Replay / telemetry logs are generated per round; attach them to issues
 # rather than committing them (docs/WORKPLAN.md M1.12).
 *.lucidlog

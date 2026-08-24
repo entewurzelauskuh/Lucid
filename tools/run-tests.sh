@@ -6,6 +6,9 @@
 #   tools/run-tests.sh editmode <filter>  one fixture or test by name
 #   tools/run-tests.sh playmode [filter]
 #
+# Only Lucid.Tests.* assemblies run; set LUCID_ALL_ASSEMBLIES=1 to include
+# tests that ship inside packages.
+#
 # The editor binary comes from $UNITY_PATH, or is guessed from the version
 # pinned in Lucid/ProjectSettings/ProjectVersion.txt.
 set -euo pipefail
@@ -54,6 +57,11 @@ run_platform() {
   local args=(-batchmode -nographics -projectPath "$PROJECT"
               -runTests -testPlatform "$platform" -testResults "$out"
               -logFile - )
+  # Scope to Lucid's own assemblies. Without this the run also collects test
+  # stubs that ship inside packages (Addressables contributes one), which is
+  # noise in the summary line and grows with every package added.
+  # LUCID_ALL_ASSEMBLIES=1 runs everything, for debugging a package.
+  [[ -z "${LUCID_ALL_ASSEMBLIES:-}" ]] && args+=(-assemblyNames "Lucid.Tests.$platform")
   # -quit must NOT be passed with -runTests: it ends the editor before results
   # are written.
   [[ -n "$FILTER" ]] && args+=(-testFilter "$FILTER")
