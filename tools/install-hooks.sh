@@ -11,7 +11,11 @@ target="$root/.git/hooks/pre-commit"
 
 cat > "$target" <<'SHIM'
 #!/usr/bin/env bash
-exec "$(git rev-parse --show-toplevel)/tools/hooks/pre-commit" "$@"
+# Skip quietly when the versioned hook is absent -- e.g. after checking out a
+# branch that predates it -- so a missing file can never block a commit.
+hook="$(git rev-parse --show-toplevel)/tools/hooks/pre-commit"
+[ -x "$hook" ] || exit 0
+exec "$hook" "$@"
 SHIM
 chmod +x "$target"
 echo "installed $target -> tools/hooks/pre-commit"
