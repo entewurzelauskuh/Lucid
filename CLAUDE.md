@@ -21,6 +21,7 @@ Still to create in M0.1: `tools/`, the four assemblies, `.gitattributes` (LFS), 
 5. **The asset rule.** Only CC0 / CC-BY assets are committed, each with a line in that cube's `assets/LICENSES.md` and in the root `THIRD_PARTY_NOTICES.md`. Anything else goes in `assets.manifest.json` and is fetched, never committed. The pre-commit hook enforces this; do not bypass it.
 6. **Run `tools/run-tests.sh` before every PR** and paste the summary line into the PR description. There is no CI.
 7. **Decisions leave a trace.** Promoting a [D] to [S] or deviating from the spec means editing `docs/SPEC.md` and adding a `docs/DECISIONS.md` entry in the same PR.
+8. **Every PR is independently reviewed before it is opened.** Run the `pr-review` skill: two reviewers with different lenses, reproduce each finding before fixing it, mutation-check every test you touched, then post the triage on the PR. There is no CI, so an unchecked claim reaches the owner as fact.
 
 ## Commands
 
@@ -28,6 +29,7 @@ Still to create in M0.1: `tools/`, the four assemblies, `.gitattributes` (LFS), 
 tools/run-tests.sh                 EditMode + PlayMode tests in Unity batch mode
 tools/run-tests.sh editmode        Core tests only, fastest loop
 tools/run-tests.sh editmode <name> one fixture or test by name, the inner loop
+LUCID_ALL_ASSEMBLIES=1 …         include tests that ship inside packages
 tools/build-cube.sh <pack>/<cube>  build one cube from cube.spec.json, validate, render previews
 tools/build-cube.sh <pack>         rebuild a whole pack (after template changes)
 tools/fetch-assets.py <cube dir>   download manifest assets and verify hashes

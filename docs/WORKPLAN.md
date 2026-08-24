@@ -74,7 +74,7 @@ No `.github/workflows/` for now; see spec §18.
 
 ## 3. Definition of done
 
-A task is done when: the acceptance criteria below are met; `tools/run-tests.sh` passes locally; new rules have tests; new cubes pass the validator with previews committed; the spec is updated if a default was decided; the owner has merged the pull request; the issue is closed with a one-line summary.
+A task is done when: the acceptance criteria below are met; `tools/run-tests.sh` passes locally; new rules have tests; new cubes pass the validator with previews committed; the independent review of `CLAUDE.md` rule 8 has run and its triage is on the pull request; the spec is updated if a default was decided; the owner has merged the pull request; the issue is closed with a one-line summary.
 
 A milestone is done when: every issue is closed, a play-test note exists in `docs/playtests/`, and `README.md` reflects what now works.
 
