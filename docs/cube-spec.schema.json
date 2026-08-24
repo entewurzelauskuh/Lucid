@@ -1,0 +1,611 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lucid.game/schemas/cube-spec-1.json",
+  "title": "Lucid cube spec",
+  "description": "Declarative description of one cube. Written by Claude Code from brief.md and the assets folder; consumed by Lucid.Editor.CubeBuilder. Cube-local frame: origin at the centre of the floor, x east, y up, z north, metres; the cube spans x,z in [-4,4] and y in [0,8]. Doorways are centred on their face at floor level, 2.5 m wide and 3 m high; vertical connectors are a 2.5 m square hole centred on the face.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specVersion",
+    "id",
+    "name",
+    "pack",
+    "category",
+    "cost",
+    "connectors",
+    "shell"
+  ],
+  "properties": {
+    "specVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+\\.[a-z0-9_]+$",
+      "description": "pack.cube, e.g. core.trapdoor_pit. Stable forever; it is what event logs store."
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 40
+    },
+    "pack": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+$",
+      "description": "Must equal the prefix of id."
+    },
+    "category": {
+      "enum": [
+        "connector",
+        "vertical",
+        "chicane",
+        "mob",
+        "gimmick",
+        "start"
+      ]
+    },
+    "cost": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 20
+    },
+    "connectors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/face"
+      },
+      "uniqueItems": true,
+      "minItems": 1,
+      "description": "Faces that are doorways in the unrotated cube. At least two unless category is start."
+    },
+    "climbable": {
+      "type": "boolean",
+      "default": false,
+      "description": "The up connector can be climbed from inside (ladder or stairs reach the ceiling). Requires up in connectors."
+    },
+    "shell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "materials"
+      ],
+      "properties": {
+        "materials": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "wall",
+            "floor",
+            "ceiling"
+          ],
+          "properties": {
+            "wall": {
+              "$ref": "#/$defs/materialRole"
+            },
+            "floor": {
+              "$ref": "#/$defs/materialRole"
+            },
+            "ceiling": {
+              "$ref": "#/$defs/materialRole"
+            },
+            "trim": {
+              "$ref": "#/$defs/materialRole"
+            }
+          },
+          "description": "Role names that a SkinSet maps to materials. Use the standard roles so any skin fits; a literal material path pins the cube to that look."
+        },
+        "doorFrame": {
+          "enum": [
+            "none",
+            "plain",
+            "arch",
+            "industrial"
+          ],
+          "default": "plain"
+        },
+        "thickness": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 1.0,
+          "default": 0.3,
+          "description": "Wall thickness in metres, inside the 8 m bounds."
+        },
+        "interior": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "width": {
+              "type": "number",
+              "minimum": 2.5,
+              "maximum": 8
+            },
+            "height": {
+              "type": "number",
+              "minimum": 3,
+              "maximum": 8
+            }
+          },
+          "description": "Inset the shell to make a narrower or lower room; doorways stay at the standard size."
+        },
+        "openFloor": {
+          "type": "boolean",
+          "default": false,
+          "description": "No generated floor slab (pits, gaps, drops provide their own)."
+        },
+        "openCeiling": {
+          "type": "boolean",
+          "default": false,
+          "description": "No generated ceiling slab (shafts)."
+        }
+      }
+    },
+    "props": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/prop"
+      },
+      "default": []
+    },
+    "chicane": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "component"
+      ],
+      "properties": {
+        "component": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Za-z0-9]+$",
+          "description": "A component in the chicane library (Lucid.Runtime.Chicanes). Core set: SpikePit, Gap, Trapdoor, TimedSpikes, Crusher, Pendulum, Turret, Vent, MovingPlatforms, LittleMaze, Nest. Packs may add more; the validator checks the component exists."
+        },
+        "params": {
+          "type": "object",
+          "description": "Component-specific parameters; each component publishes its own schema fragment."
+        },
+        "actors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Prop names the component drives (a trapdoor panel, pistons, a pendulum arm)."
+        }
+      },
+      "description": "Required when category is chicane or mob."
+    },
+    "weakPoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prop",
+        "hp",
+        "jamEffect"
+      ],
+      "properties": {
+        "prop": {
+          "type": "string",
+          "description": "Name of the shootable prop."
+        },
+        "hp": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 300
+        },
+        "jamEffect": {
+          "type": "string",
+          "description": "Component-defined effect id, e.g. lockShut, retract, stallRetracted, dropBlade, disable, stopWaves."
+        }
+      }
+    },
+    "trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "Component-defined trigger id, e.g. dropNow, fireNow, slamNow, release, spawnWave."
+        },
+        "cooldownMs": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 60000,
+          "default": 6000
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 24,
+          "description": "Shown on the Nightmare's trigger button."
+        }
+      }
+    },
+    "killVolumes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "center",
+          "size"
+        ],
+        "properties": {
+          "center": {
+            "$ref": "#/$defs/vec3"
+          },
+          "size": {
+            "$ref": "#/$defs/vec3"
+          },
+          "cause": {
+            "enum": [
+              "pit",
+              "spikes",
+              "crush"
+            ],
+            "default": "pit"
+          }
+        }
+      },
+      "default": []
+    },
+    "intendedPaths": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "from",
+          "to",
+          "points"
+        ],
+        "properties": {
+          "from": {
+            "$ref": "#/$defs/face"
+          },
+          "to": {
+            "$ref": "#/$defs/face"
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/vec3"
+            },
+            "minItems": 2
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Polylines a Sleeper is expected to follow between connectors. The validator samples them: no gap over 3.5 m, no rise over 1.1 m, no clearance under 1.1 m. Required for chicane and vertical cubes."
+    },
+    "nav": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "agentRadius": {
+          "type": "number",
+          "minimum": 0.2,
+          "maximum": 1.0,
+          "default": 0.4
+        },
+        "links": {
+          "type": "boolean",
+          "default": true,
+          "description": "Generate NavMeshLinks across every connector."
+        },
+        "exclude": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Prop names left out of the navmesh bake."
+        }
+      }
+    },
+    "lighting": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preset": {
+          "enum": [
+            "skin",
+            "none",
+            "dark"
+          ],
+          "default": "skin",
+          "description": "skin: the SkinSet's light preset; none: cube provides its own lights; dark: no lights, for dark rooms."
+        },
+        "lights": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "type",
+              "position"
+            ],
+            "properties": {
+              "type": {
+                "enum": [
+                  "point",
+                  "spot"
+                ]
+              },
+              "position": {
+                "$ref": "#/$defs/vec3"
+              },
+              "direction": {
+                "$ref": "#/$defs/vec3"
+              },
+              "role": {
+                "enum": [
+                  "key",
+                  "fill",
+                  "accent"
+                ],
+                "default": "accent"
+              },
+              "intensity": {
+                "type": "number",
+                "minimum": 0
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^(skin|#[0-9A-Fa-f]{6})$",
+                "default": "skin"
+              }
+            }
+          },
+          "maxItems": 4
+        }
+      }
+    },
+    "skins": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "*"
+      ],
+      "description": "SkinSet ids this cube supports; * means every skin whose material roles cover the shell's roles."
+    },
+    "preview": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cameras": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "iso",
+              "entrance",
+              "top",
+              "custom"
+            ]
+          },
+          "default": [
+            "iso",
+            "entrance",
+            "top"
+          ]
+        },
+        "custom": {
+          "type": "object",
+          "properties": {
+            "position": {
+              "$ref": "#/$defs/vec3"
+            },
+            "lookAt": {
+              "$ref": "#/$defs/vec3"
+            }
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "Free text for reviewers; not used by the builder."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "start"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "connectors": {
+            "maxItems": 1
+          },
+          "cost": {
+            "const": 0
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "connectors": {
+            "minItems": 2
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "climbable": {
+            "const": true
+          }
+        },
+        "required": [
+          "climbable"
+        ]
+      },
+      "then": {
+        "properties": {
+          "connectors": {
+            "contains": {
+              "const": "up"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "enum": [
+              "chicane",
+              "mob"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "chicane",
+          "intendedPaths"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "vertical"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "intendedPaths"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "trigger"
+        ]
+      },
+      "then": {
+        "required": [
+          "chicane"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "weakPoint"
+        ]
+      },
+      "then": {
+        "required": [
+          "chicane"
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "face": {
+      "enum": [
+        "north",
+        "east",
+        "south",
+        "west",
+        "up",
+        "down"
+      ]
+    },
+    "vec3": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "materialRole": {
+      "type": "string",
+      "description": "A role name (wall, floor, ceiling, trim, metal, wood, glass, fabric) resolved by the SkinSet, or an explicit path under Assets/ to pin a material."
+    },
+    "prop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "asset",
+        "position"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Unique within the cube; referenced by chicane.actors, weakPoint.prop, nav.exclude."
+        },
+        "asset": {
+          "type": "string",
+          "description": "assets/<file> for a committed CC0/CC-BY asset, manifest:<key> for a fetched one, or generated:<shape> for builder primitives (box, cylinder, plane, ladder, stairs)."
+        },
+        "position": {
+          "$ref": "#/$defs/vec3"
+        },
+        "rotation": {
+          "$ref": "#/$defs/vec3",
+          "default": [
+            0,
+            0,
+            0
+          ],
+          "description": "Euler degrees."
+        },
+        "scale": {
+          "oneOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "$ref": "#/$defs/vec3"
+            }
+          ],
+          "default": 1
+        },
+        "size": {
+          "$ref": "#/$defs/vec3",
+          "description": "For generated shapes only: dimensions in metres."
+        },
+        "collider": {
+          "enum": [
+            "auto",
+            "mesh",
+            "convex",
+            "box",
+            "none"
+          ],
+          "default": "auto"
+        },
+        "static": {
+          "type": "boolean",
+          "default": true,
+          "description": "False for props a chicane component moves."
+        },
+        "material": {
+          "$ref": "#/$defs/materialRole",
+          "description": "Overrides the asset's own material with a skin role; useful for generated shapes."
+        },
+        "skinTag": {
+          "type": "string",
+          "description": "Only instantiated for skins that declare this tag; lets one cube carry alternative dressing."
+        }
+      }
+    }
+  }
+}
