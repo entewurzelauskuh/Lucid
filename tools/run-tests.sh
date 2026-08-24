@@ -71,6 +71,17 @@ run_platform() {
   local code=$?
   set -e
 
+  # A compile error does not stop Unity from running whatever assemblies it
+  # already had, so the run can report a cheerful green over a broken build.
+  # Rule 6 makes this summary line the only evidence a reviewer gets, so treat
+  # any compiler error as a failure of the run.
+  if grep -qE "error CS[0-9]+" "$RESULTS/$platform.log"; then
+    echo "$platform: COMPILATION FAILED - results below would be from stale assemblies" >&2
+    grep -oE "[^ ]+\.cs\([0-9]+,[0-9]+\): error CS[0-9]+: .*" "$RESULTS/$platform.log" \
+      | sort -u | head -15 >&2
+    return 1
+  fi
+
   if [[ ! -f "$out" ]]; then
     echo "$platform: no results written (exit $code). Tail of the log:" >&2
     tail -20 "$RESULTS/$platform.log" >&2
