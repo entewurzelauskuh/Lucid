@@ -1,0 +1,19 @@
+{
+    "name": "Lucid.Runtime",
+    "rootNamespace": "Lucid.Runtime",
+    "references": [
+        "Lucid.Core",
+        "Unity.InputSystem",
+        "Unity.AI.Navigation",
+        "Unity.RenderPipelines.Universal.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
