@@ -1,0 +1,18 @@
+{
+    "name": "Lucid.Netcode",
+    "rootNamespace": "Lucid.Netcode",
+    "references": [
+        "Lucid.Core",
+        "Lucid.Runtime",
+        "Unity.Netcode.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

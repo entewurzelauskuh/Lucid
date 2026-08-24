@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Pre-commit gate: enforces the asset rule (CLAUDE.md rule 5).
+# Install with tools/install-hooks.sh, which shims this from .git/hooks so
+# git-lfs's own hooks keep working.
+set -euo pipefail
+exec python3 "$(git rev-parse --show-toplevel)/tools/check-licenses.py"
