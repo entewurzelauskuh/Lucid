@@ -4,6 +4,7 @@
     "references": [
         "Lucid.Core",
         "Lucid.Editor",
+        "Unity.InputSystem",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Lucid.Runtime"

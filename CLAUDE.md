@@ -41,6 +41,7 @@ tools/run-tests.sh editmode <name> one fixture or test by name, the inner loop
 LUCID_ALL_ASSEMBLIES=1 …         include tests that ship inside packages
 tools/build-cube.sh <pack>/<cube>  build one cube from cube.spec.json, validate, render previews
 tools/build-cube.sh <pack>         rebuild a whole pack (after template changes)
+tools/build-gauntlet.sh            regenerate the movement gauntlet scene
 tools/fetch-assets.py <cube dir>   download manifest assets and verify hashes
 tools/check-licenses.py            what the pre-commit hook runs
 tools/playtest-report.py <log>     per-round metrics from a .lucidlog (see docs/playtests/PLAN-M0.md §5)
