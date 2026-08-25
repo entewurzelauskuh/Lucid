@@ -12,6 +12,13 @@ Reason: why this over the alternatives.
 Spec: sections changed.
 ```
 
+## 2026-08-25 — The floor slab hangs below the origin plane
+
+Context: #47. `docs/CUBE-SPEC.md` §1 says the cube spans y in [0, 8] with "origin at the centre of the floor", and that doorways are "centred on their face at floor level, 2.5 m wide x 3 m high" with face centres at y = 0. Those two statements together fix where the floor slab can go, and it is not inside the stated span.
+Decision: the generated floor slab occupies y in [-thickness, 0]. The walkable surface is exactly the origin plane, and a doorway occupies y in [0, 3] as §1 states.
+Reason: the alternative — a slab at [0, thickness] — raises the walkable surface above the origin, so either the doorway starts 0.3 m up a step, or its lower 0.3 m is blocked by the floor. Both contradict §1's numbers. Hanging the slab below costs nothing when cubes stack: a cube at layer n has its floor at world y in [8n - 0.3, 8n], which is exactly where the cube below puts the top of its ceiling, so the two coincide rather than collide. Vertical connectors open both, so a drop is still a drop.
+Spec: none. §1's numbers are unchanged and now hold literally; this records which side of the origin the slab sits on, which §1 does not say. `docs/WORKPLAN.md` §4's validator rule "everything inside the 8 m bounds" is read as x, z in [-4, 4] and y in [-thickness, 8]; #48 implements it that way.
+
 ## 2026-08-25 — Newtonsoft.Json becomes a direct dependency, and the spec checker is hand-written
 
 Context: #46. The cube pipeline reads `cube.spec.json`, so `Lucid.Editor` needs a JSON parser. Unity's own `JsonUtility` cannot express the format — no dictionaries, and `vec3` is an array of arrays.
