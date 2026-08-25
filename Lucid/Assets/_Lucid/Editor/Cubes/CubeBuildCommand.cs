@@ -61,7 +61,10 @@ namespace Lucid.Editor.Cubes
             {
                 CubeBuildResult result = CubeBuilder.BuildFromSpec(spec);
                 Console.WriteLine(result.Describe());
-                if (!result.Ok) failures.Add(result);
+
+                // A cube that built but failed the validator is not a success:
+                // the whole point of the report is that the caller acts on it.
+                if (!result.Ok || !result.Validated) failures.Add(result);
             }
 
             AssetDatabase.SaveAssets();

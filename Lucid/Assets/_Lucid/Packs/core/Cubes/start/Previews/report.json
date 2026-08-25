@@ -1,0 +1,13 @@
+{
+  "cube": "core.start",
+  "spec": "Assets/_Lucid/Packs/core/Cubes/start/cube.spec.json",
+  "prefab": "Assets/_Lucid/Packs/core/Cubes/start/start.prefab",
+  "ok": true,
+  "problems": [],
+  "previews": [
+    "Assets/_Lucid/Packs/core/Cubes/start/Previews/iso.png",
+    "Assets/_Lucid/Packs/core/Cubes/start/Previews/entrance.png",
+    "Assets/_Lucid/Packs/core/Cubes/start/Previews/top.png"
+  ],
+  "triangles": 132
+}

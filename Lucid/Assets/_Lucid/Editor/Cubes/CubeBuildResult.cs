@@ -54,6 +54,11 @@ namespace Lucid.Editor.Cubes
                 set => _result.DefinitionChanged = value;
             }
 
+            public ValidationReport Report
+            {
+                set => _result.Report = value;
+            }
+
             public CubeBuildResult Result => _result;
         }
 
@@ -66,6 +71,12 @@ namespace Lucid.Editor.Cubes
         /// <summary>False when the CubeDefinition on disk was already correct.</summary>
         public bool DefinitionChanged { get; set; }
 
+        /// <summary>What the validator found, or null if the spec was rejected.</summary>
+        public ValidationReport Report { get; set; }
+
+        /// <summary>A cube only counts as built if it also validated.</summary>
+        public bool Validated => Report != null && Report.Ok;
+
         public string Describe()
         {
             if (!Ok) return $"{SpecPath}\n" + string.Join("\n", Problems.Select(p => "  " + p));
@@ -73,8 +84,14 @@ namespace Lucid.Editor.Cubes
             string line = PrefabChanged ? $"built {PrefabPath}" : $"unchanged {PrefabPath}";
 
             // Saying so beats a green line over a cube whose trap was dropped.
-            return Ignored.Count == 0 ? line : line + "\n  ignored (not yet implemented): "
-                                              + string.Join(", ", Ignored);
+            if (Ignored.Count > 0)
+                line += "\n  ignored (not yet implemented): " + string.Join(", ", Ignored);
+
+            // A cube that built but did not validate is not a success.
+            if (Report != null && !Report.Ok)
+                line += "\n" + string.Join("\n", Report.Problems.Select(p => "  " + p));
+
+            return line;
         }
     }
 }

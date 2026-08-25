@@ -1,0 +1,13 @@
+{
+  "cube": "core.tee",
+  "spec": "Assets/_Lucid/Packs/core/Cubes/tee/cube.spec.json",
+  "prefab": "Assets/_Lucid/Packs/core/Cubes/tee/tee.prefab",
+  "ok": true,
+  "problems": [],
+  "previews": [
+    "Assets/_Lucid/Packs/core/Cubes/tee/Previews/iso.png",
+    "Assets/_Lucid/Packs/core/Cubes/tee/Previews/entrance.png",
+    "Assets/_Lucid/Packs/core/Cubes/tee/Previews/top.png"
+  ],
+  "triangles": 252
+}

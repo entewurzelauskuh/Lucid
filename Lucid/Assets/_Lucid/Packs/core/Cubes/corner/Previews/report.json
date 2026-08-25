@@ -1,0 +1,13 @@
+{
+  "cube": "core.corner",
+  "spec": "Assets/_Lucid/Packs/core/Cubes/corner/cube.spec.json",
+  "prefab": "Assets/_Lucid/Packs/core/Cubes/corner/corner.prefab",
+  "ok": true,
+  "problems": [],
+  "previews": [
+    "Assets/_Lucid/Packs/core/Cubes/corner/Previews/iso.png",
+    "Assets/_Lucid/Packs/core/Cubes/corner/Previews/entrance.png",
+    "Assets/_Lucid/Packs/core/Cubes/corner/Previews/top.png"
+  ],
+  "triangles": 192
+}

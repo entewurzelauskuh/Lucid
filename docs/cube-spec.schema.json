@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://lucid.game/schemas/cube-spec-1.json",
   "title": "Lucid cube spec",
-  "description": "Declarative description of one cube. Written by Claude Code from brief.md and the assets folder; consumed by Lucid.Editor.CubeBuilder. Cube-local frame: origin at the centre of the floor, x east, y up, z north, metres; the cube spans x,z in [-4,4] and y in [0,8]. Doorways are centred on their face at floor level, 2.5 m wide and 3 m high; vertical connectors are a 2.5 m square hole centred on the face.",
+  "description": "Declarative description of one cube. Written by Claude Code from brief.md and the assets folder; consumed by Lucid.Editor.CubeBuilder. Cube-local frame: origin at the centre of the floor, x east, y up, z north, metres; the cube spans x,z in [-4,4] and y in [-t,8-t] where t is the shell thickness, so the floor slab sits just below the origin and the ceiling stops the same distance short of the top (see docs/CUBE-SPEC.md \u00a71). Doorways are centred on their face at floor level, 2.5 m wide and 3 m high; vertical connectors are a 2.5 m square hole centred on the face.",
   "type": "object",
   "additionalProperties": false,
   "required": [

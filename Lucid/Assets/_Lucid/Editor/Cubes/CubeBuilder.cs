@@ -43,6 +43,10 @@ namespace Lucid.Editor.Cubes
             }
 
             var instance = (GameObject)PrefabUtility.InstantiatePrefab(template);
+            CubeDefinition definition;
+            bool packChanged;
+            string prefabPath;
+            bool prefabChanged;
             try
             {
                 PrefabUtility.UnpackPrefabInstance(
@@ -51,27 +55,44 @@ namespace Lucid.Editor.Cubes
 
                 Configure(instance, spec);
 
-                string prefabPath = $"{folder}/{instance.name}.prefab";
+                prefabPath = $"{folder}/{instance.name}.prefab";
 
                 // Only write when the cube actually changed. Saving
                 // unconditionally would rewrite the file on every build, because
                 // Unity mints new fileIDs each time and orders the YAML by them.
                 var onDisk = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-                bool prefabChanged = !CubeEquivalence.Matches(instance, onDisk);
+                prefabChanged = !CubeEquivalence.Matches(instance, onDisk);
                 if (prefabChanged) PrefabUtility.SaveAsPrefabAsset(instance, prefabPath);
 
-                CubeDefinition definition = WriteDefinition(folder, spec, prefabPath);
-                bool packChanged = Register(spec, definition);
-
-                AssetDatabase.SaveAssets();
-                return new CubeBuildResult.Builder(
-                    specPath, prefabPath, definition, packChanged, prefabChanged)
-                    { Ignored = Unhandled(spec), DefinitionChanged = _definitionChanged }.Result;
+                definition = WriteDefinition(folder, spec, prefabPath);
+                packChanged = Register(spec, definition);
             }
             finally
             {
+                // Destroyed before anything renders. The preview renderer puts
+                // its own copy in the scene, and a second one standing in the
+                // same place renders straight through the cut-away.
                 Object.DestroyImmediate(instance);
             }
+
+            // Validate and preview the prefab as saved, not the working
+            // instance: what a reviewer looks at has to be what shipped.
+            var saved = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+
+            // Render first: the validator checks that every camera the spec
+            // asked for actually produced a file.
+            List<string> previews = CubePreviewRenderer.Render(saved, spec, folder);
+            ValidationReport report = CubeValidator.Validate(saved, spec, folder, previews);
+            WriteReport(folder, report);
+
+            AssetDatabase.SaveAssets();
+            return new CubeBuildResult.Builder(
+                specPath, prefabPath, definition, packChanged, prefabChanged)
+                {
+                    Ignored = Unhandled(spec),
+                    DefinitionChanged = _definitionChanged,
+                    Report = report,
+                }.Result;
         }
 
         /// <summary>Shell, sockets and doors, from the spec's connector mask.</summary>
@@ -91,6 +112,19 @@ namespace Lucid.Editor.Cubes
             }
         }
 
+        /// <summary>Writes report.json beside the previews, when it changed.</summary>
+        static void WriteReport(string folder, ValidationReport report)
+        {
+            string previews = Path.Combine(folder, "Previews");
+            Directory.CreateDirectory(previews);
+
+            string path = Path.Combine(previews, "report.json");
+            string json = report.ToJson();
+            if (File.Exists(path) && File.ReadAllText(path) == json) return;
+
+            File.WriteAllText(path, json);
+        }
+
         /// <summary>
         /// Sections the spec carries that this milestone's builder does not act
         /// on. Reporting them keeps a bare shell from reading as a finished
@@ -106,6 +140,7 @@ namespace Lucid.Editor.Cubes
             if (spec.EffectiveKillVolumes.Length > 0) ignored.Add("killVolumes");
             if (spec.Nav != null) ignored.Add("nav");
             if (spec.Lighting != null) ignored.Add("lighting");
+            if (spec.Preview?.Custom != null) ignored.Add("preview.custom");
             return ignored.ToArray();
         }
 

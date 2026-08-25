@@ -1,0 +1,19 @@
+{
+  "specVersion": 1,
+  "id": "core.start",
+  "name": "Bedroom",
+  "pack": "core",
+  "category": "start",
+  "cost": 0,
+  "connectors": ["north"],
+  "shell": {
+    "materials": { "wall": "wall", "floor": "floor", "ceiling": "ceiling", "trim": "trim" },
+    "doorFrame": "plain",
+    "interior": { "width": 6, "height": 4 }
+  },
+  "intendedPaths": [
+    { "from": "north", "to": "north", "points": [[0, 0, 0], [0, 0, 4]] }
+  ],
+  "skins": ["*"],
+  "notes": "The dreamer's bedroom. Exactly one door, exempt from every lattice rule, and where Sleepers spawn and respawn."
+}

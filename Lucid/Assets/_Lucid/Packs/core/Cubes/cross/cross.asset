@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed19dd673bc7f4ee9a92eb6e2220d00d, type: 3}
+  m_Name: cross
+  m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.CubeDefinition
+  _id: core.cross
+  _pack: core
+  _displayName: Crossroads
+  _category: 0
+  _connectors: 15
+  _climbable: 0
+  _cost: 1
+  _prefab: {fileID: 1203977286750023929, guid: 5863e7b256983468c98fa9848b7787d4, type: 3}
+  _skins:
+  - '*'
