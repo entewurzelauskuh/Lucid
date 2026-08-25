@@ -6,11 +6,20 @@ Read in this order before doing anything: `docs/SPEC.md` (what the game is), `do
 
 ## Status
 
-**M0.1 is in progress** (`docs/WORKPLAN.md` §4). The Unity project is at `Lucid/`, Unity **6000.3.11f1**, with `com.unity.netcode.gameobjects` 2.13.1 and `com.unity.addressables` 2.11.2 added (`docs/DECISIONS.md`). It is otherwise still the stock URP template: `SampleScene`, `TutorialInfo/`, **no `Assets/_Lucid/`, no asmdefs, no Lucid code**.
+**M0.1, M0.2 and M0.3 are merged; M0.4 (#4) is next** (`docs/WORKPLAN.md` §4). Unity **6000.3.11f1** at `Lucid/`.
 
-Still to create in M0.1: `tools/`, the four assemblies, `.gitattributes` (LFS), `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `THIRD_PARTY_NOTICES.md`, the pre-commit license hook. Do not expect a script named below to run yet; build it as its issue specifies.
+- `Lucid.Core` implements `docs/CORE-API.md` in full — lattice, derivation, the placement and exploration rules, round, budget, powers and scoring. Every item of its §12 test list is covered.
+- The cube pipeline runs end to end: `tools/build-cube.sh core` builds Straight, Corner, T, Cross and the Bedroom from `cube.spec.json`, validates each, and renders three previews apiece. Rebuilding changes nothing on disk.
+- `Lucid.Runtime` and `Lucid.Netcode` hold only what the pipeline needed so far. There is **no gameplay yet**: no controller, no fog-door behaviour, no dream instance, no networking. M0.4 onwards builds those.
+- **PlayMode is `0/0`.** The assembly exists and runs; no test has ever been written for it. M0.4's acceptance is the first, so treat that harness as unproven.
 
-`.gitignore` is in place and keeps `Library/` (~1.9 GB) out; a full `git add` stages ~76 files / 0.4 MB. Remote is `git@github.com:entewurzelauskuh/Lucid.git`; only `LICENSE` is committed so far.
+Things the tree does not tell you:
+
+- The editor path comes from `UNITY_PATH`. `tools/run-tests.sh` and `tools/build-cube.sh` both refuse to run while the editor holds the project, so ask the owner to close it rather than working around them.
+- `build-cube.sh` deliberately omits `-nographics`: previews need a graphics device, and the renderer degrades to writing no images rather than failing.
+- Driving Unity through the MCP bridge instead? Read the console for compile errors between every refresh and test run — the bridge has no compile guard and will happily run stale assemblies (`.claude/skills/pr-review/SKILL.md` §3).
+- The git remote is HTTPS. This machine has two GitHub accounts and the SSH key is the wrong one.
+- Steam is deferred, not blocked; see the pinned #28.
 
 ## Rules that do not bend
 
