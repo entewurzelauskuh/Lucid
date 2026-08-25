@@ -12,6 +12,13 @@ Reason: why this over the alternatives.
 Spec: sections changed.
 ```
 
+## 2026-08-25 — Every pull request gets an independent review before it is opened
+
+Context: #41. There is no CI (`docs/SPEC.md` §18), so a pull request's claims rest on what the author checked by hand, and four consecutive reviews showed that reading the diff was not enough. #31 carried a bypass in the asset-rule gate itself; #35 a silent-corruption path; #36 a rule that let the Nightmare re-open a door a Sleeper had sealed, plus three tests that asserted nothing while appearing to be coverage. Each was caught in review before merging, which is the point: none was visible by reading the diff.
+Decision: `CLAUDE.md` rule 8 and the `pr-review` skill. Two independent reviewers with different lenses (adversarial correctness, and conformance against the spec's own required-test list), every finding reproduced before it is fixed, every test touched mutation-checked, the triage posted on the pull request, and out-of-scope findings filed as issues.
+Reason: the two habits that actually found things were independence and mutation testing. On #36 two reviewers converged on the same critical defect separately, which settled it without argument; and mutation testing has now caught four tests that could not fail. Neither is discoverable by reading. This is cheaper than CI and does not need a Unity licence secret; `docs/SPEC.md` §18 still holds that GitHub Actions is a one-file change once contributors appear, and this protocol is what stands in for it until then.
+Spec: none. `docs/WORKPLAN.md` §3's definition of done now names the review.
+
 ## 2026-08-25 — Core value types are hand-written structs, not record structs
 
 Context: #32. `docs/CORE-API.md` §2 declares `Coord`, `ConnectorRef` and `PlaceVerdict` as `readonly record struct`, and uses file-scoped namespaces throughout. Unity 6000.3 compiles at **C# 9.0** (`<LangVersion>9.0</LangVersion>` in the generated projects); record structs and file-scoped namespaces are C# 10.
