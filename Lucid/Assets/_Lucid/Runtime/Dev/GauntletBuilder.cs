@@ -10,10 +10,16 @@ namespace Lucid.Runtime.Dev
     /// </summary>
     public static class GauntletBuilder
     {
-        public static Gauntlet Build(IReadOnlyList<GauntletLane> lanes, Transform parent = null)
+        /// <remarks>
+        /// The course is built at the world origin and cannot be re-parented.
+        /// <see cref="Gauntlet.SpawnFor"/> reads the layout constants directly,
+        /// so under a moved parent it would hand back a spawn point in the
+        /// wrong place and say nothing. Nothing needs to move it; when
+        /// something does, the offset belongs in both.
+        /// </remarks>
+        public static Gauntlet Build(IReadOnlyList<GauntletLane> lanes)
         {
             var root = new GameObject("Gauntlet");
-            if (parent != null) root.transform.SetParent(parent, false);
 
             var built = new GauntletLane[lanes.Count];
             for (int i = 0; i < lanes.Count; i++)
@@ -32,8 +38,7 @@ namespace Lucid.Runtime.Dev
             return new Gauntlet(root, built);
         }
 
-        public static Gauntlet Build(Transform parent = null) =>
-            Build(GauntletLayout.Standard, parent);
+        public static Gauntlet Build() => Build(GauntletLayout.Standard);
 
         static void BuildLane(Transform parent, int index, GauntletLane lane)
         {

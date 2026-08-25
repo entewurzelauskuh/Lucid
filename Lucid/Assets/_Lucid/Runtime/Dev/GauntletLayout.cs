@@ -1,36 +1,5 @@
-using System.Globalization;
-
 namespace Lucid.Runtime.Dev
 {
-    public enum GauntletObstacle
-    {
-        /// <summary>A hole in the floor of the given width, in metres.</summary>
-        Gap,
-
-        /// <summary>A step up of the given height, in metres.</summary>
-        Ledge,
-    }
-
-    /// <summary>One lane of the gauntlet: a run-up, one obstacle, a landing.</summary>
-    public readonly struct GauntletLane
-    {
-        public readonly GauntletObstacle Obstacle;
-
-        /// <summary>Gap width or ledge height, metres.</summary>
-        public readonly float Size;
-
-        public GauntletLane(GauntletObstacle obstacle, float size)
-        {
-            Obstacle = obstacle;
-            Size = size;
-        }
-
-        public string Name =>
-            Obstacle + "-" + Size.ToString("0.0", CultureInfo.InvariantCulture);
-
-        public override string ToString() => Name;
-    }
-
     /// <summary>
     /// The movement test course of docs/WORKPLAN.md §4 (M0.4). It lives in
     /// Runtime rather than Editor because two very different callers need the

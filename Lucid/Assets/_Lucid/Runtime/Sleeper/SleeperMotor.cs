@@ -24,6 +24,7 @@ namespace Lucid.Runtime
         readonly Collider[] _overlap = new Collider[8];
         float _vertical;
         bool _crouched;
+        bool _configured;
 
         public SleeperMotorSettings Settings => _settings;
         public bool IsGrounded => _controller != null && _controller.isGrounded;
@@ -40,16 +41,35 @@ namespace Lucid.Runtime
 
         public Transform Eye => _eye;
 
-        void Awake()
-        {
-            _controller = GetComponent<CharacterController>();
-            _source = GetComponent<ISleeperInputSource>();
-            ApplySettings();
-        }
+        void Awake() => EnsureReady();
 
         void Update()
         {
+            EnsureReady();
             if (_source != null) Tick(_source.Read(), Time.deltaTime);
+        }
+
+        /// <summary>
+        /// Finds the controller and the input source, and configures the
+        /// capsule once. Idempotent and called from everywhere, because the
+        /// pieces do not arrive in one order: <see cref="SleeperRig"/> adds the
+        /// motor before any input source exists and the scene builder adds the
+        /// source afterwards, so a source cached once in Awake would be the
+        /// null one. That would have left a runtime-spawned Sleeper unable to
+        /// move, silently.
+        /// </summary>
+        void EnsureReady()
+        {
+            if (_controller == null) _controller = GetComponent<CharacterController>();
+            if (_controller == null) return;
+
+            if (!_configured)
+            {
+                ApplySettings();
+                _configured = true;
+            }
+
+            if (_source == null) _source = GetComponent<ISleeperInputSource>();
         }
 
         /// <summary>
@@ -59,7 +79,8 @@ namespace Lucid.Runtime
         public void Tick(SleeperInput input, float dt)
         {
             if (dt <= 0f) return;
-            if (_controller == null) Awake();
+            EnsureReady();
+            if (_controller == null) return;
 
             ResolveStance(input.Crouch);
 
@@ -156,9 +177,7 @@ namespace Lucid.Runtime
 
             int hits = Physics.OverlapBoxNonAlloc(
                 centre, half, _overlap, Quaternion.identity, ~0, QueryTriggerInteraction.Ignore);
-            for (int i = 0; i < hits; i++)
-                if (_overlap[i] != null && _overlap[i].transform != transform) return false;
-            return true;
+            return NothingButOurselves(hits);
         }
 
         bool HasRoomToStand()
@@ -172,8 +191,24 @@ namespace Lucid.Runtime
 
             int hits = Physics.OverlapCapsuleNonAlloc(
                 bottom, top, r, _overlap, ~0, QueryTriggerInteraction.Ignore);
+            return NothingButOurselves(hits);
+        }
+
+        /// <summary>
+        /// True when the overlap found nothing but this Sleeper's own colliders.
+        /// </summary>
+        /// <remarks>
+        /// Whole-hierarchy, not just this transform. Comparing against the
+        /// transform alone means the first child collider the rig ever gains —
+        /// a hitbox, a Nightlight muzzle — sits in both probes at once, so
+        /// <see cref="WouldMantle"/> would see "already inside something" every
+        /// tick and the no-mantle rule would switch itself off in silence.
+        /// </remarks>
+        bool NothingButOurselves(int hits)
+        {
             for (int i = 0; i < hits; i++)
-                if (_overlap[i] != null && _overlap[i].transform != transform) return false;
+                if (_overlap[i] != null && !_overlap[i].transform.IsChildOf(transform))
+                    return false;
             return true;
         }
 
@@ -186,6 +221,7 @@ namespace Lucid.Runtime
 
         void ApplySettings()
         {
+            if (_controller == null) return;
             _controller.radius = _settings.Radius;
             _controller.skinWidth = _settings.SkinWidth;
             _controller.stepOffset = _settings.StepOffset;

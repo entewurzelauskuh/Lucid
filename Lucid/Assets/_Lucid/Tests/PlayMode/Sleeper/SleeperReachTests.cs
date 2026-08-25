@@ -60,7 +60,7 @@ namespace Lucid.Tests.PlayMode.Sleeper
         public IEnumerator TheWidestCrossableGapIsAboutFourMetres()
         {
             yield return null;
-            float widest = Boundary(GauntletObstacle.Gap, 3.5f, 4.5f, 0.05f);
+            float widest = Boundary(GauntletObstacle.Gap, 3.0f, 5.0f, 0.05f);
 
             Assert.That(widest, Is.EqualTo(4f).Within(0.4f),
                 $"SPEC §9 promises a jump of about 4 m; this one reaches {widest:0.00} m");
@@ -71,11 +71,19 @@ namespace Lucid.Tests.PlayMode.Sleeper
         {
             yield return null;
             var kit = new SleeperMotorSettings();
-            float tallest = Boundary(GauntletObstacle.Ledge, 1.1f, 1.4f, 0.025f);
+            float tallest = Boundary(GauntletObstacle.Ledge, 0.9f, 1.5f, 0.025f);
 
-            // With no mantle to help, the ledge a Sleeper can take is exactly
-            // the height they jump. Before that rule existed, the capsule's
-            // rounded foot climbed to 1.4 m off a 1.2 m apex.
+            // With no mantle to help, the ledge a Sleeper can take is the
+            // height they jump, less the little the freeze costs: horizontal
+            // motion is held until the feet clear the lip, so the last few
+            // centimetres of apex are too brief to cross the capsule's own
+            // radius. That lands near 1.19 m. Before the rule existed the
+            // capsule's rounded foot climbed to 1.4 m off a 1.2 m apex.
+            //
+            // The search starts below 1.1 m and ends above 1.4 m on purpose:
+            // bounded at the acceptance figures, the lower half of this
+            // assertion would be satisfied by the search range rather than by
+            // the controller.
             Assert.That(tallest, Is.EqualTo(kit.JumpRise).Within(0.1f),
                 $"a {kit.JumpRise:0.00} m jump reached a {tallest:0.00} m ledge");
         }

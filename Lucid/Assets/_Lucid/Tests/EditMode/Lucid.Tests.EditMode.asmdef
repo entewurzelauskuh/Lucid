@@ -5,6 +5,7 @@
         "Lucid.Core",
         "Lucid.Editor",
         "Unity.InputSystem",
+        "Unity.InputSystem.TestFramework",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Lucid.Runtime"

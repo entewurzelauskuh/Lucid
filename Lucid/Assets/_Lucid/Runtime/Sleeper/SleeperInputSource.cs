@@ -49,6 +49,11 @@ namespace Lucid.Runtime
             _actions = actions;
             _map = null;
             Resolve();
+
+            // OnEnable is the only other thing that enables the map, and it has
+            // already run if the component was live when this was called. A
+            // disabled map reads as zero for ever, with no error.
+            if (isActiveAndEnabled) _map?.Enable();
         }
 
         void Resolve()

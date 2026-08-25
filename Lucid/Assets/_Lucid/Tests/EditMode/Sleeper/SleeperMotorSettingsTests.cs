@@ -21,6 +21,10 @@ namespace Lucid.Tests.EditMode.Sleeper
             Assert.That(kit.CrouchSpeed, Is.EqualTo(2.5f));
             Assert.That(kit.JumpRise, Is.EqualTo(1.2f));
             Assert.That(kit.CrouchHeight, Is.EqualTo(1f));
+
+            // The one tunable SPEC §9 does not state verbatim, and so the one
+            // that could drift without contradicting anything on its face.
+            Assert.That(kit.JumpTravel, Is.EqualTo(3.8f));
         }
 
         [Test]
@@ -42,7 +46,7 @@ namespace Lucid.Tests.EditMode.Sleeper
         {
             // Not a preference: a 1.2 m rise under 9.81 m/s² hangs for most of
             // a second and carries nearly 6 m, half again the reach SPEC §9
-            // allows. The two spec numbers only coexist at about three g, and
+            // allows. The two spec numbers only coexist at about 2.4 g, and
             // that is a thing the M0 play-test should feel for
             // (docs/DECISIONS.md).
             Assert.That(Kit.Gravity, Is.GreaterThan(2f * 9.81f));

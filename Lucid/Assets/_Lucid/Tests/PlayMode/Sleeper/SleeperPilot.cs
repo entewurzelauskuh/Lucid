@@ -43,7 +43,8 @@ namespace Lucid.Tests.PlayMode.Sleeper
         /// of the landing platform and fall — which is how the first draft of
         /// these tests reported four false failures.
         /// </summary>
-        public static void RunForward(
+        /// <returns>Whether the jump was ever taken.</returns>
+        public static bool RunForward(
             SleeperMotor motor, float seconds,
             JumpPolicy policy = null, bool stopOnLanding = true)
         {
@@ -66,14 +67,27 @@ namespace Lucid.Tests.PlayMode.Sleeper
                 motor.Tick(input, Dt);
 
                 if (!motor.IsGrounded) airborne++;
-                else if (stopOnLanding && airborne >= AirborneTicks) return;
+                else if (stopOnLanding && airborne >= AirborneTicks) return jumped;
                 else airborne = 0;
             }
+
+            return jumped;
         }
 
         /// <summary>Jump on the last tick the near lip is still underfoot.</summary>
+        /// <remarks>
+        /// The threshold sits half a step short of the lip, not on it. The
+        /// standard run-up is 8 m and a tick carries 0.1 m, so a runner arrives
+        /// exactly on z = 0 — and a comparison against 0 is then settled by
+        /// whether float accumulation lands a millionth above or below it. That
+        /// moved take-off by a whole tick, which is 0.1 m of the measured reach:
+        /// twice the resolution the bisection in SleeperReachTests claims.
+        /// Half-way between two reachable positions, nothing can round across.
+        /// </remarks>
         public static JumpPolicy AtTheEdge(float edgeZ) =>
-            (motor, _) => motor.IsGrounded && motor.Feet.z >= edgeZ;
+            (motor, _) =>
+                motor.IsGrounded
+                && motor.Feet.z >= edgeZ - motor.Settings.RunSpeed * Dt * 0.5f;
 
         /// <summary>
         /// Jump when the run stops making progress, which is what running into

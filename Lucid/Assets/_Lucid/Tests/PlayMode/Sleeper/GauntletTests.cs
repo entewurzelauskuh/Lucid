@@ -53,7 +53,15 @@ namespace Lucid.Tests.PlayMode.Sleeper
             yield return null;
 
             SleeperPilot.Settle(motor);
-            SleeperPilot.RunForward(motor, RunSeconds, SleeperPilot.PolicyFor(_gauntlet, lane));
+            bool jumped = SleeperPilot.RunForward(
+                motor, RunSeconds, SleeperPilot.PolicyFor(_gauntlet, lane));
+
+            // Without this the two negative cases would pass for a runner that
+            // never jumped at all: walking off a 4.5 m gap falls in, and walking
+            // into a 1.4 m ledge stops at its foot. Both are the asserted
+            // outcome, reached without testing the kit.
+            Assert.That(jumped, Is.True,
+                $"the runner never jumped at the {obstacle} of {size} m");
 
             float landing = _gauntlet.LandingHeightFor(lane);
             Vector3 feet = motor.Feet;
@@ -126,10 +134,18 @@ namespace Lucid.Tests.PlayMode.Sleeper
             // speed already banked from standing drops nearly straight down,
             // which is both wrong and a way for the runs above to succeed for
             // the wrong reason.
+            //
+            // The body leaves the lip already moving down at the ground stick
+            // plus one tick of gravity, not from rest. Assuming rest overstates
+            // the flight by 0.58 m here, which a 0.75 m tolerance was quietly
+            // absorbing — the assertion held while modelling the wrong thing.
+            var kit = motor.Settings;
             float dropped = -motor.Feet.y;
-            float expected = motor.Settings.RunSpeed
-                * Mathf.Sqrt(2f * dropped / motor.Settings.Gravity);
-            Assert.That(motor.Feet.z, Is.EqualTo(expected).Within(0.75f),
+            float entry = kit.GroundStick + kit.Gravity * SleeperPilot.Dt;
+            float airtime =
+                (Mathf.Sqrt(entry * entry + 2f * kit.Gravity * dropped) - entry) / kit.Gravity;
+
+            Assert.That(motor.Feet.z, Is.EqualTo(kit.RunSpeed * airtime).Within(0.2f),
                 $"fell {dropped:0.0} m but only carried {motor.Feet.z:0.00} m forward");
         }
     }

@@ -13,7 +13,7 @@ namespace Lucid.Runtime
     /// Those two are not independent: a jump that rises 1.2 m under Earth
     /// gravity hangs for 0.99 s and carries almost 6 m, half again the gap the
     /// spec wants. Fixing the rise and the reach therefore fixes gravity, and
-    /// it lands near 30 m/s² — about three g. The dream is heavy on purpose;
+    /// it lands at 23.9 m/s² — about 2.4 g. The dream is heavy on purpose;
     /// this is worth a look in the M0 play-test rather than a surprise.
     ///
     /// <see cref="JumpTravel"/> is the flight of the capsule's *centre* over
@@ -21,10 +21,14 @@ namespace Lucid.Runtime
     /// because the rounded foot finds a few centimetres of purchase at each
     /// lip: measured on the gauntlet, 3.8 m of centre travel crosses gaps up
     /// to about 4.15 m. That is the "~4 m" of SPEC §9, and it is why a 3.5 m
-    /// gap is always makeable and a 4.5 m one never is. A ledge gets no such
-    /// bonus — <see cref="SleeperMotor"/> refuses to climb what its feet are
-    /// below — so the tallest ledge is the rise itself, 1.2 m
-    /// (docs/DECISIONS.md).
+    /// gap is always makeable and a 4.5 m one never is.
+    ///
+    /// That purchase is not the mantle SPEC §9 forbids and
+    /// <see cref="SleeperMotor"/> suppresses, though both come from the same
+    /// rounded foot. Catching the lip of a floor you are already falling past
+    /// never carries you above the height you jumped; climbing a ledge taller
+    /// than your apex does. So a ledge gets no bonus at all, and the tallest
+    /// one is a shade under the rise (docs/DECISIONS.md).
     /// </remarks>
     [Serializable]
     public sealed class SleeperMotorSettings

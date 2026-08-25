@@ -22,10 +22,17 @@ namespace Lucid.Runtime
         /// <summary>Current pitch in degrees; negative is up.</summary>
         public float Pitch => _pitch;
 
-        void Awake() => _source = GetComponent<ISleeperInputSource>();
+        /// <summary>Degrees turned per unit of look delta.</summary>
+        public float DegreesPerCount => _degreesPerCount;
+
+        /// <summary>How far from level the eye may tilt, degrees.</summary>
+        public float PitchLimit => _pitchLimit;
 
         void Update()
         {
+            // Resolved here rather than in Awake: the rig is assembled piece by
+            // piece and the input source may arrive after this component does.
+            if (_source == null) _source = GetComponent<ISleeperInputSource>();
             if (_source != null) Tick(_source.Read().Look);
         }
 

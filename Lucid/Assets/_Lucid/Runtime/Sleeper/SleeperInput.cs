@@ -19,7 +19,7 @@ namespace Lucid.Runtime
         /// <summary>True only on the tick the jump key went down.</summary>
         public bool JumpPressed;
 
-        /// <summary>True while crouch is held (SPEC §9 has no toggle yet).</summary>
+        /// <summary>True while crouch is held; the hold/toggle option of docs/UI.md §11 comes with rebinding.</summary>
         public bool Crouch;
 
         public static SleeperInput Forward =>
