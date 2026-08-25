@@ -18,7 +18,7 @@ MonoBehaviour:
   _category: 0
   _connectors: 15
   _climbable: 0
-  _cost: 2
+  _cost: 1
   _prefab: {fileID: 1203977286750023929, guid: 5863e7b256983468c98fa9848b7787d4, type: 3}
   _skins:
   - '*'

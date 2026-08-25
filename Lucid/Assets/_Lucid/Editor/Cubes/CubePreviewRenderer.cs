@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
@@ -75,13 +76,13 @@ namespace Lucid.Editor.Cubes
         static List<Renderer> CutAway(GameObject instance, PreviewCamera angle)
         {
             string[] hide;
-            string suffix = null;
+            string[] suffixes = null;
             switch (angle)
             {
                 // Iso looks down from the east and south, so those two walls
                 // and the ceiling are what stands in the way.
                 case PreviewCamera.Iso:
-                    hide = new[] { "ceiling", "wall_east", "wall_south", "frame_south" };
+                    hide = new[] { "ceiling", "wall_east", "wall_south", "frame_east", "frame_south" };
                     break;
 
                 // Straight down: only the ceiling is in the way, and without it
@@ -96,7 +97,7 @@ namespace Lucid.Editor.Cubes
                     // from directly overhead they roof the openings and the plan
                     // reads as a sealed box with no way in.
                     hide = new[] { "ceiling", "floor" };
-                    suffix = "_lintel";
+                    suffixes = new[] { "_lintel", "_head" };
                     break;
 
                 // Standing in the doorway looking in; nothing is in the way.
@@ -110,7 +111,15 @@ namespace Lucid.Editor.Cubes
                 if (!r.enabled) continue;
 
                 string name = r.gameObject.name;
-                bool match = suffix != null && name.EndsWith(suffix);
+                bool match = false;
+                if (suffixes != null)
+                {
+                    foreach (string s in suffixes)
+                    {
+                        if (name.EndsWith(s)) { match = true; break; }
+                    }
+                }
+
                 if (!match)
                 {
                     foreach (string prefix in hide)
@@ -241,7 +250,13 @@ namespace Lucid.Editor.Cubes
                 image.ReadPixels(new Rect(0, 0, Size, Size), 0, 0);
                 image.Apply();
 
-                File.WriteAllBytes(path, image.EncodeToPNG());
+                byte[] png = image.EncodeToPNG();
+
+                // Only write on a difference. These are LFS binaries, and a
+                // rebuild of the pack would otherwise dirty every one of them.
+                if (File.Exists(path) && File.ReadAllBytes(path).SequenceEqual(png)) return true;
+
+                File.WriteAllBytes(path, png);
                 return true;
             }
             finally

@@ -78,8 +78,11 @@ namespace Lucid.Editor.Cubes
             // Validate and preview the prefab as saved, not the working
             // instance: what a reviewer looks at has to be what shipped.
             var saved = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-            ValidationReport report = CubeValidator.Validate(saved, spec, folder);
-            report.Previews = CubePreviewRenderer.Render(saved, spec, folder);
+
+            // Render first: the validator checks that every camera the spec
+            // asked for actually produced a file.
+            List<string> previews = CubePreviewRenderer.Render(saved, spec, folder);
+            ValidationReport report = CubeValidator.Validate(saved, spec, folder, previews);
             WriteReport(folder, report);
 
             AssetDatabase.SaveAssets();
@@ -109,18 +112,24 @@ namespace Lucid.Editor.Cubes
             }
         }
 
+        /// <summary>Writes report.json beside the previews, when it changed.</summary>
+        static void WriteReport(string folder, ValidationReport report)
+        {
+            string previews = Path.Combine(folder, "Previews");
+            Directory.CreateDirectory(previews);
+
+            string path = Path.Combine(previews, "report.json");
+            string json = report.ToJson();
+            if (File.Exists(path) && File.ReadAllText(path) == json) return;
+
+            File.WriteAllText(path, json);
+        }
+
         /// <summary>
         /// Sections the spec carries that this milestone's builder does not act
         /// on. Reporting them keeps a bare shell from reading as a finished
         /// cube (docs/SPEC.md §17 lists the full step order).
         /// </summary>
-        static void WriteReport(string folder, ValidationReport report)
-        {
-            string previews = Path.Combine(folder, "Previews");
-            Directory.CreateDirectory(previews);
-            File.WriteAllText(Path.Combine(previews, "report.json"), report.ToJson());
-        }
-
         static string[] Unhandled(CubeSpec spec)
         {
             var ignored = new List<string>();
@@ -131,6 +140,7 @@ namespace Lucid.Editor.Cubes
             if (spec.EffectiveKillVolumes.Length > 0) ignored.Add("killVolumes");
             if (spec.Nav != null) ignored.Add("nav");
             if (spec.Lighting != null) ignored.Add("lighting");
+            if (spec.Preview?.Custom != null) ignored.Add("preview.custom");
             return ignored.ToArray();
         }
 

@@ -4,7 +4,7 @@
   "name": "Crossroads",
   "pack": "core",
   "category": "connector",
-  "cost": 2,
+  "cost": 1,
   "connectors": ["north", "east", "south", "west"],
   "shell": {
     "materials": { "wall": "wall", "floor": "floor", "ceiling": "ceiling", "trim": "trim" },

@@ -16,5 +16,5 @@ a bad place to be caught.
 - **Two intended paths**, the two straight crossings. The turns are covered by
   Corner and the T; measuring them again here would say nothing new.
 
-Cost 2, the same as a T. It gives the Nightmare one more spare branch end than a
-T does, but it is also the easiest way to hand a Sleeper an escape.
+Cost 1, per `docs/SPEC.md` §8. It hands the Nightmare a spare branch end and
+hands a Sleeper an escape; whether those balance is a question for M0.10.

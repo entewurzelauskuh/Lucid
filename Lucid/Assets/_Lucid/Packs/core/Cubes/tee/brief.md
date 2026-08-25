@@ -17,5 +17,7 @@ is a one-line change in `Lucid.Core`.
 - **Three intended paths**, because all three crossings are legitimate and the
   validator should measure each.
 
-Cost 2, twice a Straight. A junction is a real gain in options and should feel
-like a decision rather than a default.
+Cost 1, like every connector in `docs/SPEC.md` §8. A junction is worth more to
+the Nightmare than a corridor, so pricing it higher is tempting — but §8 prices
+the whole connector set at 1, and the place to change that is M0.10 with
+play-test evidence behind it, not a brief.

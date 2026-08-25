@@ -19,14 +19,21 @@ namespace Lucid.Editor.Cubes
     /// </remarks>
     public static class CubeValidator
     {
-        public static ValidationReport Validate(GameObject prefab, CubeSpec spec, string cubeFolder)
+        public static ValidationReport Validate(
+            GameObject prefab, CubeSpec spec, string cubeFolder, List<string> previews = null)
         {
             var report = new ValidationReport
             {
                 Cube = spec.Id,
                 Spec = $"{cubeFolder}/cube.spec.json",
                 Prefab = $"{cubeFolder}/{Path.GetFileName(cubeFolder)}.prefab",
+                Previews = previews ?? new List<string>(),
             };
+
+            // null means the caller is not checking previews — a unit test of
+            // another rule, or a check of an already-built cube. An empty list
+            // means rendering ran and produced nothing, which is a problem.
+            bool checkPreviews = previews != null;
 
             if (prefab == null)
             {
@@ -39,11 +46,35 @@ namespace Lucid.Editor.Cubes
             ShellCollision(prefab, report);
             Licences(cubeFolder, report);
 
+            if (checkPreviews) Previews(spec, report);
+
             report.Triangles = prefab.GetComponentsInChildren<MeshFilter>()
                 .Where(f => f.sharedMesh != null)
                 .Sum(f => f.sharedMesh.triangles.Length / 3);
 
             return report;
+        }
+
+        /// <summary>
+        /// Every camera the spec asked for produced a file. Without this a
+        /// machine with no graphics device writes an empty Previews folder and
+        /// a green report, and the pipeline's caller has nothing to look at.
+        /// </summary>
+        static void Previews(CubeSpec spec, ValidationReport report)
+        {
+            PreviewCamera[] wanted = spec.Preview?.EffectiveCameras ?? PreviewSpec.DefaultCameras;
+            if (wanted.Length == 0)
+            {
+                report.Add("previews", "no preview cameras requested; a cube nobody can look at");
+                return;
+            }
+
+            foreach (PreviewCamera camera in wanted)
+            {
+                string name = camera.ToString().ToLowerInvariant() + ".png";
+                if (!report.Previews.Any(p => p.EndsWith(name)))
+                    report.Add("previews", $"the {name} preview was not rendered");
+            }
         }
 
         /// <summary>
@@ -59,15 +90,15 @@ namespace Lucid.Editor.Cubes
             float low = -t, high = CubeGeometry.Size - t;
             const float slack = 1e-3f;
 
-            foreach (Renderer r in prefab.GetComponentsInChildren<Renderer>())
+            foreach (Component c in Occupants(prefab))
             {
-                Bounds b = LocalBounds(prefab.transform, r);
+                Bounds b = LocalBounds(prefab.transform, c);
                 if (b.min.x < -half - slack || b.max.x > half + slack ||
                     b.min.z < -half - slack || b.max.z > half + slack ||
                     b.min.y < low - slack || b.max.y > high + slack)
                 {
                     report.Add("bounds",
-                        $"'{PathOf(prefab.transform, r.transform)}' reaches {Describe(b)}, " +
+                        $"'{PathOf(prefab.transform, c.transform)}' reaches {Describe(b)}, " +
                         $"outside x,z [{-half}, {half}] and y [{low}, {high}]");
                 }
             }
@@ -115,6 +146,14 @@ namespace Lucid.Editor.Cubes
                 if (connector.Door == null)
                     report.Add("connectors", $"{face} socket has no FogDoor");
 
+                bool declared = Faces.Has(CubeSpecMapping.ToMask(spec.Connectors), face);
+                if (connector.IsDoorway != declared)
+                {
+                    report.Add("connectors",
+                        $"{face} is {(connector.IsDoorway ? "a doorway" : "walled")} in the prefab " +
+                        $"but {(declared ? "a doorway" : "walled")} in the spec");
+                }
+
                 if (connector.IsDoorway) doorways++;
             }
 
@@ -142,12 +181,16 @@ namespace Lucid.Editor.Cubes
             var missing = new List<string>();
             foreach (MeshFilter filter in shell.GetComponentsInChildren<MeshFilter>())
             {
-                if (filter.GetComponent<Collider>() == null)
-                    missing.Add(filter.name);
+                // Present is not enough: a disabled collider or a trigger is
+                // walked straight through, which is the whole failure this
+                // rule exists to catch.
+                Collider[] colliders = filter.GetComponents<Collider>();
+                bool solid = colliders.Any(c => c.enabled && !c.isTrigger);
+                if (!solid) missing.Add(filter.name);
             }
 
             if (missing.Count > 0)
-                report.Add("collision", "no collider on " + string.Join(", ", missing));
+                report.Add("collision", "no solid collider on " + string.Join(", ", missing));
 
             if (shell.GetComponentsInChildren<MeshFilter>().Length == 0)
                 report.Add("collision", "the shell is empty");
@@ -167,10 +210,22 @@ namespace Lucid.Editor.Cubes
             string ledgerPath = Path.Combine(assets, "LICENSES.md");
             string ledger = File.Exists(ledgerPath) ? File.ReadAllText(ledgerPath) : null;
 
-            foreach (string file in Directory.GetFiles(assets))
+            string[] fetched = ManifestNames(cubeFolder);
+
+            foreach (string file in Directory.GetFiles(assets, "*", SearchOption.AllDirectories))
             {
                 string name = Path.GetFileName(file);
                 if (name == "LICENSES.md" || name.EndsWith(".meta")) continue;
+
+                // Anything the manifest lists is fetched at build time and must
+                // never be committed (CLAUDE.md rule 5).
+                if (fetched.Contains(name))
+                {
+                    report.Add("licences",
+                        $"'{name}' is listed in assets.manifest.json, so it is fetched " +
+                        "and must not be committed");
+                    continue;
+                }
 
                 if (ledger == null)
                 {
@@ -188,19 +243,62 @@ namespace Lucid.Editor.Cubes
             }
         }
 
+        /// <summary>
+        /// The file names the manifest says are fetched. Mirrors the shape
+        /// tools/check-licenses.py reads, so the two gates agree.
+        /// </summary>
+        static string[] ManifestNames(string cubeFolder)
+        {
+            string path = Path.Combine(cubeFolder, "assets.manifest.json");
+            if (!File.Exists(path)) return new string[0];
+
+            try
+            {
+                var root = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(path));
+                var list = root["assets"] as Newtonsoft.Json.Linq.JArray;
+                if (list == null) return new string[0];
+
+                return list.OfType<Newtonsoft.Json.Linq.JObject>()
+                    .Select(e => (string)(e["file"] ?? e["path"] ?? e["name"] ?? e["dest"]))
+                    .Where(n => !string.IsNullOrEmpty(n))
+                    .Select(Path.GetFileName)
+                    .ToArray();
+            }
+            catch (Newtonsoft.Json.JsonException)
+            {
+                // The hook reports this; here it just means nothing is known to
+                // be fetched, and the ledger rule below still applies.
+                return new string[0];
+            }
+        }
+
         /// <summary>Whole-token match, so a.png does not match aa.png.</summary>
         static bool Names(string line, string name) =>
             System.Text.RegularExpressions.Regex.IsMatch(
                 line, $@"(?<![\w.\-]){System.Text.RegularExpressions.Regex.Escape(name)}(?![\w.\-])");
 
-        static Bounds LocalBounds(Transform root, Renderer r)
+        /// <summary>
+        /// Everything that occupies space. Inactive objects are included: a
+        /// disabled piece still ships in the prefab, and a collider reaching
+        /// into the neighbouring cube is the failure that actually matters.
+        /// </summary>
+        static IEnumerable<Component> Occupants(GameObject prefab)
         {
-            var mesh = r.GetComponent<MeshFilter>();
-            Bounds local = mesh != null && mesh.sharedMesh != null
-                ? mesh.sharedMesh.bounds
-                : new Bounds(Vector3.zero, Vector3.one);
+            foreach (Renderer r in prefab.GetComponentsInChildren<Renderer>(true)) yield return r;
+            foreach (Collider c in prefab.GetComponentsInChildren<Collider>(true)) yield return c;
+        }
 
-            Matrix4x4 toRoot = root.worldToLocalMatrix * r.transform.localToWorldMatrix;
+        static Bounds LocalBounds(Transform root, Component component)
+        {
+            Bounds local;
+            var mesh = component.GetComponent<MeshFilter>();
+            if (mesh != null && mesh.sharedMesh != null) local = mesh.sharedMesh.bounds;
+            else if (component is BoxCollider box) local = new Bounds(box.center, box.size);
+            else if (component is SphereCollider s)
+                local = new Bounds(s.center, Vector3.one * (s.radius * 2f));
+            else local = new Bounds(Vector3.zero, Vector3.one);
+
+            Matrix4x4 toRoot = root.worldToLocalMatrix * component.transform.localToWorldMatrix;
             var result = new Bounds(toRoot.MultiplyPoint3x4(local.center), Vector3.zero);
 
             Vector3 e = local.extents;

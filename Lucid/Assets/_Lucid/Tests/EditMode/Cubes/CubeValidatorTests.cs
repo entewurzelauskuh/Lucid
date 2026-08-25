@@ -183,6 +183,74 @@ namespace Lucid.Tests.EditMode.Cubes
         }
 
         [Test]
+        public void ADisabledOrTriggerColliderIsNotSolid()
+        {
+            // Present is not enough. Either of these is walked straight
+            // through, which is the failure the rule names.
+            CubeSpec spec = Spec();
+            GameObject cube = Valid(spec);
+            Collider first = cube.transform.Find("Shell").GetComponentInChildren<Collider>();
+            first.enabled = false;
+
+            AssertBlames(CubeValidator.Validate(cube, spec, "Assets/scratch"), "collision");
+
+            first.enabled = true;
+            first.isTrigger = true;
+            AssertBlames(CubeValidator.Validate(cube, spec, "Assets/scratch"), "collision");
+        }
+
+        [Test]
+        public void APrefabThatDisagreesWithItsSpecIsRejected()
+        {
+            // The rule used to count the prefab's own flags and never read the
+            // spec, so a prefab whose doorways had drifted still passed.
+            CubeSpec spec = Spec();
+            GameObject cube = Valid(spec);
+
+            Transform east = cube.transform.Find("Sockets/East");
+            var connector = east.GetComponent<Connector>();
+            connector.Configure(Face.East, true, connector.Door);
+
+            AssertBlames(CubeValidator.Validate(cube, spec, "Assets/scratch"), "connectors");
+        }
+
+        [Test]
+        public void AColliderReachingIntoTheNeighbouringCubeIsRejected()
+        {
+            // Nothing renders there, but it is the collider that ruins the
+            // cube next door.
+            CubeSpec spec = Spec();
+            GameObject cube = Valid(spec);
+
+            var probe = new GameObject("probe");
+            probe.transform.SetParent(cube.transform.Find("Shell"), false);
+            probe.transform.localPosition = new Vector3(6f, 1f, 0f);
+            probe.AddComponent<BoxCollider>();
+
+            AssertBlames(CubeValidator.Validate(cube, spec, "Assets/scratch"), "bounds");
+        }
+
+        [Test]
+        public void AMissingPreviewIsReported()
+        {
+            // A machine with no graphics device writes an empty Previews folder
+            // and used to get a green report.
+            CubeSpec spec = Spec();
+            ValidationReport none = CubeValidator.Validate(
+                Valid(spec), spec, "Assets/scratch", new System.Collections.Generic.List<string>());
+            AssertBlames(none, "previews");
+
+            var all = new System.Collections.Generic.List<string>
+            {
+                "Assets/scratch/Previews/iso.png",
+                "Assets/scratch/Previews/entrance.png",
+                "Assets/scratch/Previews/top.png",
+            };
+            ValidationReport ok = CubeValidator.Validate(Valid(spec), spec, "Assets/scratch", all);
+            Assert.That(ok.Problems.Select(p => p.Rule), Has.None.EqualTo("previews"), ok.Describe());
+        }
+
+        [Test]
         public void TheReportSerialisesToJson()
         {
             // The pipeline's caller reads this file and acts on it

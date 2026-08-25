@@ -43,7 +43,14 @@ namespace Lucid.Tests.EditMode.Cubes
                 Assert.That(read.Ok, Is.True, $"{cube}: {read.Describe()}");
 
                 var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{Folder(cube)}/{cube}.prefab");
-                ValidationReport report = CubeValidator.Validate(prefab, read.Spec, Folder(cube));
+
+                // The previews that are actually committed, so the previews
+                // rule runs against the repository rather than being skipped.
+                var previews = Directory.GetFiles($"{Folder(cube)}/Previews", "*.png")
+                    .Select(p => p.Replace('\\', '/')).ToList();
+
+                ValidationReport report = CubeValidator.Validate(
+                    prefab, read.Spec, Folder(cube), previews);
 
                 Assert.That(report.Ok, Is.True, report.Describe());
             }
@@ -80,9 +87,26 @@ namespace Lucid.Tests.EditMode.Cubes
                 try
                 {
                     top.LoadImage(File.ReadAllBytes($"{Folder(cube)}/Previews/top.png"));
+
+                    // The corridor shows through...
                     Color centre = top.GetPixel(top.width / 2, top.height / 2);
                     Assert.That(centre.r, Is.LessThan(0.3f),
                         $"{cube}: the middle of the plan is solid, so the ceiling was not cut away");
+
+                    // ...and there is still a cube around it. Without this the
+                    // assertion above is satisfied by a picture of nothing: an
+                    // empty scene, a camera pointed the wrong way, a cube that
+                    // failed to instantiate.
+                    int wall = 0, background = 0;
+                    for (int y = 0; y < top.height; y += 8)
+                    {
+                        for (int x = 0; x < top.width; x += 8)
+                        {
+                            if (top.GetPixel(x, y).r > 0.3f) wall++; else background++;
+                        }
+                    }
+                    Assert.That(wall, Is.GreaterThan(background / 4),
+                        $"{cube}: barely any geometry in the plan; is the cube in shot?");
                 }
                 finally
                 {
