@@ -25,20 +25,24 @@ namespace Lucid.Editor.Scenes
         [MenuItem("Lucid/Build Gauntlet Scene")]
         public static void Build()
         {
-            // Additively, and put back afterwards: rebuilding a dev scene is no
-            // reason to close whatever the person at the keyboard is working on.
             var previous = SceneManager.GetActiveScene();
+            bool untitled = string.IsNullOrEmpty(previous.path);
 
-            // Unity refuses to open a scene additively beside an untitled one
-            // that has never been saved, and the alternative — replacing it —
-            // would throw away whatever is open.
-            if (string.IsNullOrEmpty(previous.path) && previous.isDirty)
+            // Unity refuses to add a scene beside an untitled one, dirty or
+            // not, so an untitled scene has to be replaced rather than joined.
+            // Replacing an empty one costs nothing — batch mode always starts
+            // that way — but replacing one with unsaved work in it would throw
+            // that work away, and rebuilding a dev scene is no reason to.
+            if (untitled && previous.isDirty)
                 throw new Exception(
-                    "save or open a scene first: Unity cannot add a scene beside an " +
-                    "unsaved untitled one. tools/build-gauntlet.sh has no such trouble.");
+                    "save the open scene first, or close it: Unity cannot add a scene " +
+                    "beside an unsaved untitled one, and replacing it would lose your work.");
 
-            var scene = EditorSceneManager.NewScene(
-                NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+            // Beside a saved scene, additively, and put back afterwards: no
+            // reason to close what the person at the keyboard is working on.
+            bool additive = !untitled;
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,
+                additive ? NewSceneMode.Additive : NewSceneMode.Single);
 
             try
             {
@@ -56,8 +60,11 @@ namespace Lucid.Editor.Scenes
             }
             finally
             {
-                if (previous.IsValid()) SceneManager.SetActiveScene(previous);
-                EditorSceneManager.CloseScene(scene, removeScene: true);
+                if (additive)
+                {
+                    if (previous.IsValid()) SceneManager.SetActiveScene(previous);
+                    EditorSceneManager.CloseScene(scene, removeScene: true);
+                }
                 AssetDatabase.Refresh();
             }
         }
