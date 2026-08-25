@@ -12,6 +12,17 @@ Reason: why this over the alternatives.
 Spec: sections changed.
 ```
 
+## 2026-08-25 — Newtonsoft.Json becomes a direct dependency, and the spec checker is hand-written
+
+Context: #46. The cube pipeline reads `cube.spec.json`, so `Lucid.Editor` needs a JSON parser. Unity's own `JsonUtility` cannot express the format — no dictionaries, and `vec3` is an array of arrays.
+
+Decision: `com.unity.nuget.newtonsoft-json` at **3.2.2** as a direct entry in `Lucid/Packages/manifest.json`.
+Reason: it was already resolving, but only as a *transitive* dependency of `com.coplaydev.unity-mcp` at depth 1. That bridge is a development-only tool, and the entry above it in this file promises `tools/build-cube.sh` keeps working without it — so a contributor who never installs the bridge, or an owner who removes it, would have found the cube pipeline broken with no obvious cause. Naming it directly makes the dependency real rather than incidental.
+
+Second decision: the builder's spec check is **hand-written against** `docs/cube-spec.schema.json`, not a JSON-Schema engine running that file.
+Reason: there is no JSON-Schema validator available in either environment — Newtonsoft's schema package is not part of Unity's distribution, and the local Python has no `jsonschema` module. `docs/WORKPLAN.md` §4's "validates specs against the schema" is therefore delivered as a checker that enforces the schema's rules: Newtonsoft's `MissingMemberHandling.Error` and `Required.Always` cover unknown and missing members, and the ranges, patterns and the six cross-field rules in the schema's `allOf` are coded explicitly. The honest cost is drift: nothing makes the checker follow the schema if the schema changes. Revisit if the format grows enough that keeping them in step stops being obvious — vendoring a C# JSON-Schema library or requiring `pip install jsonschema` are both open.
+Spec: none. `docs/WORKPLAN.md` §4's wording is satisfied in substance; the difference is recorded here.
+
 ## 2026-08-25 — A Sleeper may strand herself, and that is a way to lose
 
 Context: #40, raised by the independent review of #36. The leak rule is evaluated on placement, from each Sleeper's current cube, and nothing re-evaluates when a Sleeper moves. A fuzz run over roughly 6000 accepted placements found 29 stranding events, every one caused by a Sleeper move and none by a placement or an exploration — so the rule itself is sound; this is a case it was never asked about.
