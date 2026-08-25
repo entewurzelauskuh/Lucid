@@ -6,5 +6,6 @@ namespace Lucid.Core
         PlayerId Player,
         SleeperStatus Status,
         Coord Cube,
-        int Lives);
+        int Lives,
+        int WokeAtMs = -1);
 }

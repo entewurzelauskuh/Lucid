@@ -12,6 +12,21 @@ Reason: why this over the alternatives.
 Spec: sections changed.
 ```
 
+## 2026-08-25 — Round closes at dawn, and the powers' Apply methods report failure
+
+Context: #34, and the independent review of that branch (CLAUDE.md rule 8). Four deviations from `docs/CORE-API.md` §8 and §9 were needed, each because the specification's listing was thinner than the behaviour it implies elsewhere in the document set.
+
+Decision, and the reason for each:
+
+1. **`Disconnected` no longer ends the round.** §8 said "every Sleeper is Awake or Consumed"; the implementation had treated any non-`InDream` status as finished, which ended the round on a two-second network blip and un-ended it on the player's return. `docs/NETCODE.md` §10 gives disconnects a reconnect grace, so the literal reading of §8 is the correct one. Dawn now consumes the disconnected as well, otherwise pulling the cable beat being eaten: the Sleeper survived dawn and the Nightmare was denied the 100 points.
+2. **`Dawn` closes `TryPlace`, `TryExplore` and `TryWake`.** Only `Advance` respected the end of the round, so the maze kept growing and a Sleeper could still wake and score on the results screen. Every client re-derives from the broadcast log, so those events would have reached them.
+3. **`Powers.ApplyEffect` and `ApplyTrigger` return `bool` instead of `void`.** They cannot assume a passing verdict the way `Rules.ApplyPlace` does: §10's host loop validates, may spend budget on a placement, and only then applies. The `void` versions spent whatever they could and started the cooldown regardless, so an effect the Nightmare could no longer afford fired for free.
+4. **`SleeperState` carries `WokeAtMs`, and `DeathOutcome` has an `Ignored` value.** §8's `Scoring` contract is "100 + remaining seconds *at wake*", which cannot be computed at results time without recording the instant. `Ignored` answers a death arriving just after a wake, which is ordinary on a 10 Hz link and must not cost a life.
+
+Also: `PowerError.Possessed` now has a meaning. It is returned while `PossessionActive` is set, and `Disabled` is reserved for an effect that is not in this round's list. Previously both returned `Disabled` and `Possessed` was dead, which is the defect #39 records against `PlaceError.StartProtected`.
+
+Spec: `docs/CORE-API.md` §2 (SleeperState), §8 (IsOver, ReportDeath, the dawn gate) and §9 (Apply signatures, Possessed vs Disabled) edited in the same pull request.
+
 ## 2026-08-25 — Every pull request gets an independent review before it is opened
 
 Context: #41. There is no CI (`docs/SPEC.md` §18), so a pull request's claims rest on what the author checked by hand, and four consecutive reviews showed that reading the diff was not enough. #31 carried a bypass in the asset-rule gate itself; #35 a silent-corruption path; #36 a rule that let the Nightmare re-open a door a Sleeper had sealed, plus three tests that asserted nothing while appearing to be coverage. Each was caught in review before merging, which is the point: none was visible by reading the diff.

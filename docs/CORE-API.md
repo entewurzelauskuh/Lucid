@@ -104,7 +104,8 @@ public sealed record Derived(
 ```csharp
 public enum SleeperStatus : byte { InDream, Awake, Consumed, Disconnected }
 
-public sealed record SleeperState(int Id, PlayerId Player, SleeperStatus Status, Coord Cube, int Lives);
+public sealed record SleeperState(int Id, PlayerId Player, SleeperStatus Status, Coord Cube, int Lives,
+                                  int WokeAtMs = -1);   // clock at wake, -1 if still running; scoring reads it
 
 public sealed class Budget
 {
@@ -259,7 +260,7 @@ public sealed class Round
     public ExploreError TryExplore(int sleeperId, Coord cube);      // validate, apply, log
     public void UpdateSleeperCube(int sleeperId, Coord cube);       // from telemetry; feeds the leak rule
     public WakeVerdict TryWake(int sleeperId, ConnectorRef door);   // Woke | NotAnExit | NotInDream | HeadStart
-    public DeathVerdict ReportDeath(int sleeperId);                 // LostLife(livesLeft) | Consumed
+    public DeathVerdict ReportDeath(int sleeperId);                 // LostLife(livesLeft) | Consumed | Ignored
     public void ReportDisconnect(int sleeperId, bool reconnected);
 }
 
@@ -270,7 +271,11 @@ public static class Scoring
 }
 ```
 
-`Round` is the host's single object; the netcode layer only forwards requests into it and broadcasts what it appends to the log. `IsOver` becomes true when every Sleeper is Awake or Consumed, or when `Phase == Dawn`, at which point every `InDream` Sleeper is consumed.
+`Round` is the host's single object; the netcode layer only forwards requests into it and broadcasts what it appends to the log. `IsOver` becomes true when every Sleeper is Awake or Consumed, or when `Phase == Dawn`, at which point every Sleeper who has not woken is consumed — including anyone still inside their reconnect grace, so that dropping out is never better than being eaten.
+
+A `Disconnected` Sleeper is neither Awake nor Consumed, so they hold the round open until they return or dawn takes them (`docs/NETCODE.md` §10). `ReportDeath` answers `Ignored` for a Sleeper who is not `InDream`: on a 10 Hz link a death arriving just after a wake is ordinary, and it must not cost a life.
+
+Dawn closes the round to everything, not just the clock: `TryPlace`, `TryExplore` and `TryWake` all refuse once `Phase == Dawn`, because every client re-derives its dream from the broadcast log and a late event would grow the maze on the results screen. `Advance` clamps to `RoundLengthMs`, so the budget total does not depend on the host's tick size.
 
 ## 9. Powers (budget and cooldowns only)
 
@@ -288,14 +293,18 @@ public sealed class Powers
 {
     public Powers(IReadOnlyList<EffectSpec> effects, int triggerCooldownMs, int dreamCount);
     public PowerError ValidateEffect(EffectKind k, PowerTarget t, Budget b, int clockMs);
-    public void ApplyEffect(EffectKind k, PowerTarget t, Budget b, int clockMs);   // spends once; starts the cooldown in every targeted dream
+    public bool ApplyEffect(EffectKind k, PowerTarget t, Budget b, int clockMs);   // spends once; starts the cooldown in every targeted dream
     public PowerError ValidateTrigger(Coord cube, PowerTarget t, int clockMs);
-    public void ApplyTrigger(Coord cube, PowerTarget t, int clockMs);
+    public bool ApplyTrigger(Coord cube, PowerTarget t, int clockMs);
     public int CooldownRemainingMs(EffectKind k, int dreamId, int clockMs);
     public int TriggerCooldownRemainingMs(Coord cube, int dreamId, int clockMs);
     public bool PossessionActive { get; set; }   // while true every other power is Disabled
 }
 ```
+
+Both `Apply` methods re-check and return false without changing anything if the power is not currently allowed. They cannot assume a passing verdict the way `Rules.ApplyPlace` does: the host loop validates, may then spend budget on a placement, and only then applies (§10), so an effect can become unaffordable in between. The earlier `void` signatures started the cooldown regardless, which let an effect the Nightmare could not pay for fire for free.
+
+`Possessed` is returned while `PossessionActive` is set; `Disabled` means the effect is not in this round's list at all. The two are different messages for the HUD.
 
 What a trigger or effect *does* inside a dream is runtime code; Core only answers "may the Nightmare do this now, and what does it cost".
 
