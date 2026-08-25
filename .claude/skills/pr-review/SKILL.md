@@ -73,6 +73,37 @@ asserted nothing while appearing to be coverage:
 A test that cannot fail is worse than no test: it is a false claim of
 coverage in a repository where the test summary is the only evidence.
 
+### Never trust a green run you did not prove compiled
+
+`tools/run-tests.sh` fails the run if the Unity log contains `error CS`,
+because it once reported `OK, 2/2 passed` over a build that did not compile.
+**The MCP bridge has no such guard.** `refresh_unity` returns
+`resulting_state: "idle"` whether compilation succeeded or not, and
+`run_tests` will then execute the *previously built* assemblies and report a
+cheerful green.
+
+That bites hardest here, because mutation testing deliberately breaks code
+and is therefore the workflow most likely to break a compile. A false green
+during a mutation pass does not merely miss a bug — it manufactures evidence
+that the tests bite when nothing was even rebuilt. This has happened: a
+mutation deleted a member a test referenced, the test assembly failed to
+compile, and the pass reported 183/183 with nine mutations applied.
+
+So, when driving Unity through the bridge:
+
+- Call `read_console` for errors **between** every `refresh_unity` and
+  `run_tests`. No errors is the only evidence the run means anything.
+- Mutate by changing behaviour, not by deleting members the tests name — a
+  renamed `[JsonProperty]` or an inverted condition keeps the test assembly
+  compiling, so the mutant actually reaches the run.
+- Do not try to infer freshness from file timestamps. `git checkout` rewrites
+  source mtimes, and an assembly with no changes legitimately does not
+  rebuild, so the naive comparison reports stale assemblies that are fine.
+
+When the editor can be closed, `tools/run-tests.sh` is the better instrument
+for a mutation pass: it carries the guard, and its summary line is the one
+rule 6 asks for.
+
 ## 4. Post the triage as a pull request comment
 
 State which findings were real, which were false positives **and why**, and
