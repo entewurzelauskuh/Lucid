@@ -122,17 +122,29 @@ namespace Lucid.Tests.EditMode.Cubes
         public void RebuildingChangesNothingOnDisk()
         {
             Build();
-            byte[] first = File.ReadAllBytes(PrefabPath);
+
+            // #47 says "rebuilding changes nothing on disk", which is all three
+            // generated files, not only the hard one.
+            string definitionPath = $"{CubeFolder}/straight.asset";
+            string packPath = $"{PackRoot}/{Pack}.asset";
+
+            byte[] prefab = File.ReadAllBytes(PrefabPath);
+            byte[] definition = File.ReadAllBytes(definitionPath);
+            byte[] pack = File.ReadAllBytes(packPath);
 
             for (int i = 0; i < 3; i++)
             {
                 CubeBuildResult again = Build();
                 Assert.That(again.Ok, Is.True, again.Describe());
                 Assert.That(again.PrefabChanged, Is.False, $"rebuild {i + 1} rewrote the prefab");
+                Assert.That(again.PackChanged, Is.False, $"rebuild {i + 1} rewrote the pack");
+                Assert.That(again.DefinitionChanged, Is.False,
+                    $"rebuild {i + 1} rewrote the CubeDefinition");
             }
 
-            Assert.That(File.ReadAllBytes(PrefabPath), Is.EqualTo(first),
-                "the file is byte-identical after three rebuilds");
+            Assert.That(File.ReadAllBytes(PrefabPath), Is.EqualTo(prefab), "prefab");
+            Assert.That(File.ReadAllBytes(definitionPath), Is.EqualTo(definition), "CubeDefinition");
+            Assert.That(File.ReadAllBytes(packPath), Is.EqualTo(pack), "DreamPack");
         }
 
         [Test]

@@ -12,7 +12,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROJECT="$ROOT/Lucid"
 
-if [[ $# -lt 1 ]]; then
+if [[ $# -ne 1 ]]; then
   echo "usage: tools/build-cube.sh <pack>[/<cube>]" >&2
   exit 2
 fi
@@ -42,7 +42,8 @@ if [[ -e "$PROJECT/Temp/UnityLockfile" ]] && pgrep -f "Unity.*-projectPath.*$PRO
   exit 1
 fi
 
-LOG="$ROOT/.build-cube.log"
+mkdir -p "$ROOT/.test-results"
+LOG="$ROOT/.test-results/build-cube.log"
 
 set +e
 "$UNITY" -batchmode -nographics -quit \
@@ -61,7 +62,9 @@ if grep -qE "error CS[0-9]+" "$LOG"; then
   exit 1
 fi
 
-grep -E "^(built |build-cube: |  )" "$LOG" || true
+# Exactly two spaces then content: that is a problem line from Describe().
+# Unity indents its own log six, which the looser pattern let through.
+grep -E "^(built |unchanged |rebuilt |build-cube: |Assets/[^ ]|  [^ ])" "$LOG" || true
 
 if [[ $code -ne 0 ]]; then
   echo "FAILED (exit $code); full log at $LOG" >&2

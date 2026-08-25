@@ -72,15 +72,27 @@ namespace Lucid.Editor.Cubes
 
         /// <summary>The height of the room, from the floor surface to the ceiling.</summary>
         public static float InteriorHeight(ShellSpec shell) =>
-            shell?.Interior?.Height ?? (Size - Thickness(shell));
+            shell?.Interior?.Height ?? (Size - Thickness(shell) * 2f);
 
         public static float Thickness(ShellSpec shell) => shell?.Thickness ?? DefaultThickness;
 
         /// <summary>
-        /// Whether a doorway of the standard width still fits once the interior
-        /// has been narrowed. Cubes join at the standard positions whatever
-        /// their interior, so a room narrower than a door cannot be built.
+        /// Where the ceiling slab stops. One thickness below the top, so that
+        /// the cube stacked above can put its floor slab in the gap rather than
+        /// in the same volume.
         /// </summary>
-        public static bool DoorwayFits(ShellSpec shell) => InteriorHalf(shell) > DoorWidth / 2f;
+        public static float CeilingTop(ShellSpec shell) => Size - Thickness(shell);
+
+        /// <summary>
+        /// The widest interior that still leaves a wall on each side. The schema
+        /// permits a width of 8, which would leave none at all.
+        /// </summary>
+        public static float MaxInteriorWidth(ShellSpec shell) => Size - Thickness(shell) * 2f;
+
+        /// <summary>
+        /// The tallest interior that still leaves a ceiling. Above this there is
+        /// no room between the interior and where the slab has to stop.
+        /// </summary>
+        public static float MaxInteriorHeight(ShellSpec shell) => CeilingTop(shell) - Thickness(shell);
     }
 }

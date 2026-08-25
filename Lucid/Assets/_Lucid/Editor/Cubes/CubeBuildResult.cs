@@ -35,11 +35,46 @@ namespace Lucid.Editor.Cubes
             new CubeBuildResult(specPath, prefabPath, definition, packChanged, prefabChanged,
                 new SpecProblem[0]);
 
+        /// <summary>Assembles a successful result, including what was ignored.</summary>
+        public sealed class Builder
+        {
+            readonly CubeBuildResult _result;
+
+            public Builder(string specPath, string prefabPath, CubeDefinition definition,
+                           bool packChanged, bool prefabChanged) =>
+                _result = Built(specPath, prefabPath, definition, packChanged, prefabChanged);
+
+            public IReadOnlyList<string> Ignored
+            {
+                set => _result.Ignored = value;
+            }
+
+            public bool DefinitionChanged
+            {
+                set => _result.DefinitionChanged = value;
+            }
+
+            public CubeBuildResult Result => _result;
+        }
+
         public static CubeBuildResult Rejected(string specPath, IEnumerable<SpecProblem> problems) =>
             new CubeBuildResult(specPath, null, null, false, false, problems.ToList());
 
-        public string Describe() =>
-            Ok ? (PrefabChanged ? $"built {PrefabPath}" : $"unchanged {PrefabPath}")
-               : $"{SpecPath}\n" + string.Join("\n", Problems.Select(p => "  " + p));
+        /// <summary>Spec sections the builder parsed and did not act on.</summary>
+        public IReadOnlyList<string> Ignored { get; set; } = new string[0];
+
+        /// <summary>False when the CubeDefinition on disk was already correct.</summary>
+        public bool DefinitionChanged { get; set; }
+
+        public string Describe()
+        {
+            if (!Ok) return $"{SpecPath}\n" + string.Join("\n", Problems.Select(p => "  " + p));
+
+            string line = PrefabChanged ? $"built {PrefabPath}" : $"unchanged {PrefabPath}";
+
+            // Saying so beats a green line over a cube whose trap was dropped.
+            return Ignored.Count == 0 ? line : line + "\n  ignored (not yet implemented): "
+                                              + string.Join(", ", Ignored);
+        }
     }
 }

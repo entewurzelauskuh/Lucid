@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Lucid.Core;
 using Lucid.Runtime;
 using UnityEditor;
@@ -62,8 +64,9 @@ namespace Lucid.Editor.Cubes
                 bool packChanged = Register(spec, definition);
 
                 AssetDatabase.SaveAssets();
-                return CubeBuildResult.Built(
-                    specPath, prefabPath, definition, packChanged, prefabChanged);
+                return new CubeBuildResult.Builder(
+                    specPath, prefabPath, definition, packChanged, prefabChanged)
+                    { Ignored = Unhandled(spec), DefinitionChanged = _definitionChanged }.Result;
             }
             finally
             {
@@ -88,6 +91,27 @@ namespace Lucid.Editor.Cubes
             }
         }
 
+        /// <summary>
+        /// Sections the spec carries that this milestone's builder does not act
+        /// on. Reporting them keeps a bare shell from reading as a finished
+        /// cube (docs/SPEC.md §17 lists the full step order).
+        /// </summary>
+        static string[] Unhandled(CubeSpec spec)
+        {
+            var ignored = new List<string>();
+            if (spec.EffectiveProps.Length > 0) ignored.Add("props");
+            if (spec.Chicane != null) ignored.Add("chicane");
+            if (spec.WeakPoint != null) ignored.Add("weakPoint");
+            if (spec.Trigger != null) ignored.Add("trigger");
+            if (spec.EffectiveKillVolumes.Length > 0) ignored.Add("killVolumes");
+            if (spec.Nav != null) ignored.Add("nav");
+            if (spec.Lighting != null) ignored.Add("lighting");
+            return ignored.ToArray();
+        }
+
+        /// <summary>Set by <see cref="WriteDefinition"/>; read straight back by the caller.</summary>
+        static bool _definitionChanged;
+
         static CubeDefinition WriteDefinition(string folder, CubeSpec spec, string prefabPath)
         {
             string path = $"{folder}/{Path.GetFileName(folder)}.asset";
@@ -96,10 +120,31 @@ namespace Lucid.Editor.Cubes
             bool fresh = definition == null;
             if (fresh) definition = ScriptableObject.CreateInstance<CubeDefinition>();
 
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            FaceMask connectors = CubeSpecMapping.ToMask(spec.Connectors);
+            CubeCategory category = CubeSpecMapping.ToCategory(spec.Category);
+
+            // Only mark it dirty when something actually differs, for the same
+            // reason the prefab is only written on change: an unconditional
+            // SetDirty re-serialises the asset on every build of the pack.
+            _definitionChanged = false;
+            bool changed = fresh
+                || definition.Id != spec.Id
+                || definition.Pack != spec.Pack
+                || definition.DisplayName != spec.Name
+                || definition.Category != category
+                || definition.Connectors != connectors
+                || definition.Climbable != spec.Climbable
+                || definition.Cost != spec.Cost
+                || definition.Prefab != prefab
+                || !definition.Skins.SequenceEqual(spec.EffectiveSkins);
+
+            _definitionChanged = changed;
+            if (!changed) return definition;
+
             definition.Configure(
-                spec.Id, spec.Pack, spec.Name, CubeSpecMapping.ToCategory(spec.Category),
-                CubeSpecMapping.ToMask(spec.Connectors), spec.Climbable, spec.Cost,
-                AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath), spec.EffectiveSkins);
+                spec.Id, spec.Pack, spec.Name, category, connectors,
+                spec.Climbable, spec.Cost, prefab, spec.EffectiveSkins);
 
             if (fresh) AssetDatabase.CreateAsset(definition, path);
             else EditorUtility.SetDirty(definition);

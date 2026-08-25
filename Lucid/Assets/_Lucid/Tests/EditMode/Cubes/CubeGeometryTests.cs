@@ -44,14 +44,41 @@ namespace Lucid.Tests.EditMode.Cubes
         }
 
         [Test]
-        public void ARoomNarrowerThanADoorwayIsImpossible()
+        public void TheCeilingStopsShortOfTheTopSoTheCubeAboveHasRoom()
         {
-            // Cubes join at the standard positions whatever their interior, so
-            // the doorway cannot be wider than the room it opens into.
-            Assert.That(CubeGeometry.DoorwayFits(
-                new ShellSpec { Interior = new InteriorSpec { Width = 4f } }), Is.True);
-            Assert.That(CubeGeometry.DoorwayFits(
-                new ShellSpec { Interior = new InteriorSpec { Width = 2.5f } }), Is.False);
+            // Running the ceiling to y = 8 put it in the same volume as the
+            // floor slab of the cube stacked above: duplicated solid boxes and
+            // two overlapping colliders at every vertical join.
+            var plain = new ShellSpec();
+            Assert.That(CubeGeometry.CeilingTop(plain),
+                Is.EqualTo(CubeGeometry.Size - CubeGeometry.DefaultThickness));
+
+            // The cube occupies exactly its 8 m: floor at [-t, 0], ceiling top
+            // at 8 - t, so a cube one layer up abuts rather than overlaps.
+            float occupied = CubeGeometry.CeilingTop(plain) + CubeGeometry.DefaultThickness;
+            Assert.That(occupied, Is.EqualTo(CubeGeometry.Size).Within(1e-4f));
+
+            // And the default interior leaves the ceiling one thickness deep,
+            // the same way it leaves a wall on each side.
+            Assert.That(CubeGeometry.CeilingTop(plain) - CubeGeometry.InteriorHeight(plain),
+                Is.EqualTo(CubeGeometry.DefaultThickness).Within(1e-4f));
         }
+
+        [Test]
+        public void TheLimitsLeaveRoomForAWallAndACeiling()
+        {
+            // The schema permits width and height up to 8, which would leave
+            // no wall and no ceiling at all. These are the geometric limits it
+            // cannot express, because they depend on thickness.
+            var plain = new ShellSpec();
+            Assert.That(CubeGeometry.MaxInteriorWidth(plain),
+                Is.EqualTo(8f - 2f * CubeGeometry.DefaultThickness).Within(1e-4f));
+            Assert.That(CubeGeometry.MaxInteriorHeight(plain),
+                Is.EqualTo(8f - 2f * CubeGeometry.DefaultThickness).Within(1e-4f));
+
+            var thick = new ShellSpec { Thickness = 1f };
+            Assert.That(CubeGeometry.MaxInteriorWidth(thick), Is.EqualTo(6f).Within(1e-4f));
+        }
+
     }
 }

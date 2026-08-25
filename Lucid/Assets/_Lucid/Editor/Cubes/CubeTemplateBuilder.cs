@@ -28,6 +28,28 @@ namespace Lucid.Editor.Cubes
             Debug.Log($"Lucid: rebuilt {path}");
         }
 
+        /// <summary>
+        /// Whether the committed template still matches what this code would
+        /// generate. Without this, changing a socket position and rebuilding a
+        /// pack would quietly produce every cube from the stale template.
+        /// </summary>
+        public static bool IsStale()
+        {
+            var onDisk = AssetDatabase.LoadAssetAtPath<GameObject>(TemplatePath);
+            if (onDisk == null) return true;
+
+            var fresh = new GameObject("CubeTemplate");
+            try
+            {
+                Populate(fresh.transform);
+                return !CubeEquivalence.Matches(fresh, onDisk);
+            }
+            finally
+            {
+                Object.DestroyImmediate(fresh);
+            }
+        }
+
         /// <summary>Writes the template and returns its asset path.</summary>
         public static string Build()
         {
@@ -36,14 +58,7 @@ namespace Lucid.Editor.Cubes
             var root = new GameObject("CubeTemplate");
             try
             {
-                NewChild(root.transform, "Shell");
-                NewChild(root.transform, "Interior");
-                NewChild(root.transform, "Logic");
-                NewChild(root.transform, "Nav");
-
-                Transform sockets = NewChild(root.transform, "Sockets");
-                foreach (Face face in Faces.All) Socket(sockets, face);
-
+                Populate(root.transform);
                 PrefabUtility.SaveAsPrefabAsset(root, TemplatePath);
             }
             finally
@@ -53,6 +68,30 @@ namespace Lucid.Editor.Cubes
 
             AssetDatabase.ImportAsset(TemplatePath);
             return TemplatePath;
+        }
+
+        /// <summary>Everything the template is, in one place, so IsStale can rebuild it.</summary>
+        static void Populate(Transform root)
+        {
+            {
+                // The bounds the cube must stay inside, carried on the root so
+                // the validator and anyone opening the prefab can see it
+                // (#47, docs/SPEC.md §17). It occupies the 8 m the cube owns in
+                // the lattice: the floor slab hangs below the origin and the
+                // ceiling stops the same distance short of the top.
+                var bounds = root.gameObject.AddComponent<CubeBounds>();
+                bounds.SetExtent(CubeGeometry.Size, CubeGeometry.DefaultThickness);
+
+                NewChild(root, "Shell");
+                NewChild(root, "Interior");
+                NewChild(root, "Logic");
+
+                Transform nav = NewChild(root, "Nav");
+                nav.gameObject.AddComponent<Unity.AI.Navigation.NavMeshSurface>();
+
+                Transform sockets = NewChild(root, "Sockets");
+                foreach (Face face in Faces.All) Socket(sockets, face);
+            }
         }
 
         /// <summary>

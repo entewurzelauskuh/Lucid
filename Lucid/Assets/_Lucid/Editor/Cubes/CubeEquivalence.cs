@@ -68,11 +68,19 @@ namespace Lucid.Editor.Cubes
             var conB = b.GetComponent<Connector>();
             if ((conA == null) != (conB == null)) return false;
             if (conA != null && (conA.Face != conB.Face || conA.IsDoorway != conB.IsDoorway)) return false;
+            if (conA != null && (conA.Door == null) != (conB.Door == null)) return false;
 
             var doorA = a.GetComponent<FogDoor>();
             var doorB = b.GetComponent<FogDoor>();
             if ((doorA == null) != (doorB == null)) return false;
             if (doorA != null && (doorA.Face != doorB.Face || doorA.State != doorB.State)) return false;
+
+            var boundsA = a.GetComponent<CubeBounds>();
+            var boundsB = b.GetComponent<CubeBounds>();
+            if ((boundsA == null) != (boundsB == null)) return false;
+            if (boundsA != null &&
+                (Mathf.Abs(boundsA.Size - boundsB.Size) > Epsilon ||
+                 Mathf.Abs(boundsA.FloorDrop - boundsB.FloorDrop) > Epsilon)) return false;
 
             // The mesh a primitive carries is decided by its type, which the
             // type list above already pins.

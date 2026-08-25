@@ -12,6 +12,13 @@ Reason: why this over the alternatives.
 Spec: sections changed.
 ```
 
+## 2026-08-25 — Three doorFrame styles generate the same geometry for now
+
+Context: #47. `docs/cube-spec.schema.json` defines `doorFrame` as `none | plain | arch | industrial`. The builder distinguishes two behaviours: `none` emits no trim, and the other three emit the same jambs and head.
+Decision: ship it, and say so. `plain`, `arch` and `industrial` are accepted and produce identical geometry until skins exist.
+Reason: the three differ in how they *look*, and looking like anything needs a SkinSet to resolve the trim role to a material — that is M1.10 (#23). Generating three different box arrangements now would be inventing an art direction the spec does not state, and it would have to be thrown away. Recording it matters because a cube author reading `docs/CUBE-SPEC.md` today would otherwise have no way to know that `"doorFrame": "industrial"` currently does nothing beyond `"plain"`.
+Spec: none. The schema's four values all remain valid; only the rendering is deferred.
+
 ## 2026-08-25 — A pack's folder is named for its id, in lower case
 
 Context: #47. Three sources disagreed. `docs/WORKPLAN.md` §2's layout said `Packs/Core/`; `docs/CUBE-SPEC.md` §3 and §4 both write `Packs/core/` in their worked example paths; and `docs/cube-spec.schema.json` constrains a pack id to `^[a-z0-9]+$`, which admits only lower case. A `Core/` folder from the M0.1 skeleton was already committed, so on a case-insensitive filesystem the builder's `Packs/core` resolved into it and nothing looked wrong.
@@ -23,8 +30,12 @@ Spec: `docs/WORKPLAN.md` §2. `docs/CUBE-SPEC.md` was already right.
 
 Context: #47. `docs/CUBE-SPEC.md` §1 says the cube spans y in [0, 8] with "origin at the centre of the floor", and that doorways are "centred on their face at floor level, 2.5 m wide x 3 m high" with face centres at y = 0. Those two statements together fix where the floor slab can go, and it is not inside the stated span.
 Decision: the generated floor slab occupies y in [-thickness, 0]. The walkable surface is exactly the origin plane, and a doorway occupies y in [0, 3] as §1 states.
-Reason: the alternative — a slab at [0, thickness] — raises the walkable surface above the origin, so either the doorway starts 0.3 m up a step, or its lower 0.3 m is blocked by the floor. Both contradict §1's numbers. Hanging the slab below costs nothing when cubes stack: a cube at layer n has its floor at world y in [8n - 0.3, 8n], which is exactly where the cube below puts the top of its ceiling, so the two coincide rather than collide. Vertical connectors open both, so a drop is still a drop.
-Spec: none. §1's numbers are unchanged and now hold literally; this records which side of the origin the slab sits on, which §1 does not say. `docs/WORKPLAN.md` §4's validator rule "everything inside the 8 m bounds" is read as x, z in [-4, 4] and y in [-thickness, 8]; #48 implements it that way.
+Reason: the alternative — a slab at [0, thickness] — raises the walkable surface above the origin, so either the doorway starts 0.3 m up a step, or its lower 0.3 m is blocked by the floor. Both contradict §1's numbers.
+
+That leaves the cube one thickness taller than its 8 m unless the ceiling gives the room back, so the ceiling slab stops at y = 8 - thickness rather than at 8. A cube at layer n then occupies world y in [8n - 0.3, 8n + 7.7]: exactly 8 m, with its floor slab filling the gap the cube below left above its ceiling. The two abut.
+
+An earlier draft of this entry said the ceiling ran to 8 and that the two slabs "coincide rather than collide", at no cost. That was wrong, and the independent review of #47 caught it: coinciding is the failure, not the escape from it — two solid boxes in one volume, two overlapping colliders, and co-planar faces at every vertical join. It was also wrong about the cube actually shipped, whose `interior.height` of 4 makes its ceiling the block [4, 8], so the floor above was buried inside it rather than merely touching.
+Spec: `docs/CUBE-SPEC.md` §1 and §2, edited in the same pull request to say which 8 m the cube occupies. `docs/WORKPLAN.md` §4's validator rule "everything inside the 8 m bounds" is read as x, z in [-4, 4] and y in [-thickness, 8 - thickness]; #48 implements it that way.
 
 ## 2026-08-25 — Newtonsoft.Json becomes a direct dependency, and the spec checker is hand-written
 

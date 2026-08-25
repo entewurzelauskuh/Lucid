@@ -61,6 +61,27 @@ namespace Lucid.Editor.Cubes
                 if (interior?.Height != null && (interior.Height < 3f || interior.Height > 8f))
                     Add(problems, "shell.interior.height",
                         $"must be between 3 and 8 m, found {interior.Height}");
+
+                // The schema's bounds are generous enough to describe a cube
+                // with no walls or no ceiling at all: at width 8 the wall slabs
+                // have zero depth, and at height 8 there is nowhere for the
+                // ceiling to go. Both used to build cleanly and report success.
+                // A millimetre of slack: the limits are computed by subtraction
+                // in float, so an author writing exactly the maximum lands a
+                // few ulps above it.
+                const float slack = 1e-3f;
+
+                float maxWidth = CubeGeometry.MaxInteriorWidth(spec.Shell);
+                if (interior?.Width != null && interior.Width > maxWidth + slack)
+                    Add(problems, "shell.interior.width",
+                        $"leaves no wall at a thickness of {CubeGeometry.Thickness(spec.Shell)} m; " +
+                        $"at most {maxWidth} m");
+
+                float maxHeight = CubeGeometry.MaxInteriorHeight(spec.Shell);
+                if (interior?.Height != null && interior.Height > maxHeight + slack)
+                    Add(problems, "shell.interior.height",
+                        $"leaves no ceiling at a thickness of {CubeGeometry.Thickness(spec.Shell)} m; " +
+                        $"at most {maxHeight} m");
             }
 
             if (spec.Nav != null && (spec.Nav.AgentRadius < 0.2f || spec.Nav.AgentRadius > 1.0f))

@@ -40,10 +40,13 @@ namespace Lucid.Editor.Cubes
             }
 
             // The template is generated, so a fresh clone has none until
-            // something asks for it (CLAUDE.md rule 4).
-            if (AssetDatabase.LoadAssetAtPath<GameObject>(CubeTemplateBuilder.TemplatePath) == null)
+            // something asks for it (CLAUDE.md rule 4). It is also rebuilt when
+            // it no longer matches the code, because otherwise a change to the
+            // socket layout would silently produce every cube from the stale
+            // one — and CLAUDE.md forbids opening the editor to fix it by hand.
+            if (CubeTemplateBuilder.IsStale())
             {
-                CubeTemplateBuilder.Build();
+                Console.WriteLine("rebuilt " + CubeTemplateBuilder.Build());
             }
 
             List<string> specs = FindSpecs(target);
@@ -69,6 +72,15 @@ namespace Lucid.Editor.Cubes
         /// <summary>`&lt;pack&gt;` builds a whole pack; `&lt;pack&gt;/&lt;cube&gt;` builds one.</summary>
         static List<string> FindSpecs(string target)
         {
+            // The target reaches a path, so it may not climb out of the packs
+            // root: "core/../../.." would otherwise build every spec in the
+            // project.
+            if (target.Contains("..") || target.StartsWith("/") || target.Contains("\\"))
+            {
+                Console.Error.WriteLine($"build-cube: '{target}' is not a pack or cube name");
+                return new List<string>();
+            }
+
             string root = $"{CubeBuilder.PacksRoot}/{target.Split('/')[0]}/Cubes";
             if (target.Contains("/")) root += "/" + target.Substring(target.IndexOf('/') + 1);
 

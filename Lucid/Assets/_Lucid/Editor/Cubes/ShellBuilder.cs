@@ -27,9 +27,19 @@ namespace Lucid.Editor.Cubes
                 Wall(parent, face, halfIn, height, Faces.Has(mask, face), shell);
             }
 
-            if (!shell.OpenFloor) Slab(parent, "floor", -t, 0f, Faces.Has(mask, Face.Down), shell.Materials.Floor);
-            if (!shell.OpenCeiling) Slab(parent, "ceiling", height, CubeGeometry.Size,
-                Faces.Has(mask, Face.Up), shell.Materials.Ceiling);
+            if (!shell.OpenFloor)
+            {
+                Slab(parent, "floor", -t, 0f, Faces.Has(mask, Face.Down), shell.Materials.Floor);
+            }
+
+            if (!shell.OpenCeiling)
+            {
+                // Stops one thickness below the top so the cube stacked above
+                // has somewhere to put its floor slab. Running to 8 would put
+                // two solid boxes in the same volume at every vertical join.
+                Slab(parent, "ceiling", height, CubeGeometry.CeilingTop(shell),
+                    Faces.Has(mask, Face.Up), shell.Materials.Ceiling);
+            }
         }
 
         /// <summary>
@@ -67,7 +77,7 @@ namespace Lucid.Editor.Cubes
                     Span(alongX, -doorHalf, doorHalf, inner, outer, CubeGeometry.DoorHeight, height), material);
             }
 
-            Frame(parent, name, alongX, inner, doorHalf, shell);
+            Frame(parent, name, alongX, inner, doorHalf, height, shell);
         }
 
         /// <summary>
@@ -82,7 +92,7 @@ namespace Lucid.Editor.Cubes
         /// like anything.
         /// </remarks>
         static void Frame(Transform parent, string name, bool alongX, float inner,
-                          float doorHalf, ShellSpec shell)
+                          float doorHalf, float height, ShellSpec shell)
         {
             if (shell.DoorFrame == DoorFrameStyle.None) return;
 
@@ -92,14 +102,19 @@ namespace Lucid.Editor.Cubes
             float material1 = inner + (inner > 0 ? -depth : depth);
 
             string trim = shell.Materials.Trim ?? shell.Materials.Wall;
+
+            // Clamped to the room: in a 3 m room the ceiling starts where the
+            // doorway ends, and an unclamped head would be buried in it.
             float top = CubeGeometry.DoorHeight;
+            float head = Mathf.Min(top + width, height);
+            if (head <= top) return;
 
             Box(parent, $"frame_{name}_a",
-                Span(alongX, -doorHalf - width, -doorHalf, material0, material1, 0f, top + width), trim);
+                Span(alongX, -doorHalf - width, -doorHalf, material0, material1, 0f, head), trim);
             Box(parent, $"frame_{name}_b",
-                Span(alongX, doorHalf, doorHalf + width, material0, material1, 0f, top + width), trim);
+                Span(alongX, doorHalf, doorHalf + width, material0, material1, 0f, head), trim);
             Box(parent, $"frame_{name}_head",
-                Span(alongX, -doorHalf, doorHalf, material0, material1, top, top + width), trim);
+                Span(alongX, -doorHalf, doorHalf, material0, material1, top, head), trim);
         }
 
         /// <summary>Floor or ceiling, as a ring of four boxes when it is pierced.</summary>
