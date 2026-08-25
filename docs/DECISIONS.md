@@ -12,6 +12,13 @@ Reason: why this over the alternatives.
 Spec: sections changed.
 ```
 
+## 2026-08-25 — A pack's folder is named for its id, in lower case
+
+Context: #47. Three sources disagreed. `docs/WORKPLAN.md` §2's layout said `Packs/Core/`; `docs/CUBE-SPEC.md` §3 and §4 both write `Packs/core/` in their worked example paths; and `docs/cube-spec.schema.json` constrains a pack id to `^[a-z0-9]+$`, which admits only lower case. A `Core/` folder from the M0.1 skeleton was already committed, so on a case-insensitive filesystem the builder's `Packs/core` resolved into it and nothing looked wrong.
+Decision: the folder is named exactly for the pack id, so `core`. `docs/WORKPLAN.md` §2 is corrected.
+Reason: the builder derives the folder from `spec.Pack`, which the schema forces to lower case, so any other convention means the builder cannot find a pack from its spec alone. Left as it was, a Linux checkout would carry `Packs/Core/` from git while the builder wrote `Packs/core/` — two packs, and `tools/build-cube.sh core/straight` finding neither. This is the same defect as the `lucid/` versus `Lucid/` project folder in `docs/DECISIONS.md`'s earlier history, and it stayed invisible for the same reason.
+Spec: `docs/WORKPLAN.md` §2. `docs/CUBE-SPEC.md` was already right.
+
 ## 2026-08-25 — The floor slab hangs below the origin plane
 
 Context: #47. `docs/CUBE-SPEC.md` §1 says the cube spans y in [0, 8] with "origin at the centre of the floor", and that doorways are "centred on their face at floor level, 2.5 m wide x 3 m high" with face centres at y = 0. Those two statements together fix where the floor slab can go, and it is not inside the stated span.
