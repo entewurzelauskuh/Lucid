@@ -1,0 +1,19 @@
+{
+  "specVersion": 1,
+  "id": "core.straight",
+  "name": "Straight",
+  "pack": "core",
+  "category": "connector",
+  "cost": 1,
+  "connectors": ["north", "south"],
+  "shell": {
+    "materials": { "wall": "wall", "floor": "floor", "ceiling": "ceiling", "trim": "trim" },
+    "doorFrame": "plain",
+    "interior": { "width": 4, "height": 4 }
+  },
+  "intendedPaths": [
+    { "from": "south", "to": "north", "points": [[0, 0, -4], [0, 0, 4]] }
+  ],
+  "skins": ["*"],
+  "notes": "A 4 m wide corridor inside the 8 m cube. No props; the skin provides all the character."
+}

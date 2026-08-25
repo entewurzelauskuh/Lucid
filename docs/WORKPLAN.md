@@ -52,7 +52,7 @@ lucid/
       Netcode/              Lucid.Netcode.asmdef — NGO glue, transports, telemetry
       Editor/               Lucid.Editor.asmdef — CubeBuilder, CubeValidator, AssetNormalizer, scene setup
       Templates/            CubeTemplate.prefab, FogDoor.prefab, StartCube
-      Packs/Core/           the base game's cubes, skins, mobs
+      Packs/core/           the base game's cubes, skins, mobs (folder name = pack id)
       Tests/EditMode/       Core rule tests, builder tests
       Tests/PlayMode/       controller, dream runtime, netcode smoke tests
     Packages/manifest.json

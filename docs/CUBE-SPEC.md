@@ -6,7 +6,7 @@
 
 ## 1. The frame
 
-Cube-local coordinates: origin at the centre of the floor, **x east, y up, z north**, metres. The cube spans x, z ∈ [−4, 4] and y ∈ [0, 8]. Doorways are centred on their face at floor level, 2.5 m wide × 3 m high. Vertical connectors are a 2.5 m square hole centred on the floor or ceiling.
+Cube-local coordinates: origin at the centre of the floor, **x east, y up, z north**, metres. The cube spans x, z ∈ [−4, 4] and y ∈ [−t, 8 − t], where t is the shell thickness: the origin is the walkable surface, so the floor slab hangs just below it and the ceiling stops the same distance short of the top. That is still exactly 8 m, and it is what lets a cube's floor slab sit in the gap the cube below leaves above its ceiling rather than in the same volume. **[S]** Doorways are centred on their face at floor level, 2.5 m wide × 3 m high. Vertical connectors are a 2.5 m square hole centred on the floor or ceiling.
 
 Face centres at floor level: north (0, 0, 4), east (4, 0, 0), south (0, 0, −4), west (−4, 0, 0); up is the ceiling hole at (0, 8, 0), down the floor hole at (0, 0, 0).
 
@@ -25,7 +25,7 @@ Face centres at floor level: north (0, 0, 4), east (4, 0, 0), south (0, 0, −4)
 
 Rules the schema enforces: at least two connectors unless the category is `start`; `climbable` needs `up`; chicane and mob cubes need a `chicane` block and intended paths; vertical cubes need intended paths; a trigger or weak point needs a chicane.
 
-Rules the validator enforces on the built prefab: everything inside the 8 m bounds; connectors at the standard positions with fog doors; shell collision present; navmesh baked and linked; declared weak point and trigger resolve to live components; intended paths within the kit limits (gap ≤ 3.5 m, rise ≤ 1.1 m, clearance ≥ 1.1 m); ≤ 60 k triangles; every asset licensed, every committed asset redistributable.
+Rules the validator enforces on the built prefab: everything inside the 8 m bounds — x, z ∈ [−4, 4] and y ∈ [−t, 8 − t] per §1, not y ∈ [0, 8]; connectors at the standard positions with fog doors; shell collision present; navmesh baked and linked; declared weak point and trigger resolve to live components; intended paths within the kit limits (gap ≤ 3.5 m, rise ≤ 1.1 m, clearance ≥ 1.1 m); ≤ 60 k triangles; every asset licensed, every committed asset redistributable.
 
 ## 3. Example: the simplest connector
 

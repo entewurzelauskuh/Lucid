@@ -176,6 +176,19 @@ namespace Lucid.Tests.EditMode.Cubes
         }
 
         [Test]
+        public void AnInteriorThatLeavesNoWallOrNoCeilingIsRejected()
+        {
+            // The schema permits width and height up to 8, which describes a
+            // cube with no walls and no ceiling. Both used to build cleanly and
+            // report success: an empty shell with four floating door frames.
+            Rejects(SpecFixtures.Replacing(@"""ceiling"": ""ceiling"" } }", @"""ceiling"": ""ceiling"" }, ""interior"": { ""width"": 8 } }"), "shell.interior.width");
+            Rejects(SpecFixtures.Replacing(@"""ceiling"": ""ceiling"" } }", @"""ceiling"": ""ceiling"" }, ""interior"": { ""height"": 8 } }"), "shell.interior.height");
+
+            // And the largest interior that still leaves both is accepted.
+            Accepts(SpecFixtures.Replacing(@"""ceiling"": ""ceiling"" } }", @"""ceiling"": ""ceiling"" }, ""interior"": { ""width"": 7.4, ""height"": 7.4 } }"));
+        }
+
+        [Test]
         public void PropNamesMustBeUniqueAndWellFormed()
         {
             string twice = SpecFixtures.With("props", @"[
