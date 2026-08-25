@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Lucid.Core;
 
 namespace Lucid.Tests.EditMode.Core
@@ -15,6 +16,8 @@ namespace Lucid.Tests.EditMode.Core
         public const string Cross = "core.cross";         // all four horizontals
         public const string Drop = "core.drop";           // North plus Down, not climbable
         public const string Ladder = "core.ladder";       // North plus Up, climbable
+        public const string Pit = "core.pit";             // North plus Up, NOT climbable
+        public const string Ledge = "core.ledge";         // North, East and Down
 
         public static CubeRegistry Registry()
         {
@@ -32,11 +35,32 @@ namespace Lucid.Tests.EditMode.Core
                 FaceMask.North | FaceMask.Down, false, 1));
             reg.Register(new CubeType(Ladder, "core", CubeCategory.Vertical,
                 FaceMask.North | FaceMask.Up, true, 1));
+            // A pit you fall into and cannot climb out of: the shape the leak
+            // rule exists for.
+            reg.Register(new CubeType(Pit, "core", CubeCategory.Vertical,
+                FaceMask.North | FaceMask.Up, false, 1));
+            reg.Register(new CubeType(Ledge, "core", CubeCategory.Vertical,
+                FaceMask.North | FaceMask.East | FaceMask.Down, false, 2));
             return reg;
         }
 
-        public static RuleContext Context(Lattice l, Derived d, CubeRegistry reg, RoundSettings s = null) =>
-            new RuleContext(l, d, reg, new SleeperState[0], null, s ?? new RoundSettings());
+        public static RuleContext Context(
+            Lattice l, Derived d, CubeRegistry reg, RoundSettings s = null,
+            IReadOnlyList<SleeperState> sleepers = null, Budget budget = null) =>
+            new RuleContext(l, d, reg, sleepers ?? new SleeperState[0], budget, s ?? new RoundSettings());
+
+        /// <summary>A Sleeper standing in a cube, still running.</summary>
+        public static SleeperState Sleeper(int id, Coord cube, SleeperStatus status = SleeperStatus.InDream) =>
+            new SleeperState(id, new PlayerId(id), status, cube, 1);
+
+        /// <summary>Ask whether a placement is legal, without applying it.</summary>
+        public static PlaceVerdict Validate(
+            Lattice l, Derived d, CubeRegistry reg, Coord from, Face face, string typeId,
+            Rotation rot = Rotation.R0, RoundSettings s = null,
+            IReadOnlyList<SleeperState> sleepers = null, Budget budget = null) =>
+            Rules.ValidatePlace(
+                Context(l, d, reg, s, sleepers, budget),
+                new PlaceRequest(new ConnectorRef(from, face), typeId, rot, null));
 
         /// <summary>Start at (0,0,0) with its single North door open.</summary>
         public static (Lattice, Derived, CubeRegistry) Fresh(RoundSettings s = null)

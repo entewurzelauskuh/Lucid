@@ -66,6 +66,15 @@ namespace Lucid.Core
         public bool HasConnector(Coord c, Face f, CubeRegistry reg) =>
             Faces.Has(ConnectorsAt(c, reg), f);
 
+        /// <summary>
+        /// Whether the face is still a doorway. A door a Sleeper condensed into
+        /// wall is wall from then on — "the Nightmare may attach: never again"
+        /// (docs/SPEC.md §7) — so the fit rule and derivation must both stop
+        /// seeing it as a connector, or building around it would re-open it.
+        /// </summary>
+        public bool HasOpenConnector(Coord c, Face f, CubeRegistry reg) =>
+            HasConnector(c, f, reg) && !IsSolidified(new ConnectorRef(c, f));
+
         public bool IsSolidified(ConnectorRef door) => _solidified.Contains(door);
 
         public bool IsExplored(Coord c) => _explored.Contains(c);
