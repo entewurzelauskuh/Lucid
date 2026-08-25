@@ -43,6 +43,10 @@ namespace Lucid.Editor.Cubes
             }
 
             var instance = (GameObject)PrefabUtility.InstantiatePrefab(template);
+            CubeDefinition definition;
+            bool packChanged;
+            string prefabPath;
+            bool prefabChanged;
             try
             {
                 PrefabUtility.UnpackPrefabInstance(
@@ -51,27 +55,41 @@ namespace Lucid.Editor.Cubes
 
                 Configure(instance, spec);
 
-                string prefabPath = $"{folder}/{instance.name}.prefab";
+                prefabPath = $"{folder}/{instance.name}.prefab";
 
                 // Only write when the cube actually changed. Saving
                 // unconditionally would rewrite the file on every build, because
                 // Unity mints new fileIDs each time and orders the YAML by them.
                 var onDisk = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-                bool prefabChanged = !CubeEquivalence.Matches(instance, onDisk);
+                prefabChanged = !CubeEquivalence.Matches(instance, onDisk);
                 if (prefabChanged) PrefabUtility.SaveAsPrefabAsset(instance, prefabPath);
 
-                CubeDefinition definition = WriteDefinition(folder, spec, prefabPath);
-                bool packChanged = Register(spec, definition);
-
-                AssetDatabase.SaveAssets();
-                return new CubeBuildResult.Builder(
-                    specPath, prefabPath, definition, packChanged, prefabChanged)
-                    { Ignored = Unhandled(spec), DefinitionChanged = _definitionChanged }.Result;
+                definition = WriteDefinition(folder, spec, prefabPath);
+                packChanged = Register(spec, definition);
             }
             finally
             {
+                // Destroyed before anything renders. The preview renderer puts
+                // its own copy in the scene, and a second one standing in the
+                // same place renders straight through the cut-away.
                 Object.DestroyImmediate(instance);
             }
+
+            // Validate and preview the prefab as saved, not the working
+            // instance: what a reviewer looks at has to be what shipped.
+            var saved = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            ValidationReport report = CubeValidator.Validate(saved, spec, folder);
+            report.Previews = CubePreviewRenderer.Render(saved, spec, folder);
+            WriteReport(folder, report);
+
+            AssetDatabase.SaveAssets();
+            return new CubeBuildResult.Builder(
+                specPath, prefabPath, definition, packChanged, prefabChanged)
+                {
+                    Ignored = Unhandled(spec),
+                    DefinitionChanged = _definitionChanged,
+                    Report = report,
+                }.Result;
         }
 
         /// <summary>Shell, sockets and doors, from the spec's connector mask.</summary>
@@ -96,6 +114,13 @@ namespace Lucid.Editor.Cubes
         /// on. Reporting them keeps a bare shell from reading as a finished
         /// cube (docs/SPEC.md §17 lists the full step order).
         /// </summary>
+        static void WriteReport(string folder, ValidationReport report)
+        {
+            string previews = Path.Combine(folder, "Previews");
+            Directory.CreateDirectory(previews);
+            File.WriteAllText(Path.Combine(previews, "report.json"), report.ToJson());
+        }
+
         static string[] Unhandled(CubeSpec spec)
         {
             var ignored = new List<string>();

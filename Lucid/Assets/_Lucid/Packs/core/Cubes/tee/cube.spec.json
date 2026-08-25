@@ -1,0 +1,21 @@
+{
+  "specVersion": 1,
+  "id": "core.tee",
+  "name": "T Junction",
+  "pack": "core",
+  "category": "connector",
+  "cost": 2,
+  "connectors": ["south", "east", "west"],
+  "shell": {
+    "materials": { "wall": "wall", "floor": "floor", "ceiling": "ceiling", "trim": "trim" },
+    "doorFrame": "plain",
+    "interior": { "width": 4, "height": 4 }
+  },
+  "intendedPaths": [
+    { "from": "south", "to": "east", "points": [[0, 0, -4], [0, 0, 0], [4, 0, 0]] },
+    { "from": "south", "to": "west", "points": [[0, 0, -4], [0, 0, 0], [-4, 0, 0]] },
+    { "from": "west", "to": "east", "points": [[-4, 0, 0], [0, 0, 0], [4, 0, 0]] }
+  ],
+  "skins": ["*"],
+  "notes": "The first cube that gives a Sleeper a choice, and the Nightmare a spare branch end."
+}

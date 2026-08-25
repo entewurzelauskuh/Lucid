@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed19dd673bc7f4ee9a92eb6e2220d00d, type: 3}
+  m_Name: tee
+  m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.CubeDefinition
+  _id: core.tee
+  _pack: core
+  _displayName: T Junction
+  _category: 0
+  _connectors: 14
+  _climbable: 0
+  _cost: 2
+  _prefab: {fileID: 1484231448334440475, guid: 5ad103b5b81ca405693f24224c69ab2f, type: 3}
+  _skins:
+  - '*'

@@ -46,7 +46,11 @@ mkdir -p "$ROOT/.test-results"
 LOG="$ROOT/.test-results/build-cube.log"
 
 set +e
-"$UNITY" -batchmode -nographics -quit \
+# No -nographics: the previews are rendered with a camera, and a null
+# graphics device silently produces no images. The renderer degrades to
+# "no previews" rather than failing, so without this the report would be
+# green and the Previews folder empty.
+"$UNITY" -batchmode -quit \
   -projectPath "$PROJECT" \
   -executeMethod Lucid.Editor.Cubes.CubeBuildCommand.Run \
   -cubeTarget "$TARGET" \

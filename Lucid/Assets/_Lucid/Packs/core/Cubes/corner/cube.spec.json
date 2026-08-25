@@ -1,0 +1,19 @@
+{
+  "specVersion": 1,
+  "id": "core.corner",
+  "name": "Corner",
+  "pack": "core",
+  "category": "connector",
+  "cost": 1,
+  "connectors": ["south", "east"],
+  "shell": {
+    "materials": { "wall": "wall", "floor": "floor", "ceiling": "ceiling", "trim": "trim" },
+    "doorFrame": "plain",
+    "interior": { "width": 4, "height": 4 }
+  },
+  "intendedPaths": [
+    { "from": "south", "to": "east", "points": [[0, 0, -4], [0, 0, 0], [4, 0, 0]] }
+  ],
+  "skins": ["*"],
+  "notes": "The turn. Same corridor as Straight, bent ninety degrees through the centre."
+}

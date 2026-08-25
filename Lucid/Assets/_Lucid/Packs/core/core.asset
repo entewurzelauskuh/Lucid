@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.DreamPack
   _packId: core
   _cubes:
+  - {fileID: 11400000, guid: d666ef966d5cd47328f1a4dc73b0c2cf, type: 2}
+  - {fileID: 11400000, guid: cf88f49867dea4250ba514bbf06c3e62, type: 2}
+  - {fileID: 11400000, guid: 337a5541f43fb411883abb569e37137a, type: 2}
   - {fileID: 11400000, guid: f16e1ca2e146b4bb8b3077b522dcc69a, type: 2}
+  - {fileID: 11400000, guid: 4a9ffee229801448a858d2a3f462a0f5, type: 2}
