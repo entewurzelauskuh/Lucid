@@ -140,7 +140,7 @@ Rejected placements show the Nightmare a red ghost with the reason.
 ### Why the rules hold together
 
 - Every cube type has at least two connectors and the fit rule forbids doorway-to-wall contact, so each placement removes one fog door and creates at least one, except when it closes a loop. The leak rule handles loops. The Nightmare can never seal the dream; it can only push the exit deeper and put chicanes in front of it.
-- **Drops are funnels.** Once a Sleeper falls through a drop, the leak rule forces the deepest point to stay beyond it: the deeper you fall, the deeper the exit.
+- **Drops are funnels.** Once a Sleeper falls through a drop, the leak rule forces the deepest point to stay beyond it: the deeper you fall, the deeper the exit. The rule is checked on **placement**, from where each Sleeper stands, so it constrains what the Nightmare may build — it does not constrain where a Sleeper may walk. A Sleeper who drops into a place with no way out has stranded herself, and that is a legitimate way to lose a life rather than a failure of the rule. **[S]**
 - **Moving exits invite a yo-yo.** With two branches near maximum depth, the Nightmare can extend whichever branch the leading Sleeper is *not* in, for a cube or two per flip. The counter is the explored rule: a Sleeper who reaches a branch end after it turned grey kills that branch for good, so the Nightmare must keep spare branch ends out of reach, and every spare branch costs budget. Watch this in play-tests; if the yo-yo dominates, add hysteresis (a new deepest cube must beat the current exit depth by 2). **[O]**
 - Running out of budget is the natural end of the Nightmare's ability to stall. The timer is the Nightmare's only way to win.
 

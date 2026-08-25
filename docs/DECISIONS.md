@@ -12,6 +12,13 @@ Reason: why this over the alternatives.
 Spec: sections changed.
 ```
 
+## 2026-08-25 — A Sleeper may strand herself, and that is a way to lose
+
+Context: #40, raised by the independent review of #36. The leak rule is evaluated on placement, from each Sleeper's current cube, and nothing re-evaluates when a Sleeper moves. A fuzz run over roughly 6000 accepted placements found 29 stranding events, every one caused by a Sleeper move and none by a placement or an exploration — so the rule itself is sound; this is a case it was never asked about.
+Decision: accept it. Falling into a place you cannot climb out of is a legible way to lose a life, and lives (M1.5) are already the recovery path. Neither of the alternatives is worth its cost: detecting and respawning would need a Core API and host work for an outcome players can already read, and guaranteeing a reachable exit from every cube would constrain the Nightmare so heavily that drops would stop being funnels, which `docs/SPEC.md` §7 relies on.
+Reason: the rule's job is to stop the *Nightmare* sealing a Sleeper away. It was never meant to stop a Sleeper walking into a pit, and the spec's wording had promised more than the rule delivers.
+Spec: `docs/SPEC.md` §7, "Why the rules hold together" — the drops-are-funnels bullet now says the check is on placement and that self-stranding is a way to lose.
+
 ## 2026-08-25 — Round closes at dawn, and the powers' Apply methods report failure
 
 Context: #34, and the independent review of that branch (CLAUDE.md rule 8). Four deviations from `docs/CORE-API.md` §8 and §9 were needed, each because the specification's listing was thinner than the behaviour it implies elsewhere in the document set.
