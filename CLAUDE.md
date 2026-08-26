@@ -45,7 +45,6 @@ LUCID_ALL_ASSEMBLIES=1 …         include tests that ship inside packages
 tools/build-cube.sh <pack>/<cube>  build one cube from cube.spec.json, validate, render previews
 tools/build-cube.sh <pack>         rebuild a whole pack (after template changes)
 tools/build-gauntlet.sh            regenerate the movement gauntlet scene
-tools/fetch-assets.py <cube dir>   download manifest assets and verify hashes
 tools/check-licenses.py            what the pre-commit hook runs
 tools/install-hooks.sh             install that hook; once per clone
 ```
@@ -69,6 +68,7 @@ Unity is invoked in batch mode by these scripts: `Unity -batchmode -nographics -
 | `Lucid/Assets/_Lucid/Runtime/` | `Lucid.Runtime` — dream instance, Sleeper controller, Nightmare view, fog doors, traps, mobs, UI; `Input/` holds the action maps and `Dev/` the gauntlet, which is in Runtime so the editor script and the PlayMode tests build one course rather than two |
 | `Lucid/Assets/_Lucid/Netcode/` | `Lucid.Netcode` — `Approval`, `SessionState`, `RoundSync`, `LatticeMirror`, `DreamRelay`, transports (UTP dev, Facepunch Steam); message IDs from `docs/NETCODE.md` §12 |
 | `Lucid/Assets/_Lucid/Editor/` | `Lucid.Editor` — `CubeBuilder`, `CubeValidator`, `AssetNormalizer`, scene setup scripts |
+| `Lucid/Assets/_Lucid/Scenes/` | generated scenes; `Gauntlet.unity` from `tools/build-gauntlet.sh` |
 | `Lucid/Assets/_Lucid/Templates/` | `CubeTemplate.prefab`; `FogDoor.prefab` when M0.5 builds it. The Start cube is a cube like any other, in the pack below |
 | `Lucid/Assets/_Lucid/Packs/<Pack>/` | content: `Cubes/<Name>/` folders, `Skins/`, `Mobs/`, the `DreamPack` asset |
 | `Lucid/Assets/_Lucid/Tests/` | `EditMode/` for Core and builder, `PlayMode/` for runtime and netcode |
