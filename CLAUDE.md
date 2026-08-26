@@ -21,6 +21,7 @@ Things the tree does not tell you:
 - Driving Unity through the MCP bridge instead? Read the console for compile errors between every refresh and test run — the bridge has no compile guard and will happily run stale assemblies (`.claude/skills/pr-review/SKILL.md` §3).
 - The git remote is HTTPS. This machine has two GitHub accounts and the SSH key is the wrong one.
 - Steam is deferred, not blocked; see the pinned #28.
+- Three scripts `docs/WORKPLAN.md` §2 plans are not written: `fetch-assets.py`, and `playtest-report.py` and `build-dev.sh`, both M0.9c. So rule 5's manifest half has no fetcher, which bites the first time a cube wants an asset that may not be committed — say so rather than reaching for it.
 
 ## Rules that do not bend
 
@@ -39,17 +40,19 @@ Things the tree does not tell you:
 tools/run-tests.sh                 EditMode + PlayMode tests in Unity batch mode
 tools/run-tests.sh editmode        Core tests only, fastest loop
 tools/run-tests.sh editmode <name> one fixture or test by name, the inner loop
+tools/run-tests.sh playmode [name] the PlayMode half on its own
 LUCID_ALL_ASSEMBLIES=1 …         include tests that ship inside packages
 tools/build-cube.sh <pack>/<cube>  build one cube from cube.spec.json, validate, render previews
 tools/build-cube.sh <pack>         rebuild a whole pack (after template changes)
 tools/build-gauntlet.sh            regenerate the movement gauntlet scene
 tools/fetch-assets.py <cube dir>   download manifest assets and verify hashes
 tools/check-licenses.py            what the pre-commit hook runs
-tools/playtest-report.py <log>     per-round metrics from a .lucidlog (see docs/playtests/PLAN-M0.md §5)
-tools/build-dev.sh                 zipped UTP dev build for a second machine
+tools/install-hooks.sh             install that hook; once per clone
 ```
 
-Unity is invoked in batch mode by these scripts: `Unity -batchmode -nographics -quit -projectPath Lucid -executeMethod <Class.Method> -logFile -` plus script-specific arguments. Test runs are the exception: `-runTests -testPlatform EditMode|PlayMode [-testFilter <name>] -testResults <file>` and **no `-quit`**, which would end the editor before results are written. The Unity version is **6000.3.11f1**, pinned in `lucid/ProjectSettings/ProjectVersion.txt`; the editor path is read from `UNITY_PATH` (ask the owner if unset).
+Every command above exists and runs today. The ones `docs/WORKPLAN.md` §2 plans and nobody has written are named in Status, not listed here — a command reference you have to read twice is worse than a short one.
+
+Unity is invoked in batch mode by these scripts: `Unity -batchmode -nographics -quit -projectPath Lucid -executeMethod <Class.Method> -logFile -` plus script-specific arguments. Test runs are the exception: `-runTests -testPlatform EditMode|PlayMode [-testFilter <name>] -testResults <file>` and **no `-quit`**, which would end the editor before results are written. The Unity version is **6000.3.11f1**, pinned in `Lucid/ProjectSettings/ProjectVersion.txt`; the editor path is read from `UNITY_PATH` (ask the owner if unset).
 
 ## How it fits together
 
@@ -66,8 +69,7 @@ Unity is invoked in batch mode by these scripts: `Unity -batchmode -nographics -
 | `Lucid/Assets/_Lucid/Runtime/` | `Lucid.Runtime` — dream instance, Sleeper controller, Nightmare view, fog doors, traps, mobs, UI; `Input/` holds the action maps and `Dev/` the gauntlet, which is in Runtime so the editor script and the PlayMode tests build one course rather than two |
 | `Lucid/Assets/_Lucid/Netcode/` | `Lucid.Netcode` — `Approval`, `SessionState`, `RoundSync`, `LatticeMirror`, `DreamRelay`, transports (UTP dev, Facepunch Steam); message IDs from `docs/NETCODE.md` §12 |
 | `Lucid/Assets/_Lucid/Editor/` | `Lucid.Editor` — `CubeBuilder`, `CubeValidator`, `AssetNormalizer`, scene setup scripts |
-| `Lucid/Assets/_Lucid/Scenes/` | generated scenes; `Gauntlet.unity` from `tools/build-gauntlet.sh` |
-| `Lucid/Assets/_Lucid/Templates/` | `CubeTemplate.prefab`, `FogDoor.prefab`, the Start cube |
+| `Lucid/Assets/_Lucid/Templates/` | `CubeTemplate.prefab`; `FogDoor.prefab` when M0.5 builds it. The Start cube is a cube like any other, in the pack below |
 | `Lucid/Assets/_Lucid/Packs/<Pack>/` | content: `Cubes/<Name>/` folders, `Skins/`, `Mobs/`, the `DreamPack` asset |
 | `Lucid/Assets/_Lucid/Tests/` | `EditMode/` for Core and builder, `PlayMode/` for runtime and netcode |
 | `docs/` | `SPEC.md`, `UI.md`, `CORE-API.md`, `CUBE-SPEC.md`, `CHICANES.md`, `NETCODE.md`, `WORKPLAN.md`, `DECISIONS.md`, `HISTORY.md`, `cube-spec.schema.json`, `playtests/` (plans, template, session notes, csv) |
