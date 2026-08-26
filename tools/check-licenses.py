@@ -148,7 +148,9 @@ def main() -> int:
         print(
             "\nRedistributable assets (CC0 / CC-BY) are committed with a ledger "
             "line.\nEverything else belongs in assets.manifest.json and is fetched "
-            "by tools/fetch-assets.py.",
+            "at build time.\nThe fetcher itself is not written yet (CLAUDE.md "
+            "Status), so an asset that\ncannot be committed cannot be used yet "
+            "either.",
             file=sys.stderr,
         )
         return 1
