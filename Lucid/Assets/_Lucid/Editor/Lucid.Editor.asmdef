@@ -5,6 +5,7 @@
         "Lucid.Core",
         "Lucid.Runtime",
         "Lucid.Netcode",
+        "Unity.InputSystem",
         "Unity.AI.Navigation",
         "Unity.AI.Navigation.Editor"
     ],

@@ -6,16 +6,17 @@ Read in this order before doing anything: `docs/SPEC.md` (what the game is), `do
 
 ## Status
 
-**M0.1, M0.2 and M0.3 are merged; M0.4 (#4) is next** (`docs/WORKPLAN.md` §4). Unity **6000.3.11f1** at `Lucid/`.
+**M0.1 through M0.4 are merged; M0.5 (#5) is next** (`docs/WORKPLAN.md` §4). Unity **6000.3.11f1** at `Lucid/`.
 
 - `Lucid.Core` implements `docs/CORE-API.md` in full — lattice, derivation, the placement and exploration rules, round, budget, powers and scoring. Every item of its §12 test list is covered.
 - The cube pipeline runs end to end: `tools/build-cube.sh core` builds Straight, Corner, T, Cross and the Bedroom from `cube.spec.json`, validates each, and renders three previews apiece. Rebuilding changes nothing on disk.
-- `Lucid.Runtime` and `Lucid.Netcode` hold only what the pipeline needed so far. There is **no gameplay yet**: no controller, no fog-door behaviour, no dream instance, no networking. M0.4 onwards builds those.
-- **PlayMode is `0/0`.** The assembly exists and runs; no test has ever been written for it. M0.4's acceptance is the first, so treat that harness as unproven.
+- The Sleeper moves. `SleeperMotor` is the whole kit of `docs/SPEC.md` §9 and nothing else, and `tools/build-gauntlet.sh` writes the course its tests measure it on. Gravity is **derived** from the spec's rise and reach rather than set, which lands at 2.4 g; movement refuses to climb above its own feet, because a `CharacterController` mantles by itself (`docs/DECISIONS.md`).
+- Still no fog-door behaviour, no dream instance, no networking. M0.5 onwards builds those.
+- **PlayMode works and is proven to fail when it should** — before M0.4 the platform had never run a test, so `0/0 passed` and "nothing ran" looked identical. It carries the Sleeper's tests now; `Lucid.Netcode` remains a stub.
 
 Things the tree does not tell you:
 
-- The editor path comes from `UNITY_PATH`. `tools/run-tests.sh` and `tools/build-cube.sh` both refuse to run while the editor holds the project, so ask the owner to close it rather than working around them.
+- The editor path comes from `UNITY_PATH`. `tools/run-tests.sh`, `tools/build-cube.sh` and `tools/build-gauntlet.sh` all refuse to run while the editor holds the project, so ask the owner to close it rather than working around them.
 - `build-cube.sh` deliberately omits `-nographics`: previews need a graphics device, and the renderer degrades to writing no images rather than failing.
 - Driving Unity through the MCP bridge instead? Read the console for compile errors between every refresh and test run — the bridge has no compile guard and will happily run stale assemblies (`.claude/skills/pr-review/SKILL.md` §3).
 - The git remote is HTTPS. This machine has two GitHub accounts and the SSH key is the wrong one.
@@ -43,6 +44,8 @@ tools/run-tests.sh playmode [name] the PlayMode half on its own
 LUCID_ALL_ASSEMBLIES=1 …         include tests that ship inside packages
 tools/build-cube.sh <pack>/<cube>  build one cube from cube.spec.json, validate, render previews
 tools/build-cube.sh <pack>         rebuild a whole pack (after template changes)
+tools/build-gauntlet.sh            regenerate the movement gauntlet scene
+tools/fetch-assets.py <cube dir>   download manifest assets and verify hashes
 tools/check-licenses.py            what the pre-commit hook runs
 tools/install-hooks.sh             install that hook; once per clone
 ```
@@ -63,7 +66,7 @@ Unity is invoked in batch mode by these scripts: `Unity -batchmode -nographics -
 | Path | What lives there |
 |---|---|
 | `Lucid/Assets/_Lucid/Core/` | `Lucid.Core` — lattice, cube types, event log, rules, `Validate`, `Derive` |
-| `Lucid/Assets/_Lucid/Runtime/` | `Lucid.Runtime` — dream instance, Sleeper controller, Nightmare view, fog doors, traps, mobs, UI |
+| `Lucid/Assets/_Lucid/Runtime/` | `Lucid.Runtime` — dream instance, Sleeper controller, Nightmare view, fog doors, traps, mobs, UI; `Input/` holds the action maps and `Dev/` the gauntlet, which is in Runtime so the editor script and the PlayMode tests build one course rather than two |
 | `Lucid/Assets/_Lucid/Netcode/` | `Lucid.Netcode` — `Approval`, `SessionState`, `RoundSync`, `LatticeMirror`, `DreamRelay`, transports (UTP dev, Facepunch Steam); message IDs from `docs/NETCODE.md` §12 |
 | `Lucid/Assets/_Lucid/Editor/` | `Lucid.Editor` — `CubeBuilder`, `CubeValidator`, `AssetNormalizer`, scene setup scripts |
 | `Lucid/Assets/_Lucid/Templates/` | `CubeTemplate.prefab`; `FogDoor.prefab` when M0.5 builds it. The Start cube is a cube like any other, in the pack below |

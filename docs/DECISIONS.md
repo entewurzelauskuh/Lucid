@@ -12,6 +12,13 @@ Reason: why this over the alternatives.
 Spec: sections changed.
 ```
 
+## 2026-08-25 — The dream pulls 2.4 g, and the Sleeper has flat feet
+
+Context: #4. `docs/SPEC.md` §9 sets three numbers that are not independent: run 6 m/s, jump 1.2 m of rise, and clear "~4 m gap at full speed". Fixing two of them fixes gravity.
+Decision: the tunables are the spec's own numbers — `RunSpeed`, `JumpRise` and `JumpTravel` (3.8 m of capsule-centre flight, which measures out as a 4.15 m gap) — and gravity is derived from them at **23.9 m/s², about 2.4 g**. Separately, `SleeperMotor` refuses to move horizontally into anything standing above its feet while airborne.
+Reason: a 1.2 m jump under Earth gravity hangs for almost a second and carries 5.9 m, half again the reach §9 allows, so a heavy dream is forced rather than chosen; it is recorded here because it is a thing the M0 play-test should feel for rather than discover. The flat-feet rule implements §9's "no mantle", which a `CharacterController` breaks on its own: its foot is a hemisphere, so once the sphere's centre rises past a lip the corner lies outside the capsule and the body slides on and over it. Measured on the gauntlet, a 1.2 m jump mounted a **1.4 m** ledge — the very height the M0.4 acceptance requires it to fail — arriving 0.2 m higher than it ever rose. With the rule the tallest ledge is the rise itself. Tuning the jump down to make the acceptance pass would have satisfied the test while breaking the spec: a Sleeper would still have mantled, just from lower down.
+Spec: none. §9's kit is unchanged and its `**[D]**` defaults stay open for the play-test; `JumpTravel` and the derived gravity are implementation of "~4 m", not a new promise.
+
 ## 2026-08-25 — Three doorFrame styles generate the same geometry for now
 
 Context: #47. `docs/cube-spec.schema.json` defines `doorFrame` as `none | plain | arch | industrial`. The builder distinguishes two behaviours: `none` emits no trim, and the other three emit the same jambs and head.
