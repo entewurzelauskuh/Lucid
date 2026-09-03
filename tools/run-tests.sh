@@ -44,8 +44,13 @@ if [[ -z "${UNITY:-}" || ! -x "$UNITY" ]]; then
   exit 1
 fi
 
-# Batch mode cannot open a project the editor already holds.
-if [[ -e "$PROJECT/Temp/UnityLockfile" ]] && pgrep -f "Unity.*-projectPath.*$PROJECT" >/dev/null 2>&1; then
+# Batch mode cannot open a project the editor already holds, and when it tries
+# it aborts before running anything. The match is case-insensitive on purpose:
+# the editor is launched with -projectpath (lower case) and, on a
+# case-insensitive filesystem, with whatever spelling of the project folder the
+# Hub recorded. Matching -projectPath exactly meant this guard only fired when
+# an AssetImportWorker — which does use that spelling — happened to be alive.
+if [[ -e "$PROJECT/Temp/UnityLockfile" ]] && pgrep -if "Unity.*-projectpath.*$PROJECT" >/dev/null 2>&1; then
   echo "error: the Unity editor has $PROJECT open. Close it, or run the tests from the editor." >&2
   exit 1
 fi
@@ -54,6 +59,10 @@ mkdir -p "$RESULTS"
 
 run_platform() {
   local platform="$1" out="$RESULTS/$1.xml"
+  # A results file left by an earlier run is indistinguishable from one this
+  # run wrote, and Unity leaves the old one in place when it aborts before
+  # starting. That reported "OK, 282/282" over a run that never began.
+  rm -f "$out"
   local args=(-batchmode -nographics -projectPath "$PROJECT"
               -runTests -testPlatform "$platform" -testResults "$out"
               -logFile - )
@@ -79,6 +88,13 @@ run_platform() {
     echo "$platform: COMPILATION FAILED - results below would be from stale assemblies" >&2
     grep -oE "[^ ]+\.cs\([0-9]+,[0-9]+\): error CS[0-9]+: .*" "$RESULTS/$platform.log" \
       | sort -u | head -15 >&2
+    return 1
+  fi
+
+  # Unity exits 0 in some abort paths, so the log is the tell.
+  if grep -q "Aborting batchmode due to fatal error" "$RESULTS/$platform.log"; then
+    echo "$platform: Unity aborted before running anything:" >&2
+    grep -A4 "Aborting batchmode due to fatal error" "$RESULTS/$platform.log" >&2
     return 1
   fi
 

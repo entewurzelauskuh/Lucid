@@ -37,7 +37,9 @@ if [[ -z "${UNITY:-}" || ! -x "$UNITY" ]]; then
   exit 1
 fi
 
-if [[ -e "$PROJECT/Temp/UnityLockfile" ]] && pgrep -f "Unity.*-projectPath.*$PROJECT" >/dev/null 2>&1; then
+# Case-insensitive: the editor uses -projectpath, and the Hub may have
+# recorded the project folder with different case (see run-tests.sh).
+if [[ -e "$PROJECT/Temp/UnityLockfile" ]] && pgrep -if "Unity.*-projectpath.*$PROJECT" >/dev/null 2>&1; then
   echo "error: the Unity editor has $PROJECT open. Close it, or build from the editor." >&2
   exit 1
 fi
@@ -60,6 +62,15 @@ set -e
 
 # A compile error does not stop Unity running whatever it already had, so a
 # build can report success over stale editor code (see #35, #49).
+# Unity can abort before running anything — most often because the editor has
+# the project open — and does not always exit non-zero when it does. Without
+# this the script reports success over a build that never started.
+if grep -q "Aborting batchmode due to fatal error" "$LOG"; then
+  echo "Unity aborted before running anything:" >&2
+  grep -A4 "Aborting batchmode due to fatal error" "$LOG" >&2
+  exit 1
+fi
+
 if grep -qE "error CS[0-9]+" "$LOG"; then
   echo "COMPILATION FAILED - the build below would be from stale assemblies" >&2
   grep -oE "[^ ]+\.cs\([0-9]+,[0-9]+\): error CS[0-9]+: .*" "$LOG" | sort -u | head -15 >&2
