@@ -135,25 +135,32 @@ namespace Lucid.Tests.EditMode.Cubes
         {
             // docs/SPEC.md §7's table: Attached and Exit are passable, Fog and
             // Solid are not, and only Exit wakes a Sleeper.
+            // A door each, because these are properties of a state rather than
+            // of a history. Walking one door through all four would assert a
+            // sequence §7 forbids — Solid and Attached are both terminal — and
+            // that is now refused rather than quietly recorded.
             var go = new GameObject("door");
             try
             {
-                var door = go.AddComponent<FogDoor>();
+                FogDoor Door(ConnectorState state)
+                {
+                    var d = new GameObject(state.ToString()).AddComponent<FogDoor>();
+                    d.transform.SetParent(go.transform, false);
+                    d.Initialise(state);
+                    return d;
+                }
 
-                door.SetState(ConnectorState.Fog);
-                Assert.That(door.IsPassable, Is.False);
-                Assert.That(door.IsExit, Is.False);
+                Assert.That(Door(ConnectorState.Fog).IsPassable, Is.False);
+                Assert.That(Door(ConnectorState.Fog).IsExit, Is.False);
 
-                door.SetState(ConnectorState.Solid);
-                Assert.That(door.IsPassable, Is.False);
+                Assert.That(Door(ConnectorState.Solid).IsPassable, Is.False);
+                Assert.That(Door(ConnectorState.Solid).IsExit, Is.False);
 
-                door.SetState(ConnectorState.Attached);
-                Assert.That(door.IsPassable, Is.True);
-                Assert.That(door.IsExit, Is.False);
+                Assert.That(Door(ConnectorState.Attached).IsPassable, Is.True);
+                Assert.That(Door(ConnectorState.Attached).IsExit, Is.False);
 
-                door.SetState(ConnectorState.Exit);
-                Assert.That(door.IsPassable, Is.True);
-                Assert.That(door.IsExit, Is.True);
+                Assert.That(Door(ConnectorState.Exit).IsPassable, Is.True);
+                Assert.That(Door(ConnectorState.Exit).IsExit, Is.True);
             }
             finally
             {
