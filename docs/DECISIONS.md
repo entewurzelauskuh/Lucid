@@ -12,6 +12,20 @@ Reason: why this over the alternatives.
 Spec: sections changed.
 ```
 
+## 2026-09-03 — The owner's word merges the pull request, not the owner's hand
+
+Context: rule 1 said "Open the PR and stop; the owner reviews and merges. Never push to `main`, never merge your own PR." Every pull request in this repository is opened by the `entewurzelauskuh` account, which is also the owner's, and **GitHub will not let an account approve its own pull request** — so branch protection's "one approving review" can never be satisfied here, and every merge is an admin override regardless of whose hand performs it.
+Decision: the owner still reviews every PR and still decides; the merge itself is performed on their word, per pull request, named. `gh pr merge <n> --squash --admin --delete-branch`. Branch protection stays as it is.
+Reason: the part of rule 1 that was load-bearing is that nothing reaches `main` without the owner having looked at it, and that is untouched — the gate moved from a button to a sentence, and the sentence is the thing that was always doing the work. Keeping the protection rule in place while overriding it is deliberate: it is unenforceable for a sole maintainer using one account, and it becomes real the day a second collaborator can approve. The alternative, setting `required_approving_review_count` to 0, would state the truth today and quietly remove the rule that should apply tomorrow. The authorisation is explicitly per-PR and does not generalise: merging is outward-facing and hard to undo, and "I reviewed #73, merge it" is a different sentence from "merge things from now on".
+Spec: none. `docs/WORKPLAN.md` §1's branch-protection line still describes the setting, which is unchanged.
+
+## 2026-09-03 — Two reviewers, in parallel, with lenses chosen for the change
+
+Context: rule 8 asked for "two reviewers with different lenses" without saying whether they run together, and I ran one on #73 on the grounds that a shell script did not need two.
+Decision: always two, always in parallel, never letting the second read the first. Reviewer A stays adversarial correctness. Reviewer B's lens fits the change: specification conformance where there is a spec surface, and *operational* — another machine, a fresh clone, unsmudged LFS, a headless box, a step failing half way — where there is not.
+Reason: independent convergence is the strongest signal this protocol produces. Two reviewers landing on one defect separately settles it without argument, and that is worth nothing if one has read the other. Anchoring is the other half: the findings that mattered most here came from a single reviewer each — a serialization bug on one side, a missing DECISIONS entry on the other — because neither was primed by the other's framing. Sequential review buys depth on ground already covered and pays for it in the two properties that make the protocol work. The lens rule is what stops the second reviewer being an echo: on #73 a spec-conformance pass would have found almost nothing, while the one reviewer who ran showed the change's central claim was false.
+Spec: none. `CLAUDE.md` rule 8 and `.claude/skills/pr-review/SKILL.md` §1 carry it.
+
 ## 2026-09-03 — A solidified door stops moving instead of becoming the wall
 
 Context: #5. `docs/SPEC.md` §7 marks the fog-door block **[S]** and says a Solid connector is a "Wall in the cube's skin; the mist condensed into it"; `docs/WORKPLAN.md` §4 repeats it as an M0.5 deliverable, "Solid (condenses into the cube's wall material)".

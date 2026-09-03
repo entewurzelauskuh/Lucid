@@ -27,14 +27,14 @@ Things the tree does not tell you:
 
 ## Rules that do not bend
 
-1. **One issue, one branch, one pull request.** Branch `m<N>/<NN>-<slug>`. Conventional commits. Open the PR and stop; the owner reviews and merges. Never push to `main`, never merge your own PR.
+1. **One issue, one branch, one pull request.** Branch `m<N>/<NN>-<slug>`. Conventional commits. Open the PR and **stop**: the owner reviews it and says whether to merge. On that word — naming the PR, for that PR — merge it yourself with `gh pr merge <n> --squash --admin --delete-branch`. Never push to `main`, never merge unasked, and never read one go-ahead as standing permission for the next. The `--admin` is required rather than casual: branch protection asks for an approving review, and GitHub will not let the account that opened a PR approve it, so the owner's review lives in the conversation and the override is what records that. Close the issue if the PR body's closing keyword did not.
 2. **Spec items marked [S] are settled.** Do not reinterpret them. Ambiguity → comment on the issue, label it `question`, move on.
 3. **`Lucid.Core` is pure C#.** No `UnityEngine` anywhere in `Assets/_Lucid/Core/`. Every rule (fit, frontier, depth, exits, explored, leak, budget) is a pure function with a test. Determinism is part of the contract: no floating point in rules, time in integer milliseconds, sets iterated in a defined order — two machines must derive a bit-identical `Derived.Hash` (`docs/CORE-API.md` §1, §11).
 4. **Never hand-edit prefab or scene YAML.** Cubes come from `CubeBuilder`; scenes are set up by editor scripts. Commit the generated files.
 5. **The asset rule.** Only CC0 / CC-BY assets are committed, each with a line in that cube's `assets/LICENSES.md` and in the root `THIRD_PARTY_NOTICES.md`. Anything else goes in `assets.manifest.json` and is fetched, never committed. The pre-commit hook enforces this; do not bypass it.
 6. **Run `tools/run-tests.sh` before every PR** and paste the summary line into the PR description. There is no CI.
 7. **Decisions leave a trace.** Promoting a [D] to [S] or deviating from the spec means editing `docs/SPEC.md` and adding a `docs/DECISIONS.md` entry in the same PR.
-8. **Every PR is independently reviewed before it is opened.** Run the `pr-review` skill: two reviewers with different lenses, reproduce each finding before fixing it, mutation-check every test you touched, then post the triage on the PR. There is no CI, so an unchecked claim reaches the owner as fact.
+8. **Every PR is independently reviewed before it is opened.** Run the `pr-review` skill: **always two** reviewers, in parallel, with lenses chosen to fit the change — reproduce each finding before fixing it, mutation-check every test you touched, then post the triage on the PR. There is no CI, so an unchecked claim reaches the owner as fact. Two is not a formality even for a small change: on #73 a single reviewer found that the whole premise of the change was false.
 
 ## Commands
 
@@ -102,7 +102,7 @@ A new mechanic = a new component in the chicane library (`docs/CHICANES.md` §8:
 
 ```
 ## What
-## Why  (issue #, spec §)
+## Why  (Closes #N — the keyword, or the merge leaves the issue open; spec §)
 ## How tested  (paste tools/run-tests.sh summary)
 ## Generated files touched
 ## Spec / DECISIONS changes

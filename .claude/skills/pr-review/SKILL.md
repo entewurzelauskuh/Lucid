@@ -28,13 +28,32 @@ behaviour, and *tests that pass for the wrong reason*. Require a concrete
 failure scenario for each finding: exact inputs, expected versus actual.
 Require it to separate PROVEN from SUSPECTED.
 
-**Reviewer B — specification conformance.** Audit against the normative
+**Reviewer B — the lens that fits the change.** Two reviewers only pay off if
+their lenses genuinely differ; a second one covering the same ground is an echo,
+not a check.
+
+*Specification conformance* is the default, and the right choice whenever the
+change has a spec surface — it is what caught a deviation owing a DECISIONS
+entry on #71 and seven wrong document citations. Audit against the normative
 documents only, not personal taste. For `Lucid.Core` that is
 `docs/CORE-API.md` — its §12 lists required tests by group, so demand an
 explicit COVERED / MISSING checklist naming the test for each bullet, and
 treat a test whose *body* checks something else as MISSING. Also check §11
 invariants, signature fidelity, scope creep from later issues, and
 `CLAUDE.md` conventions.
+
+For a change with no spec surface — a shell script, the test harness, tooling —
+that lens finds almost nothing. Use *operational* instead: what happens on
+another machine, on a fresh clone, with LFS unsmudged, on a headless box, when
+the editor is open, when a step fails half way. That is where the remaining risk
+in `tools/` lives.
+
+Keep them **parallel**, and never let the second read the first. Independent
+convergence is the strongest signal available — when both land on one defect
+separately it settles the matter without argument — and it is worth nothing if
+one has seen the other. Anchoring is the other half: the most valuable findings
+in this project have come from one reviewer only, because neither was primed by
+the other's framing.
 
 Tell both: **do not modify any file**, and say plainly when a category is
 clean rather than manufacturing findings.
