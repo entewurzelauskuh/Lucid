@@ -33,6 +33,14 @@ namespace Lucid.Editor.Scenes
             // Replacing an empty one costs nothing — batch mode always starts
             // that way — but replacing one with unsaved work in it would throw
             // that work away, and rebuilding a dev scene is no reason to.
+            // OpenScene on a scene that is already open hands back that same
+            // scene, and the signature read would then close it — taking away
+            // what the developer was looking at, unsaved edits and all.
+            if (previous.path == ScenePath)
+                throw new Exception(
+                    $"close {ScenePath} first: the builder cannot rewrite the scene you " +
+                    "have open. tools/build-gauntlet.sh has no such trouble.");
+
             if (untitled && previous.isDirty)
                 throw new Exception(
                     "save the open scene first, or close it: Unity cannot add a scene " +

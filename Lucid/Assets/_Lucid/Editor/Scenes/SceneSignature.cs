@@ -21,9 +21,11 @@ namespace Lucid.Editor.Scenes
     /// for prefabs by comparing a hand-written list of fields, and says in its
     /// own remarks that the list has to grow whenever the builder learns to
     /// emit something new. That is a trap: the failure is silent, and it looks
-    /// exactly like success. So this walks the serialized properties instead,
-    /// which means a generator can emit anything at all and still be compared
-    /// correctly.
+    /// exactly like success. So this walks the serialized properties instead:
+    /// a generator can emit anything it likes and be compared on all of it,
+    /// and the one thing that cannot happen is a value being quietly skipped —
+    /// a property type with no arm to read it stops the build rather than
+    /// signing as a constant.
     ///
     /// Two kinds of value are deliberately not taken literally. A fileID is
     /// Unity's own bookkeeping and differs on every save, so a reference to
@@ -115,23 +117,75 @@ namespace Lucid.Editor.Scenes
             }
         }
 
+        /// <summary>
+        /// The value of one property, as text.
+        /// </summary>
+        /// <remarks>
+        /// Every arm must read the value. An arm that returns something
+        /// constant — the name of the type, say — hides that property from the
+        /// comparison, so a generator changing it would stop rewriting the
+        /// scene and leave a stale one committed. That is the silent failure
+        /// this whole file exists to avoid, and the first draft walked into it:
+        /// the default arm returned the type name, which made a Light's
+        /// culling mask invisible. Unknown types therefore throw rather than
+        /// return anything at all.
+        /// </remarks>
         static string Value(SerializedProperty p)
         {
             switch (p.propertyType)
             {
                 case SerializedPropertyType.ObjectReference: return Reference(p.objectReferenceValue);
+                case SerializedPropertyType.ExposedReference: return Reference(p.exposedReferenceValue);
                 case SerializedPropertyType.Float: return F(p.floatValue);
+                case SerializedPropertyType.Vector2: return V2(p.vector2Value);
                 case SerializedPropertyType.Vector3: return V(p.vector3Value);
-                case SerializedPropertyType.Vector2: return F(p.vector2Value.x) + "," + F(p.vector2Value.y);
+                case SerializedPropertyType.Vector4: return V4(p.vector4Value);
                 case SerializedPropertyType.Quaternion: return V(p.quaternionValue.eulerAngles);
-                case SerializedPropertyType.Color: return p.colorValue.ToString();
-                case SerializedPropertyType.Integer: return p.longValue.ToString(CultureInfo.InvariantCulture);
+                case SerializedPropertyType.Rect: return R(p.rectValue);
+                case SerializedPropertyType.Bounds:
+                    return V(p.boundsValue.center) + V(p.boundsValue.extents);
+                case SerializedPropertyType.Vector2Int: return p.vector2IntValue.ToString();
+                case SerializedPropertyType.Vector3Int: return p.vector3IntValue.ToString();
+                case SerializedPropertyType.RectInt: return p.rectIntValue.ToString();
+                case SerializedPropertyType.BoundsInt: return p.boundsIntValue.ToString();
+                case SerializedPropertyType.Color: return C(p.colorValue);
                 case SerializedPropertyType.Boolean: return p.boolValue.ToString();
                 case SerializedPropertyType.String: return p.stringValue;
-                case SerializedPropertyType.Enum: return p.enumValueIndex.ToString(CultureInfo.InvariantCulture);
-                case SerializedPropertyType.Generic: return "";      // its children are visited
-                default: return p.propertyType.ToString();
+                case SerializedPropertyType.AnimationCurve: return Curve(p.animationCurveValue);
+                case SerializedPropertyType.Hash128: return p.hash128Value.ToString();
+                case SerializedPropertyType.ManagedReference: return p.managedReferenceFullTypename;
+
+                // All stored as integers, and all read for their value. An
+                // enum read as enumValueIndex would be the position in the
+                // names array, which is not the value a [Flags] enum holds.
+                case SerializedPropertyType.Integer:
+                case SerializedPropertyType.LayerMask:
+                case SerializedPropertyType.Enum:
+                case SerializedPropertyType.Character:
+                case SerializedPropertyType.ArraySize:
+                case SerializedPropertyType.RenderingLayerMask:
+                    return I(p.longValue);
+
+                // A container: NextVisible descends into the parts that carry
+                // the values, and each is rendered by an arm above.
+                case SerializedPropertyType.Generic: return "";
+
+                default:
+                    throw new NotSupportedException(
+                        $"SceneSignature cannot read {p.propertyType} at '{p.propertyPath}'. " +
+                        "Add an arm that reads its value — returning anything constant would " +
+                        "hide the property from the comparison instead.");
             }
+        }
+
+        static string Curve(AnimationCurve curve)
+        {
+            if (curve == null) return "null";
+            var sb = new StringBuilder("curve");
+            foreach (Keyframe k in curve.keys)
+                sb.Append('[').Append(F(k.time)).Append(',').Append(F(k.value))
+                  .Append(',').Append(F(k.inTangent)).Append(',').Append(F(k.outTangent)).Append(']');
+            return sb.ToString();
         }
 
         /// <summary>
@@ -178,6 +232,16 @@ namespace Lucid.Editor.Scenes
         }
 
         static string V(Vector3 v) => $"({F(v.x)},{F(v.y)},{F(v.z)})";
+
+        static string V2(Vector2 v) => $"({F(v.x)},{F(v.y)})";
+
+        static string V4(Vector4 v) => $"({F(v.x)},{F(v.y)},{F(v.z)},{F(v.w)})";
+
+        static string R(Rect r) => $"({F(r.x)},{F(r.y)},{F(r.width)},{F(r.height)})";
+
+        static string C(Color c) => $"({F(c.r)},{F(c.g)},{F(c.b)},{F(c.a)})";
+
+        static string I(long v) => v.ToString(CultureInfo.InvariantCulture);
 
         // Rounded, so a rebuild is not defeated by the last bit of a float.
         static string F(float f) => Mathf.Abs(f) < 1e-4f

@@ -157,6 +157,27 @@ namespace Lucid.Tests.EditMode.Scenes
         }
 
         [Test]
+        public void AValueWithNoChildrenOfItsOwnIsStillCompared()
+        {
+            // A mask has no child properties to descend into, so it is only
+            // seen if its own arm reads it. The first draft returned the name
+            // of the property's type for anything it did not recognise, which
+            // made this — and every AnimationCurve, Hash128 and ExposedReference
+            // — invisible: the builder would have stopped rewriting a scene it
+            // really had changed, which is the one failure that must not be
+            // silent.
+            var go = new GameObject("Sun");
+            _spawned.Add(go);
+            var light = go.AddComponent<Light>();
+            light.cullingMask = ~0;
+            string before = Of(go);
+
+            light.cullingMask = 1;
+
+            Assert.That(Of(go), Is.Not.EqualTo(before));
+        }
+
+        [Test]
         public void AddingAComponentSignsDifferently()
         {
             var go = new GameObject("Thing");
