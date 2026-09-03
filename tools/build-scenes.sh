@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
-# Write the movement gauntlet scene from GauntletLayout.
+# Write every generated scene.
 #
-#   tools/build-gauntlet.sh
+#   tools/build-scenes.sh
 #
-# The scene is generated, never hand-edited (CLAUDE.md rule 4). Its geometry
-# comes from Lucid.Runtime.Dev.GauntletBuilder, which is also what the PlayMode
-# tests run against, so the course a human walks is the course they measure.
+# Scenes are generated, never hand-edited (CLAUDE.md rule 4), and each is
+# written only when it differs from the one committed, so running this on an
+# unchanged tree changes nothing (#59).
+#
+# One Unity launch for all of them: starting the editor costs far more than
+# building a scene.
 #
 # The editor path comes from $UNITY_PATH, or is guessed from the version
 # pinned in Lucid/ProjectSettings/ProjectVersion.txt.
@@ -49,17 +52,17 @@ unity_holds_project() {
 
 # Batch mode cannot open a project the editor already holds; it aborts instead.
 if [[ -e "$PROJECT/Temp/UnityLockfile" ]] && unity_holds_project; then
-  echo "error: the Unity editor has $PROJECT open. Close it, or use Lucid > Build Gauntlet Scene." >&2
+  echo "error: the Unity editor has $PROJECT open. Close it, or use the Lucid menu." >&2
   exit 1
 fi
 
 mkdir -p "$ROOT/.test-results"
-LOG="$ROOT/.test-results/build-gauntlet.log"
+LOG="$ROOT/.test-results/build-scenes.log"
 
 set +e
 "$UNITY" -batchmode -nographics -quit \
   -projectPath "$PROJECT" \
-  -executeMethod Lucid.Editor.Scenes.GauntletSceneBuilder.BuildFromCommandLine \
+  -executeMethod Lucid.Editor.Scenes.GeneratedScenes.BuildAllFromCommandLine \
   -logFile - >"$LOG" 2>&1
 code=$?
 set -e
@@ -81,7 +84,7 @@ if grep -qE "error CS[0-9]+" "$LOG"; then
   exit 1
 fi
 
-grep -E "^gauntlet: " "$LOG" || true
+grep -E "^(gauntlet|fogdoors|scenes): " "$LOG" || true
 
 if [[ $code -ne 0 ]]; then
   echo "FAILED (exit $code); full log at $LOG" >&2

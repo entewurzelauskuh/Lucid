@@ -30,7 +30,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 5142695482551605672}
+  - {fileID: 3541704572381906783}
   m_Father: {fileID: 1344655419202082655}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &6164643992432812485
@@ -47,8 +47,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.Connector
   _face: 2
   _isDoorway: 0
-  _door: {fileID: 2788012269264480280}
---- !u!1 &1667000781716269344
+  _door: {fileID: 5430409061503803047}
+--- !u!1 &1555054056766227622
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -56,8 +56,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8140973085032586290}
-  - component: {fileID: 6865551120227517119}
+  - component: {fileID: 200477158400195053}
+  - component: {fileID: 7271894790747794439}
+  - component: {fileID: 8459274452223669403}
   m_Layer: 0
   m_Name: FogDoor
   m_TagString: Untagged
@@ -65,81 +66,49 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8140973085032586290
+--- !u!4 &200477158400195053
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1667000781716269344}
+  m_GameObject: {fileID: 1555054056766227622}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 3494092689025418753}
+  m_Father: {fileID: 5152245789794422611}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6865551120227517119
+--- !u!114 &7271894790747794439
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1667000781716269344}
+  m_GameObject: {fileID: 1555054056766227622}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bfc188a3661e74cdcb69fa789c9f5b3a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.FogDoor
-  _face: 4
+  _face: 5
   _state: 1
---- !u!1 &1850732966137394839
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1348222780363637599}
-  - component: {fileID: 6672859922085976692}
-  m_Layer: 0
-  m_Name: FogDoor
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1348222780363637599
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1850732966137394839}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 2795578924249927211}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6672859922085976692
+  _transitionSeconds: 0.35
+--- !u!114 &8459274452223669403
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1850732966137394839}
+  m_GameObject: {fileID: 1555054056766227622}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bfc188a3661e74cdcb69fa789c9f5b3a, type: 3}
+  m_Script: {fileID: 11500000, guid: 679a1ce253656453c9a62247e8829705, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.FogDoor
-  _face: 3
-  _state: 1
+  m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.FogDoorVisual
+  _layers: 4
 --- !u!1 &1941197731564443479
 GameObject:
   m_ObjectHideFlags: 0
@@ -177,6 +146,67 @@ Transform:
   - {fileID: 5152245789794422611}
   m_Father: {fileID: 6995006738372627577}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2254723736969104418
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8041297540041110642}
+  - component: {fileID: 4846742778681986294}
+  - component: {fileID: 7304588085475870740}
+  m_Layer: 0
+  m_Name: FogDoor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8041297540041110642
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2254723736969104418}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2795578924249927211}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4846742778681986294
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2254723736969104418}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bfc188a3661e74cdcb69fa789c9f5b3a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.FogDoor
+  _face: 3
+  _state: 1
+  _transitionSeconds: 0.35
+--- !u!114 &7304588085475870740
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2254723736969104418}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 679a1ce253656453c9a62247e8829705, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.FogDoorVisual
+  _layers: 4
 --- !u!1 &2314345963853170143
 GameObject:
   m_ObjectHideFlags: 0
@@ -225,6 +255,67 @@ MonoBehaviour:
   _face: 0
   _isDoorway: 0
   _door: {fileID: 7375657710723507387}
+--- !u!1 &2917044964157935825
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3541704572381906783}
+  - component: {fileID: 5430409061503803047}
+  - component: {fileID: 1410056741415695280}
+  m_Layer: 0
+  m_Name: FogDoor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3541704572381906783
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2917044964157935825}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6372515861550566213}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5430409061503803047
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2917044964157935825}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bfc188a3661e74cdcb69fa789c9f5b3a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.FogDoor
+  _face: 2
+  _state: 1
+  _transitionSeconds: 0.35
+--- !u!114 &1410056741415695280
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2917044964157935825}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 679a1ce253656453c9a62247e8829705, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.FogDoorVisual
+  _layers: 4
 --- !u!1 &3197611446415825429
 GameObject:
   m_ObjectHideFlags: 0
@@ -255,7 +346,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 6245132031483903406}
+  - {fileID: 200477158400195053}
   m_Father: {fileID: 1344655419202082655}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &3308527881208062222
@@ -272,7 +363,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.Connector
   _face: 5
   _isDoorway: 0
-  _door: {fileID: 8928545246250544243}
+  _door: {fileID: 7271894790747794439}
 --- !u!1 &3788004538464263170
 GameObject:
   m_ObjectHideFlags: 0
@@ -355,7 +446,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 6995006738372627577}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &5023274786069386062
+--- !u!1 &5146508125733169091
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -363,8 +454,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5142695482551605672}
-  - component: {fileID: 2788012269264480280}
+  - component: {fileID: 8536607643084266253}
+  - component: {fileID: 1092427640007387583}
+  - component: {fileID: 2864438359445263364}
   m_Layer: 0
   m_Name: FogDoor
   m_TagString: Untagged
@@ -372,35 +464,49 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5142695482551605672
+--- !u!4 &8536607643084266253
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5023274786069386062}
+  m_GameObject: {fileID: 5146508125733169091}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 6372515861550566213}
+  m_Father: {fileID: 1718328793644383685}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2788012269264480280
+--- !u!114 &1092427640007387583
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5023274786069386062}
+  m_GameObject: {fileID: 5146508125733169091}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bfc188a3661e74cdcb69fa789c9f5b3a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.FogDoor
-  _face: 2
+  _face: 1
   _state: 1
+  _transitionSeconds: 0.35
+--- !u!114 &2864438359445263364
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5146508125733169091}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 679a1ce253656453c9a62247e8829705, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.FogDoorVisual
+  _layers: 4
 --- !u!1 &5147069049039959043
 GameObject:
   m_ObjectHideFlags: 0
@@ -431,7 +537,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1348222780363637599}
+  - {fileID: 8041297540041110642}
   m_Father: {fileID: 1344655419202082655}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7396461086394641872
@@ -448,7 +554,68 @@ MonoBehaviour:
   m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.Connector
   _face: 3
   _isDoorway: 0
-  _door: {fileID: 6672859922085976692}
+  _door: {fileID: 4846742778681986294}
+--- !u!1 &5402341291972214109
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2472002089210936120}
+  - component: {fileID: 451323301698383590}
+  - component: {fileID: 328275143823185427}
+  m_Layer: 0
+  m_Name: FogDoor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2472002089210936120
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5402341291972214109}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3494092689025418753}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &451323301698383590
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5402341291972214109}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bfc188a3661e74cdcb69fa789c9f5b3a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.FogDoor
+  _face: 4
+  _state: 1
+  _transitionSeconds: 0.35
+--- !u!114 &328275143823185427
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5402341291972214109}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 679a1ce253656453c9a62247e8829705, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.FogDoorVisual
+  _layers: 4
 --- !u!1 &5506324348348871572
 GameObject:
   m_ObjectHideFlags: 0
@@ -479,7 +646,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 585481899080910571}
+  - {fileID: 8536607643084266253}
   m_Father: {fileID: 1344655419202082655}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1669714975648866830
@@ -496,53 +663,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.Connector
   _face: 1
   _isDoorway: 0
-  _door: {fileID: 8687986712392726969}
---- !u!1 &5838922862944795805
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 585481899080910571}
-  - component: {fileID: 8687986712392726969}
-  m_Layer: 0
-  m_Name: FogDoor
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &585481899080910571
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5838922862944795805}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1718328793644383685}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8687986712392726969
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5838922862944795805}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bfc188a3661e74cdcb69fa789c9f5b3a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.FogDoor
-  _face: 1
-  _state: 1
+  _door: {fileID: 1092427640007387583}
 --- !u!1 &6890539369582591350
 GameObject:
   m_ObjectHideFlags: 0
@@ -573,7 +694,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 8140973085032586290}
+  - {fileID: 2472002089210936120}
   m_Father: {fileID: 1344655419202082655}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1923437007896546857
@@ -590,7 +711,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.Connector
   _face: 4
   _isDoorway: 0
-  _door: {fileID: 6865551120227517119}
+  _door: {fileID: 451323301698383590}
 --- !u!1 &7652399645555279442
 GameObject:
   m_ObjectHideFlags: 0
@@ -696,6 +817,7 @@ GameObject:
   m_Component:
   - component: {fileID: 134774039743286848}
   - component: {fileID: 7375657710723507387}
+  - component: {fileID: 6591807979460075774}
   m_Layer: 0
   m_Name: FogDoor
   m_TagString: Untagged
@@ -732,52 +854,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.FogDoor
   _face: 0
   _state: 1
---- !u!1 &8715449621901180897
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6245132031483903406}
-  - component: {fileID: 8928545246250544243}
-  m_Layer: 0
-  m_Name: FogDoor
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &6245132031483903406
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8715449621901180897}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 5152245789794422611}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8928545246250544243
+  _transitionSeconds: 0.35
+--- !u!114 &6591807979460075774
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8715449621901180897}
+  m_GameObject: {fileID: 8691582233487648723}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bfc188a3661e74cdcb69fa789c9f5b3a, type: 3}
+  m_Script: {fileID: 11500000, guid: 679a1ce253656453c9a62247e8829705, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.FogDoor
-  _face: 5
-  _state: 1
+  m_EditorClassIdentifier: Lucid.Runtime::Lucid.Runtime.FogDoorVisual
+  _layers: 4
 --- !u!1 &8868370451852975708
 GameObject:
   m_ObjectHideFlags: 0
