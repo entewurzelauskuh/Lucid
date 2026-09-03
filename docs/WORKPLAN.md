@@ -16,7 +16,7 @@ This is the document Claude Code works from. The spec says *what the game is*; t
 1. Sources of truth, in order: `docs/SPEC.md` (design), `docs/WORKPLAN.md` (order and acceptance), `CLAUDE.md` (conventions and commands), `docs/DECISIONS.md` (recorded deviations). If code and spec disagree, the spec wins unless a DECISIONS entry says otherwise.
 2. Pick the lowest-numbered open issue in the current milestone. Do not start the next milestone while the current one has open issues, unless an issue is labelled `parallel-ok`.
 3. One issue → one branch → one pull request. Branch names `m0/03-cube-pipeline`; conventional commits (`feat:`, `fix:`, `docs:`, `test:`, `chore:`).
-4. **Claude opens the pull request and stops.** The owner reviews, requests changes or merges (squash). Claude never merges its own work and never pushes to `main`. Requested changes go on the same branch.
+4. **Claude opens the pull request and stops.** The owner reviews and requests changes or gives the word to merge; the squash merge then follows on that word, for that pull request (`CLAUDE.md` rule 1). Claude never merges unasked and never pushes to `main`. Requested changes go on the same branch.
 5. Keep pull requests reviewable: one concern, roughly under 500 changed lines of hand-written code; generated prefabs, assets and previews do not count but are listed in the description.
 6. The PR description states what changed, why, how it was tested, and which spec sections it touches. If the work promotes a **[D]** to **[S]** or deviates from the spec, edit the spec in the same PR and add a DECISIONS entry.
 7. Tests before PR: `tools/run-tests.sh` must pass locally. `Lucid.Core` has a test for every rule; PlayMode tests cover the controller and the dream runtime. There is no CI; the PR description quotes the test summary line.
@@ -74,7 +74,7 @@ No `.github/workflows/` for now; see spec §18.
 
 ## 3. Definition of done
 
-A task is done when: the acceptance criteria below are met; `tools/run-tests.sh` passes locally; new rules have tests; new cubes pass the validator with previews committed; the independent review of `CLAUDE.md` rule 8 has run and its triage is on the pull request; the spec is updated if a default was decided; the owner has merged the pull request; the issue is closed with a one-line summary.
+A task is done when: the acceptance criteria below are met; `tools/run-tests.sh` passes locally; new rules have tests; new cubes pass the validator with previews committed; the independent review of `CLAUDE.md` rule 8 has run and its triage is on the pull request; the spec is updated if a default was decided; the owner has approved and the pull request is merged; the issue is closed with a one-line summary.
 
 A milestone is done when: every issue is closed, a play-test note exists in `docs/playtests/`, and `README.md` reflects what now works.
 
@@ -206,7 +206,7 @@ Goal: friends can play from the Steam friends list, 2–4 Sleepers each in their
 6. Open the pinned issue "Owner decisions needed" listing the spec's open questions (§19).
 7. Start M0.1 on branch `m0/01-skeleton`, open the pull request, stop.
 
-Owner actions Claude cannot do: GitHub account and repository permissions; installing Unity and telling Claude the version; Steam Direct sign-up and app ID (needed by M1.1); reviewing and merging pull requests.
+Owner actions Claude cannot do: GitHub account and repository permissions; installing Unity and telling Claude the version; Steam Direct sign-up and app ID (needed by M1.1); reviewing pull requests and giving the word to merge them.
 
 ## 10. Risks and spikes
 

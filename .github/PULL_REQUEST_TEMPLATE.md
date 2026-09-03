@@ -2,6 +2,8 @@
 
 ## Why  (issue #, spec §)
 
+Closes #
+
 ## How tested  (paste the tools/run-tests.sh summary line)
 
 ```
