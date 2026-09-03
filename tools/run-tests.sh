@@ -44,8 +44,22 @@ if [[ -z "${UNITY:-}" || ! -x "$UNITY" ]]; then
   exit 1
 fi
 
-# Batch mode cannot open a project the editor already holds.
-if [[ -e "$PROJECT/Temp/UnityLockfile" ]] && pgrep -f "Unity.*-projectPath.*$PROJECT" >/dev/null 2>&1; then
+# True when some Unity already has this project open.
+#
+# Matched as fixed strings, not a pattern: the project path is interpolated by
+# the caller, and a clone under a path containing a regex metacharacter — a
+# "C++" or a "(new)" — made pgrep fail to compile the pattern and silently
+# turn the guard off. Case-insensitive because the editor is launched with
+# -projectpath and the Hub may have recorded the folder with another case;
+# matching -projectPath exactly is what let #68 through.
+unity_holds_project() {
+  ps -Ao command= \
+    | grep -iF -- "-projectpath" \
+    | grep -qiF -- "$PROJECT"
+}
+
+# Batch mode cannot open a project the editor already holds; it aborts instead.
+if [[ -e "$PROJECT/Temp/UnityLockfile" ]] && unity_holds_project; then
   echo "error: the Unity editor has $PROJECT open. Close it, or run the tests from the editor." >&2
   exit 1
 fi
@@ -54,6 +68,17 @@ mkdir -p "$RESULTS"
 
 run_platform() {
   local platform="$1" out="$RESULTS/$1.xml"
+  # A results file left by an earlier run is indistinguishable from one this
+  # run wrote, and Unity leaves the old one in place when it aborts before
+  # starting. That reported "OK, 282/282" over a run that never began.
+  #
+  # Checked, because an unchecked rm reopens exactly that hole: if the results
+  # directory is not writable, the delete fails, the log redirect fails, and
+  # every grep below reads as "no match" — leaving the stale file to be parsed.
+  if ! rm -f "$out"; then
+    echo "$platform: cannot remove $out; results would be from an earlier run" >&2
+    return 1
+  fi
   local args=(-batchmode -nographics -projectPath "$PROJECT"
               -runTests -testPlatform "$platform" -testResults "$out"
               -logFile - )
@@ -71,6 +96,14 @@ run_platform() {
   local code=$?
   set -e
 
+  # Every check below reads the log, and grep exits 2 — which an `if` reads as
+  # "no match" — when the file is not there. So the log's existence is the
+  # precondition for trusting any of them.
+  if [[ ! -s "$RESULTS/$platform.log" ]]; then
+    echo "$platform: no log written (exit $code); the run did not start" >&2
+    return 1
+  fi
+
   # A compile error does not stop Unity from running whatever assemblies it
   # already had, so the run can report a cheerful green over a broken build.
   # Rule 6 makes this summary line the only evidence a reviewer gets, so treat
@@ -82,22 +115,46 @@ run_platform() {
     return 1
   fi
 
+  # Unity exits 0 in some abort paths, so the log is the tell.
+  if grep -q "Aborting batchmode due to" "$RESULTS/$platform.log"; then
+    echo "$platform: Unity aborted before running anything:" >&2
+    grep -A4 "Aborting batchmode due to" "$RESULTS/$platform.log" >&2
+    return 1
+  fi
+
   if [[ ! -f "$out" ]]; then
     echo "$platform: no results written (exit $code). Tail of the log:" >&2
     tail -20 "$RESULTS/$platform.log" >&2
     return 1
   fi
 
-  python3 - "$out" "$platform" <<'PY'
+  # Unity's exit code is deliberately not a verdict here: -runTests exits
+  # non-zero for ordinary test failures, so failing on it would replace the
+  # "N failed" summary with a vaguer message. The results file is the
+  # authority, and the checks above establish that it belongs to this run.
+
+    python3 - "$out" "$platform" <<'PY'
 import sys, xml.etree.ElementTree as ET
 path, platform = sys.argv[1], sys.argv[2]
 r = ET.parse(path).getroot()
 g = lambda k, d="0": r.get(k, d)
 total, passed = int(g("total")), int(g("passed"))
 failed, skipped = int(g("failed")), int(g("skipped"))
+inconclusive, state = int(g("inconclusive")), r.get("result", "")
 dur = float(g("duration", "0"))
 print(f"{platform}: {passed}/{total} passed, {failed} failed, {skipped} skipped ({dur:.1f}s)")
-sys.exit(1 if failed else 0)
+
+# A run that collected nothing is the other way of never starting, and it used
+# to print this same line and exit 0. CLAUDE.md's Status names that confusion
+# by hand; the runner should not need it named.
+problems = []
+if failed: problems.append(f"{failed} failed")
+if total == 0: problems.append("no tests ran at all")
+if inconclusive: problems.append(f"{inconclusive} inconclusive")
+if state and state != "Passed": problems.append(f"NUnit reported result={state}")
+if problems:
+    print(f"{platform}: " + "; ".join(problems), file=sys.stderr)
+    sys.exit(1)
 PY
 }
 

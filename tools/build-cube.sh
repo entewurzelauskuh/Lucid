@@ -37,7 +37,22 @@ if [[ -z "${UNITY:-}" || ! -x "$UNITY" ]]; then
   exit 1
 fi
 
-if [[ -e "$PROJECT/Temp/UnityLockfile" ]] && pgrep -f "Unity.*-projectPath.*$PROJECT" >/dev/null 2>&1; then
+# True when some Unity already has this project open.
+#
+# Matched as fixed strings, not a pattern: the project path is interpolated by
+# the caller, and a clone under a path containing a regex metacharacter — a
+# "C++" or a "(new)" — made pgrep fail to compile the pattern and silently
+# turn the guard off. Case-insensitive because the editor is launched with
+# -projectpath and the Hub may have recorded the folder with another case;
+# matching -projectPath exactly is what let #68 through.
+unity_holds_project() {
+  ps -Ao command= \
+    | grep -iF -- "-projectpath" \
+    | grep -qiF -- "$PROJECT"
+}
+
+# Batch mode cannot open a project the editor already holds; it aborts instead.
+if [[ -e "$PROJECT/Temp/UnityLockfile" ]] && unity_holds_project; then
   echo "error: the Unity editor has $PROJECT open. Close it, or build from the editor." >&2
   exit 1
 fi
@@ -60,6 +75,15 @@ set -e
 
 # A compile error does not stop Unity running whatever it already had, so a
 # build can report success over stale editor code (see #35, #49).
+# Unity can abort before running anything — most often because the editor has
+# the project open — and does not always exit non-zero when it does. Without
+# this the script reports success over a build that never started.
+if grep -q "Aborting batchmode due to" "$LOG"; then
+  echo "Unity aborted before running anything:" >&2
+  grep -A4 "Aborting batchmode due to" "$LOG" >&2
+  exit 1
+fi
+
 if grep -qE "error CS[0-9]+" "$LOG"; then
   echo "COMPILATION FAILED - the build below would be from stale assemblies" >&2
   grep -oE "[^ ]+\.cs\([0-9]+,[0-9]+\): error CS[0-9]+: .*" "$LOG" | sort -u | head -15 >&2
