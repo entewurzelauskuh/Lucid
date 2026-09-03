@@ -234,13 +234,14 @@ namespace Lucid.Editor.Cubes
 
         /// <summary>The extra clauses that disqualify an otherwise CC licence.</summary>
         internal const string DeniedLicence =
-            @"[^A-Za-z0-9](?:NC|ND|SA)+(?![A-Za-z])|NonCommercial|NoDerivat|ShareAlike";
+            @"(?:^|[^A-Za-z0-9])(?:NC|ND|SA)+(?![A-Za-z])" +
+            @"|Non[^A-Za-z0-9]*Commercial|No[^A-Za-z0-9]*Deriv|Share[^A-Za-z0-9]*Alike";
 
         /// <summary>
         /// The licence column of a ledger row, or null if the line is not one.
         /// </summary>
         /// <remarks>
-        /// docs/SPEC.md §18 fixes the shape: | file | source URL | licence |.
+        /// docs/SPEC.md §18 fixes the shape: | file | source | licence |.
         /// A line that is not a table row names no licence, and guessing from
         /// the whole line is what let a URL decide the verdict.
         /// </remarks>
@@ -330,6 +331,23 @@ namespace Lucid.Editor.Cubes
         /// The file names the manifest says are fetched. Mirrors the shape
         /// tools/check-licenses.py reads, so the two gates agree.
         /// </summary>
+        /// <summary>
+        /// The first of the name keys that carries a non-empty string, which is
+        /// what `if entry.get(key)` means on the hook's side. `??` stops at a
+        /// JSON null, because a JValue.Null is not a C# null.
+        /// </summary>
+        static string FirstName(Newtonsoft.Json.Linq.JObject entry)
+        {
+            foreach (string key in new[] { "file", "path", "name", "dest" })
+            {
+                string value = entry[key]?.Type == Newtonsoft.Json.Linq.JTokenType.String
+                    ? (string)entry[key]
+                    : null;
+                if (!string.IsNullOrEmpty(value)) return value;
+            }
+            return null;
+        }
+
         static string[] ManifestNames(string cubeFolder)
         {
             string path = Path.Combine(cubeFolder, "assets.manifest.json");
@@ -337,12 +355,14 @@ namespace Lucid.Editor.Cubes
 
             try
             {
-                var root = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(path));
-                var list = root["assets"] as Newtonsoft.Json.Linq.JArray;
+                var root = Newtonsoft.Json.Linq.JToken.Parse(File.ReadAllText(path));
+                var list = root as Newtonsoft.Json.Linq.JArray
+                    ?? (root as Newtonsoft.Json.Linq.JObject)?["assets"]
+                        as Newtonsoft.Json.Linq.JArray;
                 if (list == null) return new string[0];
 
                 return list.OfType<Newtonsoft.Json.Linq.JObject>()
-                    .Select(e => (string)(e["file"] ?? e["path"] ?? e["name"] ?? e["dest"]))
+                    .Select(FirstName)
                     .Where(n => !string.IsNullOrEmpty(n))
                     .Select(Path.GetFileName)
                     .ToArray();

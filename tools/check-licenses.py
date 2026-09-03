@@ -50,7 +50,10 @@ ASSET_DIR = re.compile(r"(?P<cube>(?:.*/)?Packs/[^/]+/Cubes/[^/]+)/assets/(?P<re
 # its verdicts against the validator's, which is the only check that proves the
 # two agree rather than merely look alike.
 ALLOWED_PATTERN = r"\bCC0\b|\bCC[- ]?BY\b"
-DENIED_PATTERN = r"[^A-Za-z0-9](?:NC|ND|SA)+(?![A-Za-z])|NonCommercial|NoDerivat|ShareAlike"
+DENIED_PATTERN = (
+    r"(?:^|[^A-Za-z0-9])(?:NC|ND|SA)+(?![A-Za-z])"
+    r"|Non[^A-Za-z0-9]*Commercial|No[^A-Za-z0-9]*Deriv|Share[^A-Za-z0-9]*Alike"
+)
 ALLOWED = re.compile(ALLOWED_PATTERN, re.IGNORECASE)
 DENIED = re.compile(DENIED_PATTERN, re.IGNORECASE)
 # Text that lives with the assets rather than being one.
@@ -60,7 +63,7 @@ EXEMPT = {"LICENSES.md"}
 def licence_cell(entry: str) -> str | None:
     """The licence column of a ledger row, or None if the line is not a row.
 
-    docs/SPEC.md §18 fixes the shape: | file | source URL | licence |. A line
+    docs/SPEC.md §18 fixes the shape: | file | source | licence |. A line
     that is not a table row cannot be read for a licence, and guessing from the
     whole line is what let a URL decide the verdict.
     """
@@ -144,7 +147,11 @@ def manifest_names(cube: Path) -> set[str]:
     except json.JSONDecodeError as exc:
         print(f"  {manifest}: not valid JSON ({exc})", file=sys.stderr)
         return set()
-    entries = data if isinstance(data, list) else data.get("assets", [])
+    entries = data if isinstance(data, list) else (
+        data.get("assets", []) if isinstance(data, dict) else []
+    )
+    if not isinstance(entries, list):
+        entries = []
     names = set()
     for entry in entries:
         if isinstance(entry, dict):
@@ -168,8 +175,13 @@ def check(paths: list[str], base: Path | None = None) -> list[str]:
         if name in EXEMPT:
             continue
 
-        # A .meta rides along with its asset; judge the asset instead.
-        subject = name[:-5] if name.endswith(".meta") else name
+        # A .meta is Unity's own import settings, not third-party content, and
+        # the asset it rides with is judged on its own account. CubeValidator
+        # skips them too: judging the subject here made a stray wall.png.meta
+        # with no wall.png block the commit and pass the build.
+        if name.endswith(".meta"):
+            continue
+        subject = name
         if subject in EXEMPT:
             continue
 

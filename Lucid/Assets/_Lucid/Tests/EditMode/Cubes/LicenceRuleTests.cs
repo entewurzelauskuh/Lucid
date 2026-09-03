@@ -52,10 +52,10 @@ namespace Lucid.Tests.EditMode.Cubes
             return CubeValidator.Validate(_cube, spec, Folder);
         }
 
-        static void Blames(ValidationReport report, string fragment)
+        static void Blames(ValidationReport report, string fragment, string because = null)
         {
             Assert.That(report.Problems.Where(p => p.Rule == "licences").Select(p => p.Message),
-                Has.Some.Contains(fragment), report.Describe());
+                Has.Some.Contains(fragment), because == null ? report.Describe() : $"{because}: {report.Describe()}");
         }
 
         [Test]
@@ -140,9 +140,22 @@ namespace Lucid.Tests.EditMode.Cubes
             // U+001C is whitespace to Python's \s and not to .NET's, so while
             // the pattern used \s this was rejected by the hook and accepted
             // here — a cube building clean and failing at commit. Neither
-            // pattern uses \s now, so both read it as an ordinary character
-            // and both accept.
-            ("CC-BY\u001CNC 4.0", true),
+            // pattern uses \s now; both read it as a separator like any other
+            // non-alphanumeric, and both refuse the clause behind it.
+            ("CC-BY\u001CNC 4.0", false),
+
+            // A clause name survives being broken up, and CC 3.0 spells
+            // NoDerivatives "NoDerivs" — the spelling most 3.0-era Sketchfab
+            // and OpenGameArt assets still carry. Three unbroken literals let
+            // every one of these through both gates.
+            ("CC BY-NoDerivs 3.0", false), ("CC BY Non-Commercial 4.0", false),
+            ("CC BY Share-Alike 4.0", false), ("CC BY Non Commercial 4.0", false),
+            ("CC BY No Derivative Works 3.0", false),
+            ("Attribution-NonCommercial-ShareAlike 4.0 International", false),
+
+            // A clause at the very start of the cell: the separator class needs
+            // a character to consume, and the padding is already trimmed off.
+            ("NC CC-BY 4.0", false), ("SA CC0", false), ("ND CC BY 4.0", false),
         };
 
         /// <summary>
@@ -157,6 +170,15 @@ namespace Lucid.Tests.EditMode.Cubes
             ("| a.png | url |", false),                          // too few columns
             ("|---|---|---|", false),                            // a separator row
             ("a.png is CC0, trust me", false),                   // not a row at all
+
+            // A CC token outside the licence cell. Reading the line instead of
+            // the cell — the bug f429bab fixed and every comment here cites —
+            // survived every assertion in this file until these rows existed.
+            // cc0-textures.com is ambientCG, which docs/SPEC.md §17 recommends
+            // by name, so this is the realistic row, not the exotic one.
+            ("| cc0-wall.png | https://polyhaven.com/x | Unity Asset Store Standard EULA |", false),
+            ("| wall.png | https://cc0-textures.com/a/Wall | All rights reserved |", false),
+            ("| wall.png | https://cc0-textures.com/a/Wall | CC-BY-NC 4.0 |", false),
         };
 
         [Test]
@@ -164,6 +186,34 @@ namespace Lucid.Tests.EditMode.Cubes
         {
             foreach ((string row, bool allowed) in Rows)
                 Assert.That(CubeValidator.IsRedistributable(row), Is.EqualTo(allowed), row);
+        }
+
+        [Test]
+        public void BothGatesReadTheSameColumnOfTheSameRow()
+        {
+            string script = HookPath();
+            foreach ((string row, bool allowed) in Rows)
+            {
+                Assert.That(CubeValidator.IsRedistributable(row), Is.EqualTo(allowed),
+                    $"validator: {row}");
+                bool? hook = JudgeWithHook(script, row);
+                if (hook == null) Assert.Ignore("python3 is not on PATH");
+                Assert.That(hook, Is.EqualTo(allowed), $"hook: {row}");
+            }
+        }
+
+        /// <summary>
+        /// Writes <paramref name="row"/> as the whole ledger, creates whichever
+        /// asset it names, and runs the hook on it.
+        /// </summary>
+        bool? JudgeWithHook(string script, string row)
+        {
+            string named = row.Contains("cc0-wall.png") ? "cc0-wall.png"
+                : row.Contains("wall.png") ? "wall.png"
+                : row.Contains("hero.fbx") ? "hero.fbx" : "a.png";
+            Asset(named);
+            Ledger(row);
+            return HookAccepts(script, AssetPath(named));
         }
 
         /// <summary>
@@ -194,10 +244,7 @@ namespace Lucid.Tests.EditMode.Cubes
                 Assert.That(CubeValidator.IsRedistributable(row), Is.EqualTo(allowed),
                     $"validator: {row}");
 
-                Asset("hero.fbx");
-                Asset("a.png");
-                Ledger(row);
-                bool? hook = HookAccepts(script, AssetPath(row.Contains("a.png") ? "a.png" : "hero.fbx"));
+                bool? hook = JudgeWithHook(script, row);
                 if (hook == null) Assert.Ignore("python3 is not on PATH");
                 Assert.That(hook, Is.EqualTo(allowed), $"hook: {row}");
             }
@@ -241,10 +288,14 @@ namespace Lucid.Tests.EditMode.Cubes
             Assert.That(File.Exists(script), Is.True, $"no hook at {script}");
 
             var disagreements = new System.Collections.Generic.List<string>();
-            foreach ((string licence, bool _) in Licences)
+            foreach ((string licence, bool allowed) in Licences)
             {
                 string row = $"| hero.fbx | https://example.invalid/x | {licence} |";
                 bool validator = CubeValidator.IsRedistributable(row);
+                // Agreement is not correctness: both gates accepting CC-BY-NC
+                // passed this test for as long as the verdict was not asserted,
+                // and one entry here had already gone stale that way.
+                Assert.That(validator, Is.EqualTo(allowed), $"verdict for '{licence}'");
 
                 Asset("hero.fbx");
                 Ledger(row);
@@ -345,6 +396,77 @@ namespace Lucid.Tests.EditMode.Cubes
                 "{ \"assets\": [ { \"file\": \"statue.fbx\", \"url\": \"https://e.com/s\" } ] }");
 
             Blames(Validate(), "must not be committed");
+        }
+
+        /// <summary>
+        /// Manifest shapes both gates have to read the same way. The hook and
+        /// the validator parse the file separately, so a shape one accepts and
+        /// the other cannot is a cube that builds clean and will not commit.
+        /// </summary>
+        static readonly (string Json, string Why)[] Manifests =
+        {
+            ("{ \"assets\": [ { \"file\": \"statue.fbx\" } ] }", "the documented shape"),
+            ("[ { \"file\": \"statue.fbx\" } ]", "a top-level array"),
+            ("{ \"assets\": [ { \"file\": null, \"path\": \"statue.fbx\" } ] }", "a JSON null before the key that has it"),
+            ("{ \"assets\": [ { \"file\": \"\", \"path\": \"statue.fbx\" } ] }", "an empty string before the key that has it"),
+        };
+
+        [Test]
+        public void BothGatesReadTheSameManifestShapes()
+        {
+            string script = HookPath();
+            foreach ((string json, string why) in Manifests)
+            {
+                Asset("statue.fbx");
+                Ledger("| statue.fbx | https://example.com/s | CC0 |");
+                File.WriteAllText($"{Folder}/assets.manifest.json", json);
+
+                Blames(Validate(), "must not be committed", why);
+                bool? hook = HookAccepts(script, AssetPath("statue.fbx"));
+                if (hook == null) Assert.Ignore("python3 is not on PATH");
+                Assert.That(hook, Is.False, $"hook: {why}");
+
+                File.Delete($"{Folder}/assets.manifest.json");
+            }
+        }
+
+        [Test]
+        public void AMalformedManifestStopsNeitherGate()
+        {
+            // A manifest that is not a list of entries means nothing is known to
+            // be fetched; the ledger rule still applies. It must not crash
+            // either gate — every shape but the array crashed the hook on every
+            // commit until now.
+            string script = HookPath();
+            foreach (string json in new[] { "null", "\"nothing yet\"", "42", "{ \"assets\": 5 }", "{ }" })
+            {
+                Asset("statue.fbx");
+                Ledger("| statue.fbx | https://example.com/s | CC0 |");
+                File.WriteAllText($"{Folder}/assets.manifest.json", json);
+
+                Assert.That(Validate().Problems.Select(p => p.Rule), Has.None.EqualTo("licences"), json);
+                bool? hook = HookAccepts(script, AssetPath("statue.fbx"));
+                if (hook == null) Assert.Ignore("python3 is not on PATH");
+                Assert.That(hook, Is.True, $"hook: {json}");
+
+                File.Delete($"{Folder}/assets.manifest.json");
+            }
+        }
+
+        [Test]
+        public void AStrayMetaIsNotAnAssetToEitherGate()
+        {
+            // Unity writes a .meta for everything and leaves them behind when
+            // the asset goes. The validator skips them; the hook used to judge
+            // the asset named inside the filename, so a wall.png.meta with no
+            // wall.png blocked the commit and passed the build.
+            Asset("wall.png.meta");
+            Ledger("| nothing | x | CC0 |");
+
+            Assert.That(Validate().Problems.Select(p => p.Rule), Has.None.EqualTo("licences"));
+            bool? hook = HookAccepts(HookPath(), AssetPath("wall.png.meta"));
+            if (hook == null) Assert.Ignore("python3 is not on PATH");
+            Assert.That(hook, Is.True);
         }
 
         [Test]
