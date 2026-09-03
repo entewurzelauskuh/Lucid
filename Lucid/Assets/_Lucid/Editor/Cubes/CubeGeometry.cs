@@ -1,4 +1,5 @@
 using Lucid.Core;
+using Lucid.Runtime;
 using UnityEngine;
 
 namespace Lucid.Editor.Cubes
@@ -16,15 +17,15 @@ namespace Lucid.Editor.Cubes
     /// </remarks>
     public static class CubeGeometry
     {
-        public const float Size = 8f;
-        public const float Half = Size / 2f;
-
-        /// <summary>Doorways are 2.5 m wide and 3 m high, at floor level.</summary>
-        public const float DoorWidth = 2.5f;
-        public const float DoorHeight = 3f;
-
-        /// <summary>A vertical connector is a 2.5 m square hole.</summary>
-        public const float VerticalHole = 2.5f;
+        // Defined in Lucid.Runtime.CubeMetrics: a doorway's size is what a
+        // Sleeper fits through and what a fog door has to fill, so it is
+        // gameplay as much as construction. Re-exported here so the builder
+        // reads as it always has.
+        public const float Size = CubeMetrics.Size;
+        public const float Half = CubeMetrics.Half;
+        public const float DoorWidth = CubeMetrics.DoorWidth;
+        public const float DoorHeight = CubeMetrics.DoorHeight;
+        public const float VerticalHole = CubeMetrics.VerticalHole;
 
         public const float DefaultThickness = 0.3f;
 

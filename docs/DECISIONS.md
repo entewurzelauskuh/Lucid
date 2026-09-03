@@ -12,6 +12,13 @@ Reason: why this over the alternatives.
 Spec: sections changed.
 ```
 
+## 2026-09-03 — A solidified door stops moving instead of becoming the wall
+
+Context: #5. `docs/SPEC.md` §7 marks the fog-door block **[S]** and says a Solid connector is a "Wall in the cube's skin; the mist condensed into it"; `docs/WORKPLAN.md` §4 repeats it as an M0.5 deliverable, "Solid (condenses into the cube's wall material)".
+Decision: a Solid door renders as mist that is dark, opaque and **completely still**, rather than taking on the cube's wall material. The target is unchanged and the delivery is deferred to M0.6.
+Reason: a door cannot reach its cube's wall material yet. `FogDoor` sits on a socket under a cube prefab and knows its `Face` and nothing else; the skin that decides a wall's material is chosen per cube by the `DreamPack`, and nothing assembles the two until M0.6 instantiates cubes from an event log and wires their doors to derived states. Faking it — sampling a neighbouring wall, or hard-coding a material — would put a second answer to "what does this cube look like" beside the skin system that owns it. The substitute keeps the property that matters, which `docs/UI.md` §1 states as a principle rather than a preference: door states must not differ by hue alone, and a wall that does not breathe is a tell no colour-blind viewer can miss. Recorded rather than left in a code comment because a reader of §7 or of M0.6's acceptance would otherwise have no way to know the debt exists — the same reason the doorFrame-styles entry below was written.
+Spec: none. §7 stays the target; only the delivery moves.
+
 ## 2026-08-25 — The dream pulls 2.4 g, and the Sleeper has flat feet
 
 Context: #4. `docs/SPEC.md` §9 sets three numbers that are not independent: run 6 m/s, jump 1.2 m of rise, and clear "~4 m gap at full speed". Fixing two of them fixes gravity.
