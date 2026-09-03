@@ -194,7 +194,16 @@ namespace Lucid.Tests.EditMode.Cubes
                 string.Join("\n  ", disagreements));
         }
 
-        /// <summary>Runs the hook on one path. Null when python3 is unavailable.</summary>
+        /// <summary>
+        /// Runs the hook on one path. Null when python3 is unavailable.
+        /// </summary>
+        /// <remarks>
+        /// Throws rather than returning false when the script itself fails. An
+        /// unhandled Python exception exits 1, exactly like a licence
+        /// violation, so without this a broken hook was reported as
+        /// disagreeing with the validator — a true failure with a false
+        /// diagnosis, which is the more expensive kind.
+        /// </remarks>
         static bool? HookAccepts(string script, string assetPath)
         {
             try
@@ -210,8 +219,13 @@ namespace Lucid.Tests.EditMode.Cubes
                 };
                 process.Start();
                 process.StandardOutput.ReadToEnd();
-                process.StandardError.ReadToEnd();
+                string errors = process.StandardError.ReadToEnd();
                 process.WaitForExit();
+
+                if (errors.Contains("Traceback"))
+                    throw new AssertionException(
+                        $"tools/check-licenses.py failed rather than judging {assetPath}:\n{errors}");
+
                 return process.ExitCode == 0;
             }
             catch (System.ComponentModel.Win32Exception)
