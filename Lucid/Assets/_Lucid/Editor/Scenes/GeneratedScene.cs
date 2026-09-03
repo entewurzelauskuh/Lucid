@@ -44,13 +44,22 @@ namespace Lucid.Editor.Scenes
             // an untitled scene, so refusing outright made the command usable
             // exactly once. It is replaced in place instead, and refused only
             // when that would discard unsaved edits.
-            bool rebuildingOpenScene = previous.path == path;
+            // Any loaded scene, not just the active one. Looking only at the
+            // active scene meant a target opened additively beside it was read
+            // for its signature and then closed — with the developer's unsaved
+            // edits in it, without a prompt.
+            Scene target = SceneManager.GetSceneByPath(path);
+            bool loaded = target.IsValid() && target.isLoaded;
+            bool rebuildingOpenScene = loaded;
 
-            if ((untitled || rebuildingOpenScene) && previous.isDirty)
+            if (loaded && target.isDirty)
                 throw new Exception(
-                    $"save or discard your changes to {(rebuildingOpenScene ? path : "the open scene")} " +
-                    "first: rebuilding would replace it, and Unity cannot add a scene beside an " +
-                    "unsaved untitled one either.");
+                    $"save or discard your changes to {path} first: rebuilding would replace it.");
+
+            if (untitled && previous.isDirty)
+                throw new Exception(
+                    "save the open scene first, or close it: Unity cannot add a scene beside " +
+                    "an unsaved untitled one, and replacing it would lose your work.");
 
             bool additive = !untitled && !rebuildingOpenScene;
 

@@ -18,6 +18,7 @@ Shader "Lucid/Mist"
         _Drift         ("Drift speed", Range(0, 2)) = 0.12
         _EdgeSoftness  ("Edge softness", Range(0.001, 0.5)) = 0.18
         _Dissolve      ("Dissolve", Range(0, 1)) = 0
+        _Base          ("Base opacity", Range(0, 1)) = 0
     }
 
     SubShader
@@ -52,6 +53,7 @@ Shader "Lucid/Mist"
                 float  _Drift;
                 float  _EdgeSoftness;
                 float  _Dissolve;
+                float  _Base;
             CBUFFER_END
 
             // The frac/dot hash in wide circulation from Inigo Quilez's
@@ -109,7 +111,10 @@ Shader "Lucid/Mist"
 
                 // Dissolve eats the thinnest parts of the noise first, so a
                 // door clears in wisps instead of fading uniformly.
-                float alpha = saturate(n * _Density) * edge;
+                // _Base is the alpha the noise cannot take away: a hardened
+                // door is a wall, and a wall is not see-through wherever the
+                // noise happens to be thin.
+                float alpha = saturate(max(_Base, n * _Density)) * edge;
                 alpha *= saturate((n - _Dissolve) / max(1e-3, 1.0 - _Dissolve));
 
                 half3 colour = _Tint.rgb * _Brightness * (0.65 + 0.35 * n);

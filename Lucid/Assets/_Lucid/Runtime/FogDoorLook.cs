@@ -25,13 +25,24 @@ namespace Lucid.Runtime
         /// <summary>How much of the mist has been eaten away, 0 to 1.</summary>
         public readonly float Dissolve;
 
-        public FogDoorLook(Color tint, float brightness, float density, float drift, float dissolve)
+        /// <summary>
+        /// Alpha the noise cannot reduce, 0 to 1. Drifting mist is only ever as
+        /// opaque as the noise happens to be at a texel, which for a hardened
+        /// door left the room visible through the wall. Solid sets this to 1;
+        /// everything else leaves the noise in charge.
+        /// </summary>
+        public readonly float Opacity;
+
+        public FogDoorLook(
+            Color tint, float brightness, float density, float drift, float dissolve,
+            float opacity = 0f)
         {
             Tint = tint;
             Brightness = brightness;
             Density = density;
             Drift = drift;
             Dissolve = dissolve;
+            Opacity = opacity;
         }
 
         /// <summary>Dark, dense and slow: a dead end for now.</summary>
@@ -53,7 +64,7 @@ namespace Lucid.Runtime
         /// which is the tell that matters — a wall does not breathe.
         /// </summary>
         public static FogDoorLook Solid =>
-            new FogDoorLook(new Color(0.20f, 0.20f, 0.23f), 0.30f, 1f, 0f, 0f);
+            new FogDoorLook(new Color(0.20f, 0.20f, 0.23f), 0.30f, 1f, 0f, 0f, opacity: 1f);
 
         public static FogDoorLook For(ConnectorState state)
         {
@@ -73,6 +84,7 @@ namespace Lucid.Runtime
                 Mathf.Lerp(a.Brightness, b.Brightness, t),
                 Mathf.Lerp(a.Density, b.Density, t),
                 Mathf.Lerp(a.Drift, b.Drift, t),
-                Mathf.Lerp(a.Dissolve, b.Dissolve, t));
+                Mathf.Lerp(a.Dissolve, b.Dissolve, t),
+                Mathf.Lerp(a.Opacity, b.Opacity, t));
     }
 }

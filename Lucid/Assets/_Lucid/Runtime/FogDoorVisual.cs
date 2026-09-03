@@ -12,6 +12,14 @@ namespace Lucid.Runtime
     /// as something you cannot see through. It is also why the door is a
     /// volume 0.25 m deep rather than a plane.
     ///
+    /// Each layer carries its own property block, which is what lets four
+    /// quads of one shared material show four different states. The cost is
+    /// that a property block puts a renderer outside the SRP Batcher: six
+    /// sockets times four layers is 24 unbatched transparent draws per cube.
+    /// Accepted because the mist animates continuously and per-state shared
+    /// materials could not; worth revisiting if transparent fill becomes the
+    /// budget rather than the draw count.
+    ///
     /// Built in code, like the door's colliders and like
     /// <see cref="SleeperRig"/>: the geometry is entirely determined by
     /// <see cref="CubeMetrics"/>, so serialising it would only create
@@ -105,10 +113,13 @@ namespace Lucid.Runtime
 
                 // Spread across the door's depth so the stack has thickness.
                 float t = _layers == 1 ? 0.5f : i / (float)(_layers - 1);
-                go.transform.localPosition = new Vector3(
-                    0f, CubeMetrics.DoorHeight / 2f, Mathf.Lerp(-FogDoor.Depth / 2f, FogDoor.Depth / 2f, t));
-                go.transform.localScale =
-                    new Vector3(CubeMetrics.DoorWidth, CubeMetrics.DoorHeight, 1f);
+                // The same opening the collider fills, which for a vertical
+                // connector is a 2.5 m square rather than a doorway.
+                Vector3 size = FogDoor.OpeningSize(_door.Face);
+                Vector3 centre = FogDoor.OpeningCentre(_door.Face);
+                go.transform.localPosition = centre + new Vector3(
+                    0f, 0f, Mathf.Lerp(-FogDoor.Depth / 2f, FogDoor.Depth / 2f, t));
+                go.transform.localScale = new Vector3(size.x, size.y, 1f);
 
                 go.AddComponent<MeshFilter>().sharedMesh = Quad();
                 var renderer = go.AddComponent<MeshRenderer>();
@@ -136,6 +147,7 @@ namespace Lucid.Runtime
                 _block.SetColor("_Tint", Shown.Tint);
                 _block.SetFloat("_Brightness", Shown.Brightness);
                 _block.SetFloat("_Density", Shown.Density / _renderers.Length * 1.6f * depth);
+                _block.SetFloat("_Base", Shown.Opacity);
                 _block.SetFloat("_Scale", 1.6f + i * 0.7f);
                 _block.SetFloat("_Drift", Shown.Drift * (1f + i * 0.35f));
                 _block.SetFloat("_Dissolve", Shown.Dissolve);

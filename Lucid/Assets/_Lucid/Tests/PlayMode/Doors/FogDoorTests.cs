@@ -56,9 +56,12 @@ namespace Lucid.Tests.PlayMode.Doors
             return motor;
         }
 
+        SimulationMode _physicsWas;
+
         [SetUp]
         public void DrivePhysicsByHand()
         {
+            _physicsWas = Physics.simulationMode;
             // SleeperPilot ticks the motor many times inside one frame, which
             // is what makes the movement tests fast and frame-rate independent.
             // Collision survives that — CharacterController.Move sweeps
@@ -68,8 +71,28 @@ namespace Lucid.Tests.PlayMode.Doors
             Physics.simulationMode = SimulationMode.Script;
         }
 
+        // Restores what was there rather than assuming FixedUpdate: this is
+        // the only fixture in the tree that touches a global, and guessing its
+        // previous value would quietly rewrite the project's setting.
         [TearDown]
-        public void RestorePhysics() => Physics.simulationMode = SimulationMode.FixedUpdate;
+        public void RestorePhysics() => Physics.simulationMode = _physicsWas;
+
+        /// <summary>
+        /// Stopped *by the door*, rather than merely not past it.
+        /// </summary>
+        /// <remarks>
+        /// "z &lt; the door" is also true of a Sleeper that fell through the
+        /// floor, never spawned its controller or received no input. Requiring
+        /// it to have arrived at the door as well pins the barrier's front face
+        /// and makes the assertion about the mist.
+        /// </remarks>
+        static void AssertStoppedAtTheDoor(float reached, string what)
+        {
+            Assert.That(reached, Is.LessThan(DoorZ),
+                $"walked through {what} to z {reached:0.00}");
+            Assert.That(reached, Is.GreaterThan(DoorZ - 1f),
+                $"never reached {what} at all — stopped at z {reached:0.00}");
+        }
 
         /// <summary>Walks a Sleeper at the door and reports how far it got.</summary>
         static float WalkInto(SleeperMotor motor)
@@ -94,8 +117,7 @@ namespace Lucid.Tests.PlayMode.Doors
             float reached = WalkInto(motor);
 
             Assert.That(door.IsPassable, Is.False);
-            Assert.That(reached, Is.LessThan(DoorZ),
-                $"walked through grey mist to z {reached:0.00}");
+            AssertStoppedAtTheDoor(reached, "grey mist");
         }
 
         [UnityTest]
@@ -108,8 +130,7 @@ namespace Lucid.Tests.PlayMode.Doors
 
             float reached = WalkInto(motor);
 
-            Assert.That(reached, Is.LessThan(DoorZ),
-                $"walked through hardened wall to z {reached:0.00}");
+            AssertStoppedAtTheDoor(reached, "hardened wall");
         }
 
         [UnityTest]
@@ -166,8 +187,7 @@ namespace Lucid.Tests.PlayMode.Doors
 
             float reached = WalkInto(motor);
 
-            Assert.That(reached, Is.LessThan(DoorZ),
-                $"a door that hardened still let a Sleeper through to z {reached:0.00}");
+            AssertStoppedAtTheDoor(reached, "a door that hardened");
         }
 
         [UnityTest]

@@ -94,7 +94,7 @@ namespace Lucid.Tests.EditMode.Doors
             float before = visual.Shown.Brightness;
 
             _door.SetState(ConnectorState.Exit);
-            _door.Tick(_door.Progress >= 1f ? 0f : 0.1f);
+            _door.Tick(0.1f);
             visual.Refresh();
 
             float half = visual.Shown.Brightness;
@@ -122,6 +122,13 @@ namespace Lucid.Tests.EditMode.Doors
 
             Assert.That(visual.Shown.Brightness, Is.EqualTo(interrupted).Within(1e-3f),
                 "the mist jumped when the transition was interrupted");
+
+            // And it has to finish somewhere: blending from the right place is
+            // half the property, arriving at the right place is the other half.
+            _door.Tick(1000f);
+            visual.Refresh();
+            Assert.That(visual.Shown.Brightness, Is.EqualTo(FogDoorLook.Fog.Brightness).Within(1e-3f),
+                "the interrupted door never arrived back at fog");
         }
 
         [Test]
@@ -182,7 +189,115 @@ namespace Lucid.Tests.EditMode.Doors
             _door.SetState(ConnectorState.Attached);
 
             Assert.That(_door.State, Is.EqualTo(ConnectorState.Attached));
-            Assert.That(_door.Playing, Is.EqualTo(FogDoorTransition.Forbidden));
+
+            // Applied, but not animated. Playing the change would present an
+            // unlawful derivation as though it were an ordinary one.
+            Assert.That(_door.Playing, Is.EqualTo(FogDoorTransition.None));
+            Assert.That(_door.Progress, Is.EqualTo(1f).Within(1e-4f));
+        }
+
+        [Test]
+        public void BeingToldTheSameStateAgainDoesNotCancelWhatIsPlaying()
+        {
+            // The shape a per-frame refresh from M0.6's lattice mirror has. As
+            // a reset it would snap every transition to its end on the frame
+            // after it started.
+            _door.SetState(ConnectorState.Exit);
+            _door.Tick(0.1f);
+            float midway = _door.Progress;
+
+            _door.SetState(ConnectorState.Exit);
+
+            Assert.That(_door.Progress, Is.EqualTo(midway).Within(1e-4f));
+            Assert.That(_door.Playing, Is.EqualTo(FogDoorTransition.Kindle));
+        }
+
+        [Test]
+        public void ADoorAdoptsTheCollidersItAlreadyHasInsteadOfAddingMore()
+        {
+            // A door saved into a scene comes back with its colliders but not
+            // with any "already built" flag, so building again added a second
+            // barrier and — on an exit — a second live wake trigger, and one
+            // touch was reported twice. The committed FogDoors.unity had eight
+            // of them baked in. The same thing happens on a domain reload in
+            // play mode, where Awake does not run again.
+            var go = new GameObject("saved door");
+            try
+            {
+                var barrier = go.AddComponent<BoxCollider>();
+                var wake = go.AddComponent<BoxCollider>();
+                wake.isTrigger = true;
+
+                var door = go.AddComponent<FogDoor>();
+                door.Initialise(ConnectorState.Exit);
+
+                var colliders = go.GetComponents<BoxCollider>();
+                Assert.That(colliders, Has.Length.EqualTo(2),
+                    "the door added colliders beside the ones it already had");
+                Assert.That(colliders, Has.Member(barrier).And.Member(wake));
+
+                // And the adopted pair is the pair the state drives.
+                Assert.That(wake.enabled, Is.True, "the adopted trigger is not the live one");
+                Assert.That(barrier.enabled, Is.False, "an exit is still blocking");
+            }
+            finally { Object.DestroyImmediate(go); }
+        }
+
+        [Test]
+        public void AVerticalConnectorIsASquareHoleNotADoorway()
+        {
+            // docs/CUBE-SPEC.md §1: a vertical connector is a 2.5 m square in
+            // the floor or ceiling. Using the doorway's 2.5 × 3 covered half of
+            // it and buried 1.75 m of collider in the slab, so a Sleeper would
+            // have walked through the uncovered half of a Fog floor that §7
+            // calls solid to the touch.
+            Vector3 flat = FogDoor.OpeningSize(Face.Up);
+            Assert.That(flat.x, Is.EqualTo(CubeMetrics.VerticalHole).Within(1e-4f));
+            Assert.That(flat.y, Is.EqualTo(CubeMetrics.VerticalHole).Within(1e-4f));
+            Assert.That(FogDoor.OpeningCentre(Face.Up), Is.EqualTo(Vector3.zero));
+
+            Vector3 upright = FogDoor.OpeningSize(Face.North);
+            Assert.That(upright.x, Is.EqualTo(CubeMetrics.DoorWidth).Within(1e-4f));
+            Assert.That(upright.y, Is.EqualTo(CubeMetrics.DoorHeight).Within(1e-4f));
+            Assert.That(FogDoor.OpeningCentre(Face.North).y,
+                Is.EqualTo(CubeMetrics.DoorHeight / 2f).Within(1e-4f));
+        }
+
+        [Test]
+        public void AHardenedDoorIsNotSeeThrough()
+        {
+            // Drifting mist is only as opaque as the noise happens to be, so a
+            // Solid door composited to about half transparent — you could see
+            // the room through a wall. docs/DECISIONS.md says opaque, and this
+            // is what makes that true.
+            Assert.That(FogDoorLook.Solid.Opacity, Is.EqualTo(1f).Within(1e-4f));
+            Assert.That(FogDoorLook.Fog.Opacity, Is.LessThan(1f),
+                "fog is meant to be mist, not a wall");
+        }
+
+        [Test]
+        public void TheNumbersReachTheShader()
+        {
+            // Everything else here asserts FogDoorLook.Shown, which is computed
+            // before a single property is set. A misspelt property name, or a
+            // missing SetPropertyBlock, would leave every door rendering at the
+            // material defaults with all of these tests still green.
+            var visual = _go.AddComponent<FogDoorVisual>();
+            _door.SetState(ConnectorState.Exit);
+            _door.Tick(1000f);
+            visual.Refresh();
+
+            var renderers = _go.GetComponentsInChildren<Renderer>();
+            Assert.That(renderers, Is.Not.Empty, "the quad stack was never built");
+
+            var block = new MaterialPropertyBlock();
+            renderers[0].GetPropertyBlock(block);
+
+            Assert.That(block.GetFloat("_Brightness"),
+                Is.EqualTo(FogDoorLook.Exit.Brightness).Within(1e-3f),
+                "the brightness never reached the renderer");
+            Assert.That(block.GetFloat("_Drift"), Is.GreaterThan(0f),
+                "the drift never reached the renderer");
         }
 
         [Test]
