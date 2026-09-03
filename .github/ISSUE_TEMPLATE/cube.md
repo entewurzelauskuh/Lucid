@@ -26,5 +26,6 @@ labels: "area:content"
      ledges ≤ 1.1 m, crawl ≥ 1.1 m. -->
 
 ## Assets
-<!-- Sources and licences. CC0 / CC-BY can be committed; anything else is
+<!-- Sources and licences. Plain CC0 / plain CC-BY can be committed (not NC,
+     ND or SA — see docs/SPEC.md §18); anything else is
      fetched from assets.manifest.json. See CONTRIBUTING.md. -->

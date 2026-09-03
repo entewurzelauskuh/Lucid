@@ -197,23 +197,63 @@ namespace Lucid.Editor.Cubes
         }
 
         /// <summary>
-        /// The only licences rule 5 lets into the repository: CC0, or a bare
-        /// attribution CC-BY.
+        /// Rule 5 admits CC0 and a <i>bare</i> attribution CC-BY, and nothing
+        /// else. Two patterns rather than one clever one, because the clause
+        /// forms are the part that keeps going wrong.
         /// </summary>
         /// <remarks>
-        /// The lookahead is the whole point. The previous pattern was
-        /// <c>\bCC0\b|\bCC-?BY\b</c>, and a word boundary sits between the Y
-        /// and the hyphen, so it accepted CC-BY-NC, -ND and -SA — exactly the
-        /// licences rule 5 and docs/SPEC.md §18 exist to keep out of a public
-        /// MIT repository. It also rejected "CC BY 4.0", which is Creative
-        /// Commons' own spelling, so a correct entry was refused.
+        /// Both are matched against the licence <i>cell</i> of the ledger row,
+        /// never the whole line. Matching the line let anything through that
+        /// merely mentioned a licence somewhere else on it: an asset named
+        /// cc0-hero.png, or a source URL on cc0-textures.com — which is
+        /// ambientCG, a source docs/SPEC.md §17 recommends — opened the gate
+        /// for an Asset Store EULA.
         ///
-        /// Character-for-character identical to ALLOWED_PATTERN in
-        /// tools/check-licenses.py, so a cube cannot build clean here and then
-        /// fail at commit. LicenceRuleTests asserts the two are equal rather
-        /// than trusting anyone to keep them in step by hand.
+        /// <see cref="DeniedLicence"/> takes no trailing word boundary on
+        /// purpose. With one, CC-BY-NC4.0, CC-BY-NCSA and CC-BY-NC_4.0 all
+        /// slipped past, because a digit or an underscore is a word character
+        /// and the boundary never fired.
+        ///
+        /// Character-for-character identical to the patterns in
+        /// tools/check-licenses.py. LicenceRuleTests runs that script and
+        /// compares its verdicts against these, which is the only check that
+        /// proves the two agree rather than merely look alike.
         /// </remarks>
-        internal const string AllowedLicence = @"\bCC0\b|\bCC[- ]?BY\b(?![- ]?(?:NC|ND|SA)\b)";
+        internal const string AllowedLicence = @"\bCC0\b|\bCC[- ]?BY\b";
+
+        /// <summary>The extra clauses that disqualify an otherwise CC licence.</summary>
+        internal const string DeniedLicence =
+            @"[-\s_](?:NC|ND|SA)|NonCommercial|NoDerivat|ShareAlike";
+
+        /// <summary>
+        /// The licence column of a ledger row, or null if the line is not one.
+        /// </summary>
+        /// <remarks>
+        /// docs/SPEC.md §17 fixes the shape: | file | source URL | licence |.
+        /// A line that is not a table row names no licence, and guessing from
+        /// the whole line is what let a URL decide the verdict.
+        /// </remarks>
+        internal static string LicenceCell(string line)
+        {
+            if (line == null) return null;
+            string[] cells = line.Split('|')
+                .Select(c => c.Trim())
+                .Where(c => c.Length > 0)
+                .ToArray();
+            return cells.Length >= 3 ? cells[cells.Length - 1] : null;
+        }
+
+        /// <summary>Whether a ledger row names a licence rule 5 admits.</summary>
+        internal static bool IsRedistributable(string line)
+        {
+            string cell = LicenceCell(line);
+            if (cell == null) return false;
+
+            const System.Text.RegularExpressions.RegexOptions ignore =
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase;
+            return System.Text.RegularExpressions.Regex.IsMatch(cell, AllowedLicence, ignore)
+                && !System.Text.RegularExpressions.Regex.IsMatch(cell, DeniedLicence, ignore);
+        }
 
         /// <summary>
         /// Only CC0 and CC-BY assets may be committed, each with a line in the
@@ -256,10 +296,15 @@ namespace Lucid.Editor.Cubes
                 string line = ledger.Split('\n').FirstOrDefault(l => Names(l, name));
                 if (line == null)
                     report.Add("licences", $"'{name}' has no line in assets/LICENSES.md");
-                else if (!System.Text.RegularExpressions.Regex.IsMatch(line, AllowedLicence,
-                             System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                else if (LicenceCell(line) == null)
                     report.Add("licences",
-                        $"'{name}' is not CC0 or CC-BY, so it cannot be committed -> {line.Trim()}");
+                        $"the ledger line for '{name}' is not a | file | source | licence | " +
+                        $"row, so it names no licence -> {line.Trim()}");
+                else if (!IsRedistributable(line))
+                    report.Add("licences",
+                        $"'{name}' is not CC0 or a bare CC-BY. NonCommercial, NoDerivatives " +
+                        $"and ShareAlike are not accepted (CLAUDE.md rule 5, docs/SPEC.md §18) " +
+                        $"-> {LicenceCell(line)}");
             }
         }
 

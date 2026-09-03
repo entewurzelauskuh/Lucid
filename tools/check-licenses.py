@@ -18,19 +18,52 @@ import sys
 from pathlib import Path
 
 ASSET_DIR = re.compile(r"(?P<cube>(?:.*/)?Packs/[^/]+/Cubes/[^/]+)/assets/(?P<rel>.+)")
-# Only a bare attribution licence. The old pattern, r"\bCC0\b|\bCC-?BY\b",
-# accepted CC-BY-NC, -ND and -SA — a word boundary sits between the Y and
-# the hyphen — which are exactly the licences rule 5 exists to keep out of a
-# public MIT repository. It also rejected "CC BY 4.0", which is Creative
-# Commons' own spelling.
+# Rule 5 admits CC0 and a *bare* attribution CC-BY, and nothing else. Two
+# patterns rather than one clever one, because the clause forms are the part
+# that keeps going wrong:
 #
-# Kept character-for-character identical to the copy in
-# Lucid/Assets/_Lucid/Editor/Cubes/CubeValidator.cs, so a cube cannot build
-# clean and then fail at commit. LicenceRuleTests asserts the two are equal.
-ALLOWED_PATTERN = r"\bCC0\b|\bCC[- ]?BY\b(?![- ]?(?:NC|ND|SA)\b)"
+#   ALLOWED   the licence has to be one of the two families at all
+#   DENIED    ...and must carry none of the extra clauses
+#
+# Both are matched against the licence *cell* of the ledger row, never the whole
+# line. Matching the line let anything through that merely mentioned a licence
+# somewhere else on it: an asset named cc0-hero.png, or a source URL on
+# cc0-textures.com — which is ambientCG, a source docs/SPEC.md §17 recommends —
+# opened the gate for an Asset Store EULA.
+#
+# DENIED takes no trailing word boundary on purpose. With one, CC-BY-NC4.0,
+# CC-BY-NCSA and CC-BY-NC_4.0 all slipped past, because a digit or an
+# underscore is a word character and the boundary never fired.
+#
+# Kept character-for-character identical to CubeValidator.AllowedLicence and
+# CubeValidator.DeniedLicence; LicenceRuleTests runs this script and compares
+# its verdicts against the validator's, which is the only check that proves the
+# two agree rather than merely look alike.
+ALLOWED_PATTERN = r"\bCC0\b|\bCC[- ]?BY\b"
+DENIED_PATTERN = r"[-\s_](?:NC|ND|SA)|NonCommercial|NoDerivat|ShareAlike"
 ALLOWED = re.compile(ALLOWED_PATTERN, re.IGNORECASE)
+DENIED = re.compile(DENIED_PATTERN, re.IGNORECASE)
 # Text that lives with the assets rather than being one.
 EXEMPT = {"LICENSES.md"}
+
+
+def licence_cell(entry: str) -> str | None:
+    """The licence column of a ledger row, or None if the line is not a row.
+
+    docs/SPEC.md §17 fixes the shape: | file | source URL | licence |. A line
+    that is not a table row cannot be read for a licence, and guessing from the
+    whole line is what let a URL decide the verdict.
+    """
+    cells = [c.strip() for c in entry.split("|") if c.strip()]
+    return cells[-1] if len(cells) >= 3 else None
+
+
+def is_redistributable(entry: str) -> bool:
+    """Whether a ledger row names a licence rule 5 admits."""
+    cell = licence_cell(entry)
+    if cell is None:
+        return False
+    return bool(ALLOWED.search(cell)) and not DENIED.search(cell)
 
 
 def repo_root() -> Path | None:
@@ -135,10 +168,17 @@ def check(paths: list[str], base: Path | None = None) -> list[str]:
                 f"{path}: no entry for {subject!r} in {cube}/assets/LICENSES.md. "
                 f"Add source URL and licence, or move it to assets.manifest.json"
             )
-        elif not ALLOWED.search(entry):
+        elif licence_cell(entry) is None:
             problems.append(
-                f"{path}: ledger entry for {subject!r} is not CC0 or CC-BY, so it "
-                f"cannot be redistributed here -> {entry.strip()}"
+                f"{path}: the ledger line for {subject!r} is not a "
+                f"| file | source | licence | row, so it names no licence "
+                f"-> {entry.strip()}"
+            )
+        elif not is_redistributable(entry):
+            problems.append(
+                f"{path}: {subject!r} is not CC0 or a bare CC-BY. NonCommercial, "
+                f"NoDerivatives and ShareAlike are not accepted (CLAUDE.md rule 5, "
+                f"docs/SPEC.md §18) -> {licence_cell(entry)}"
             )
     return problems
 

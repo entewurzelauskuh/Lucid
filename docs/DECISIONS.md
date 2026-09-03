@@ -12,6 +12,13 @@ Reason: why this over the alternatives.
 Spec: sections changed.
 ```
 
+## 2026-09-03 — ShareAlike is refused, though it is redistributable
+
+Context: #75. The licence gate accepted `CC-BY-NC`, `-ND` and `-SA` because a word boundary sits between the Y and the hyphen in `\bCC-?BY\b`. Closing that meant deciding what to do about SA, which is not the same question as NC and ND.
+Decision: plain CC0 and plain CC-BY only. NonCommercial, NoDerivatives and ShareAlike are all refused, and the gate reads the licence column of the ledger row rather than the whole line.
+Reason: NC and ND fail `docs/SPEC.md` §18's own test — NC would make the artefact non-commercial, which an MIT repository is not, and ND forbids the rescaling, re-pivoting and material upgrades §17's pipeline performs on everything it ingests. **SA does not fail that test**: ShareAlike material is redistributable in source form, so the section's stated rationale does not reach it, and refusing it is a policy choice rather than a consequence. It is refused because §18 licenses this project's generated shell textures as CC-BY-4.0, and a texture derived from an SA source is Adapted Material that would have to ship SA instead. A prop merely placed in a cube is a Collection rather than an Adaptation and would not propagate — so the honest rule is that the project will not reason case by case about which ingested assets the pipeline adapts, and refuses the family. Recorded because a contributor holding a CC BY-SA 4.0 prop is correct that it is redistributable, and until now had no document saying why it was refused anyway.
+Spec: `docs/SPEC.md` §18's asset-rule bullet names the three refused clauses and the reason for each. `CONTRIBUTING.md` and `.github/ISSUE_TEMPLATE/cube.md` say the same in shorter form.
+
 ## 2026-09-03 — The owner's word merges the pull request, not the owner's hand
 
 Context: rule 1 said "Open the PR and stop; the owner reviews and merges. Never push to `main`, never merge your own PR." Every pull request in this repository is opened by the `entewurzelauskuh` account, which is also the owner's, and **GitHub will not let an account approve its own pull request** — so branch protection's "one approving review" can never be satisfied here, and every merge is an admin override regardless of whose hand performs it.
