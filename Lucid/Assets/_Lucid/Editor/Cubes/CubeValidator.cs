@@ -234,13 +234,13 @@ namespace Lucid.Editor.Cubes
 
         /// <summary>The extra clauses that disqualify an otherwise CC licence.</summary>
         internal const string DeniedLicence =
-            @"[- \t_](?:NC|ND|SA)+(?![A-Za-z])|NonCommercial|NoDerivat|ShareAlike";
+            @"[^A-Za-z0-9](?:NC|ND|SA)+(?![A-Za-z])|NonCommercial|NoDerivat|ShareAlike";
 
         /// <summary>
         /// The licence column of a ledger row, or null if the line is not one.
         /// </summary>
         /// <remarks>
-        /// docs/SPEC.md §17 fixes the shape: | file | source URL | licence |.
+        /// docs/SPEC.md §18 fixes the shape: | file | source URL | licence |.
         /// A line that is not a table row names no licence, and guessing from
         /// the whole line is what let a URL decide the verdict.
         /// </remarks>
@@ -253,7 +253,7 @@ namespace Lucid.Editor.Cubes
             // "CC0 base" beside a CC-BY-NC licence opened the gate — and
             // dropping empty cells refused a row whose source column was blank.
             string[] cells = line.Split('|');
-            return cells.Length >= 5 ? cells[3].Trim(' ', '\t') : null;
+            return cells.Length == 5 ? cells[3].Trim(' ', '\t') : null;
         }
 
         /// <summary>Whether a ledger row names a licence rule 5 admits.</summary>
@@ -262,8 +262,13 @@ namespace Lucid.Editor.Cubes
             string cell = LicenceCell(line);
             if (cell == null) return false;
 
+            // CultureInvariant matters: IgnoreCase alone follows the current
+            // culture, and under tr-TR the dotless i made CC-BY-NONCOMMERCIAL
+            // match nothing and pass. Python's re is culture-independent, so
+            // this was a hole in the validator and a divergence at once.
             const System.Text.RegularExpressions.RegexOptions ignore =
-                System.Text.RegularExpressions.RegexOptions.IgnoreCase;
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase |
+                System.Text.RegularExpressions.RegexOptions.CultureInvariant;
             return System.Text.RegularExpressions.Regex.IsMatch(cell, AllowedLicence, ignore)
                 && !System.Text.RegularExpressions.Regex.IsMatch(cell, DeniedLicence, ignore);
         }

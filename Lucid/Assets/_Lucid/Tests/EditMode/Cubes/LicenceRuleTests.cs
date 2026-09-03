@@ -166,6 +166,70 @@ namespace Lucid.Tests.EditMode.Cubes
                 Assert.That(CubeValidator.IsRedistributable(row), Is.EqualTo(allowed), row);
         }
 
+        /// <summary>
+        /// Row shapes, and rows with extra or misplaced columns, that must not
+        /// pass either gate.
+        /// </summary>
+        static readonly (string Row, bool Allowed)[] ShapeAttacks =
+        {
+            // A note column before the licence decided the verdict: the T1 hole
+            // arriving from the other side.
+            ("| hero.fbx | Poly Haven | CC0 pack | CC-BY-NC 4.0 |", false),
+            // A pipe in the source column shifted every column right.
+            ("| hero.fbx | pack a|CC0 base | CC-BY-NC 4.0 |", false),
+            ("| a.png | https://x/?u=1|v=2 | CC0 |", false),
+            ("| a.png | url | CC-BY-NC 4.0 | CC0 base |", false),
+        };
+
+        [Test]
+        public void ARowThatIsNotThreeColumnsIsRefusedByBothGates()
+        {
+            // Every one of these was accepted by both gates at some point in
+            // this branch's history, which is why they are pinned on both sides
+            // rather than only in C#: eight Python-side mutations survived while
+            // the row matrix was checked against the validator alone.
+            string script = HookPath();
+            foreach ((string row, bool allowed) in ShapeAttacks)
+            {
+                Assert.That(CubeValidator.IsRedistributable(row), Is.EqualTo(allowed),
+                    $"validator: {row}");
+
+                Asset("hero.fbx");
+                Asset("a.png");
+                Ledger(row);
+                bool? hook = HookAccepts(script, AssetPath(row.Contains("a.png") ? "a.png" : "hero.fbx"));
+                if (hook == null) Assert.Ignore("python3 is not on PATH");
+                Assert.That(hook, Is.EqualTo(allowed), $"hook: {row}");
+            }
+        }
+
+        [Test]
+        public void TheVerdictDoesNotDependOnTheEditorsCulture()
+        {
+            // IgnoreCase folds case with the current culture. Under tr-TR the
+            // uppercase I in CC-BY-NONCOMMERCIAL does not fold to the pattern's
+            // i, the clause matched nothing, and the gate opened. Python's re
+            // never had this, so it was a hole and a divergence at once.
+            var was = System.Globalization.CultureInfo.CurrentCulture;
+            try
+            {
+                System.Globalization.CultureInfo.CurrentCulture =
+                    new System.Globalization.CultureInfo("tr-TR");
+                Assert.That(CubeValidator.IsRedistributable("| a.png | url | CC-BY-NONCOMMERCIAL 4.0 |"),
+                    Is.False, "tr-TR");
+                Assert.That(CubeValidator.IsRedistributable("| a.png | url | CC-BY-NC 4.0 |"),
+                    Is.False, "tr-TR");
+                Assert.That(CubeValidator.IsRedistributable("| a.png | url | CC BY 4.0 |"),
+                    Is.True, "tr-TR");
+            }
+            finally { System.Globalization.CultureInfo.CurrentCulture = was; }
+        }
+
+        static string HookPath() => Application.dataPath + "/../../tools/check-licenses.py";
+
+        static string AssetPath(string name) =>
+            Application.dataPath + "/_Lucid/Packs/licencetest/Cubes/probe/assets/" + name;
+
         [Test]
         public void TheHookAndTheValidatorReachTheSameVerdict()
         {
@@ -173,7 +237,7 @@ namespace Lucid.Tests.EditMode.Cubes
             // compiles ALLOWED from ALLOWED_PATTERN, so rewriting the compile
             // line regressed the gate while the literal — and the test reading
             // it — stayed correct. Only running the hook shows they agree.
-            string script = Application.dataPath + "/../../tools/check-licenses.py";
+            string script = HookPath();
             Assert.That(File.Exists(script), Is.True, $"no hook at {script}");
 
             var disagreements = new System.Collections.Generic.List<string>();
@@ -188,8 +252,7 @@ namespace Lucid.Tests.EditMode.Cubes
                 // runs from the repository root where the same file is under
                 // "Lucid/Assets/…". Handing it the Unity-relative path made it
                 // find nothing and reject everything.
-                bool? hook = HookAccepts(script,
-                    Application.dataPath + "/_Lucid/Packs/licencetest/Cubes/probe/assets/hero.fbx");
+                bool? hook = HookAccepts(script, AssetPath("hero.fbx"));
                 if (hook == null) Assert.Ignore("python3 is not on PATH; the hook cannot be run");
 
                 if (validator != hook)
@@ -229,11 +292,18 @@ namespace Lucid.Tests.EditMode.Cubes
                 string errors = process.StandardError.ReadToEnd();
                 process.WaitForExit();
 
-                if (errors.Contains("Traceback"))
-                    throw new AssertionException(
-                        $"tools/check-licenses.py failed rather than judging {assetPath}:\n{errors}");
-
-                return process.ExitCode == 0;
+                // A crash has to be told apart from a refusal, or a broken hook
+                // reads as a verdict. "Traceback" alone is not enough: a
+                // SyntaxError prints no traceback and still exits 1, which this
+                // test then reported as a divergence from the validator.
+                // A refusal is the only exit-1 that carries the banner.
+                if (process.ExitCode == 0)
+                    return true;
+                if (process.ExitCode == 1 && errors.Contains("Asset rule violations"))
+                    return false;
+                throw new AssertionException(
+                    $"tools/check-licenses.py failed rather than judging {assetPath} " +
+                    $"(exit {process.ExitCode}):\n{errors}");
             }
             catch (System.ComponentModel.Win32Exception)
             {

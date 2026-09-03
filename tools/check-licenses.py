@@ -50,7 +50,7 @@ ASSET_DIR = re.compile(r"(?P<cube>(?:.*/)?Packs/[^/]+/Cubes/[^/]+)/assets/(?P<re
 # its verdicts against the validator's, which is the only check that proves the
 # two agree rather than merely look alike.
 ALLOWED_PATTERN = r"\bCC0\b|\bCC[- ]?BY\b"
-DENIED_PATTERN = r"[- \t_](?:NC|ND|SA)+(?![A-Za-z])|NonCommercial|NoDerivat|ShareAlike"
+DENIED_PATTERN = r"[^A-Za-z0-9](?:NC|ND|SA)+(?![A-Za-z])|NonCommercial|NoDerivat|ShareAlike"
 ALLOWED = re.compile(ALLOWED_PATTERN, re.IGNORECASE)
 DENIED = re.compile(DENIED_PATTERN, re.IGNORECASE)
 # Text that lives with the assets rather than being one.
@@ -60,7 +60,7 @@ EXEMPT = {"LICENSES.md"}
 def licence_cell(entry: str) -> str | None:
     """The licence column of a ledger row, or None if the line is not a row.
 
-    docs/SPEC.md §17 fixes the shape: | file | source URL | licence |. A line
+    docs/SPEC.md §18 fixes the shape: | file | source URL | licence |. A line
     that is not a table row cannot be read for a licence, and guessing from the
     whole line is what let a URL decide the verdict.
     """
@@ -69,7 +69,7 @@ def licence_cell(entry: str) -> str | None:
     # a CC-BY-NC licence opened the gate — and dropping empty cells refused a
     # row whose source column was blank.
     cells = entry.split("|")
-    return cells[3].strip(" \t") if len(cells) >= 5 else None
+    return cells[3].strip(" \t") if len(cells) == 5 else None
 
 
 def is_redistributable(entry: str) -> bool:
@@ -144,7 +144,7 @@ def manifest_names(cube: Path) -> set[str]:
     except json.JSONDecodeError as exc:
         print(f"  {manifest}: not valid JSON ({exc})", file=sys.stderr)
         return set()
-    entries = data.get("assets", data if isinstance(data, list) else [])
+    entries = data if isinstance(data, list) else data.get("assets", [])
     names = set()
     for entry in entries:
         if isinstance(entry, dict):
