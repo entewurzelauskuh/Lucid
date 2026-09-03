@@ -209,10 +209,13 @@ namespace Lucid.Editor.Cubes
         /// ambientCG, a source docs/SPEC.md §17 recommends — opened the gate
         /// for an Asset Store EULA.
         ///
-        /// <see cref="DeniedLicence"/> takes no trailing word boundary on
-        /// purpose. With one, CC-BY-NC4.0, CC-BY-NCSA and CC-BY-NC_4.0 all
-        /// slipped past, because a digit or an underscore is a word character
-        /// and the boundary never fired.
+        /// <see cref="DeniedLicence"/> matches a clause only as a whole token,
+        /// and repeated. A trailing word boundary let CC-BY-NC4.0 and
+        /// CC-BY-NC_4.0 past, because a digit and an underscore are word
+        /// characters and the boundary never fired; forbidding any following
+        /// letter instead keeps "CC BY 4.0 - SAmple pack" and "CC0 - NDA
+        /// cleared" accepted, where SA and ND begin an ordinary word. The + is
+        /// for CC-BY-NCSA, where one clause abuts the next.
         ///
         /// Character-for-character identical to the patterns in
         /// tools/check-licenses.py. LicenceRuleTests runs that script and
@@ -223,7 +226,7 @@ namespace Lucid.Editor.Cubes
 
         /// <summary>The extra clauses that disqualify an otherwise CC licence.</summary>
         internal const string DeniedLicence =
-            @"[-\s_](?:NC|ND|SA)|NonCommercial|NoDerivat|ShareAlike";
+            @"[-\s_](?:NC|ND|SA)+(?![A-Za-z])|NonCommercial|NoDerivat|ShareAlike";
 
         /// <summary>
         /// The licence column of a ledger row, or null if the line is not one.
@@ -236,11 +239,13 @@ namespace Lucid.Editor.Cubes
         internal static string LicenceCell(string line)
         {
             if (line == null) return null;
-            string[] cells = line.Split('|')
-                .Select(c => c.Trim())
-                .Where(c => c.Length > 0)
-                .ToArray();
-            return cells.Length >= 3 ? cells[cells.Length - 1] : null;
+
+            // By position, not "the last non-empty cell". Taking the last one
+            // read a fourth column when a ledger had one — so a note saying
+            // "CC0 base" beside a CC-BY-NC licence opened the gate — and
+            // dropping empty cells refused a row whose source column was blank.
+            string[] cells = line.Split('|');
+            return cells.Length >= 5 ? cells[3].Trim() : null;
         }
 
         /// <summary>Whether a ledger row names a licence rule 5 admits.</summary>

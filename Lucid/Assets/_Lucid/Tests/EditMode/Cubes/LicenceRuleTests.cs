@@ -132,7 +132,32 @@ namespace Lucid.Tests.EditMode.Cubes
             ("CC-BY-ShareAlike", false), ("CC-BY-SA4.0", false), ("CC BY NC 4.0", false),
             ("cc-by-nc", false),
             ("Unity Asset Store Standard EULA", false), ("All rights reserved", false),
+
+            // False rejects the clause pattern must not produce: SA and ND here
+            // begin an ordinary word, not a licence clause.
+            ("CC-BY 4.0 - SAmple pack", true), ("CC0 - NDA cleared", true),
         };
+
+        /// <summary>
+        /// Whole ledger rows, because the licences above all share one shape and
+        /// the cell is found by position.
+        /// </summary>
+        static readonly (string Row, bool Allowed)[] Rows =
+        {
+            ("| a.png | url | CC0 |", true),
+            ("| a.png |  | CC0 |", true),                        // blank source column
+            ("| a.png | url | CC-BY-NC 4.0 | CC0 base |", false), // a 4th column must not decide
+            ("| a.png | url |", false),                          // too few columns
+            ("|---|---|---|", false),                            // a separator row
+            ("a.png is CC0, trust me", false),                   // not a row at all
+        };
+
+        [Test]
+        public void TheLicenceIsReadFromItsOwnColumn()
+        {
+            foreach ((string row, bool allowed) in Rows)
+                Assert.That(CubeValidator.IsRedistributable(row), Is.EqualTo(allowed), row);
+        }
 
         [Test]
         public void TheHookAndTheValidatorReachTheSameVerdict()

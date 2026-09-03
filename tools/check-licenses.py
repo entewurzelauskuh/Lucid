@@ -31,16 +31,19 @@ ASSET_DIR = re.compile(r"(?P<cube>(?:.*/)?Packs/[^/]+/Cubes/[^/]+)/assets/(?P<re
 # cc0-textures.com — which is ambientCG, a source docs/SPEC.md §17 recommends —
 # opened the gate for an Asset Store EULA.
 #
-# DENIED takes no trailing word boundary on purpose. With one, CC-BY-NC4.0,
-# CC-BY-NCSA and CC-BY-NC_4.0 all slipped past, because a digit or an
-# underscore is a word character and the boundary never fired.
+# DENIED matches a clause only as a whole token, and repeated. A trailing \b
+# let CC-BY-NC4.0 and CC-BY-NC_4.0 past, because a digit and an underscore are
+# word characters and the boundary never fired; forbidding any following letter
+# instead keeps "CC BY 4.0 - SAmple pack" and "CC0 - NDA cleared" accepted,
+# where SA and ND are the first letters of an ordinary word. The + is for
+# CC-BY-NCSA, where one clause abuts the next.
 #
 # Kept character-for-character identical to CubeValidator.AllowedLicence and
 # CubeValidator.DeniedLicence; LicenceRuleTests runs this script and compares
 # its verdicts against the validator's, which is the only check that proves the
 # two agree rather than merely look alike.
 ALLOWED_PATTERN = r"\bCC0\b|\bCC[- ]?BY\b"
-DENIED_PATTERN = r"[-\s_](?:NC|ND|SA)|NonCommercial|NoDerivat|ShareAlike"
+DENIED_PATTERN = r"[-\s_](?:NC|ND|SA)+(?![A-Za-z])|NonCommercial|NoDerivat|ShareAlike"
 ALLOWED = re.compile(ALLOWED_PATTERN, re.IGNORECASE)
 DENIED = re.compile(DENIED_PATTERN, re.IGNORECASE)
 # Text that lives with the assets rather than being one.
@@ -54,8 +57,12 @@ def licence_cell(entry: str) -> str | None:
     that is not a table row cannot be read for a licence, and guessing from the
     whole line is what let a URL decide the verdict.
     """
-    cells = [c.strip() for c in entry.split("|") if c.strip()]
-    return cells[-1] if len(cells) >= 3 else None
+    # By position, not "the last non-empty cell". Taking the last one read a
+    # fourth column when a ledger had one — so a note saying "CC0 base" beside
+    # a CC-BY-NC licence opened the gate — and dropping empty cells refused a
+    # row whose source column was blank.
+    cells = entry.split("|")
+    return cells[3].strip() if len(cells) >= 5 else None
 
 
 def is_redistributable(entry: str) -> bool:
