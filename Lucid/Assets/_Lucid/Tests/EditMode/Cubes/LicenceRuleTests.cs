@@ -83,6 +83,59 @@ namespace Lucid.Tests.EditMode.Cubes
             Blames(Validate(), "not CC0 or CC-BY");
         }
 
+        [TestCase("CC-BY-NC 4.0", TestName = "NonCommercial")]
+        [TestCase("CC-BY-ND 4.0", TestName = "NoDerivatives")]
+        [TestCase("CC-BY-SA 4.0", TestName = "ShareAlike")]
+        [TestCase("CC BY-SA 4.0", TestName = "ShareAlike spaced")]
+        [TestCase("CC-BY-NC-SA 4.0", TestName = "NonCommercial ShareAlike")]
+        public void ACreativeCommonsLicenceWithExtraClausesIsRejected(string licence)
+        {
+            // These are the licences rule 5 and docs/SPEC.md §18 exist to keep
+            // out of a public MIT repository, and the gate waved every one of
+            // them through: a word boundary sits between the Y and the hyphen,
+            // so the old pattern matched "CC-BY-NC" happily. The only rejection
+            // test was the Asset Store EULA, which it did catch, so nothing
+            // noticed.
+            Asset("hero.fbx");
+            Ledger($"| hero.fbx | https://example.invalid/x | {licence} |");
+
+            Blames(Validate(), "not CC0 or CC-BY");
+        }
+
+        [TestCase("CC0 1.0", TestName = "CC0")]
+        [TestCase("CC-BY 4.0", TestName = "CC-BY hyphenated")]
+        [TestCase("CC BY 4.0", TestName = "CC BY spaced, the canonical spelling")]
+        public void ARedistributableLicenceIsAccepted(string licence)
+        {
+            // "CC BY 4.0" is how Creative Commons writes it, and the old pattern
+            // refused it — an author copying the name from the source was told
+            // their correct entry was wrong.
+            Asset("hero.fbx");
+            Ledger($"| hero.fbx | https://example.invalid/x | {licence} |");
+
+            ValidationReport report = Validate();
+            Assert.That(report.Problems.Where(p => p.Rule == "licences").Select(p => p.Message),
+                Is.Empty, $"'{licence}' should be allowed — {report.Describe()}");
+        }
+
+        [Test]
+        public void TheHookAndTheValidatorUseTheSamePattern()
+        {
+            // Both gates carry the pattern so a cube cannot build clean here and
+            // then fail at commit. They were kept in step by hand, which meant
+            // they agreed on the same bug for as long as it existed.
+            string script = File.ReadAllText(
+                Application.dataPath + "/../../tools/check-licenses.py");
+
+            var match = System.Text.RegularExpressions.Regex.Match(
+                script, "ALLOWED_PATTERN = r\"(?<pattern>.*)\"");
+
+            Assert.That(match.Success, Is.True,
+                "could not find ALLOWED_PATTERN in tools/check-licenses.py");
+            Assert.That(match.Groups["pattern"].Value, Is.EqualTo(CubeValidator.AllowedLicence),
+                "the pre-commit hook and the validator have drifted apart");
+        }
+
         [Test]
         public void ASubstringOfAListedNameDoesNotCount()
         {

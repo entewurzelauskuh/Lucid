@@ -197,6 +197,25 @@ namespace Lucid.Editor.Cubes
         }
 
         /// <summary>
+        /// The only licences rule 5 lets into the repository: CC0, or a bare
+        /// attribution CC-BY.
+        /// </summary>
+        /// <remarks>
+        /// The lookahead is the whole point. The previous pattern was
+        /// <c>\bCC0\b|\bCC-?BY\b</c>, and a word boundary sits between the Y
+        /// and the hyphen, so it accepted CC-BY-NC, -ND and -SA — exactly the
+        /// licences rule 5 and docs/SPEC.md §18 exist to keep out of a public
+        /// MIT repository. It also rejected "CC BY 4.0", which is Creative
+        /// Commons' own spelling, so a correct entry was refused.
+        ///
+        /// Character-for-character identical to ALLOWED_PATTERN in
+        /// tools/check-licenses.py, so a cube cannot build clean here and then
+        /// fail at commit. LicenceRuleTests asserts the two are equal rather
+        /// than trusting anyone to keep them in step by hand.
+        /// </remarks>
+        internal const string AllowedLicence = @"\bCC0\b|\bCC[- ]?BY\b(?![- ]?(?:NC|ND|SA)\b)";
+
+        /// <summary>
         /// Only CC0 and CC-BY assets may be committed, each with a line in the
         /// cube's ledger (CLAUDE.md rule 5). The pre-commit hook enforces the
         /// same rule; running it here means an author finds out at build time
@@ -217,6 +236,7 @@ namespace Lucid.Editor.Cubes
                 string name = Path.GetFileName(file);
                 if (name == "LICENSES.md" || name.EndsWith(".meta")) continue;
 
+
                 // Anything the manifest lists is fetched at build time and must
                 // never be committed (CLAUDE.md rule 5).
                 if (fetched.Contains(name))
@@ -236,7 +256,7 @@ namespace Lucid.Editor.Cubes
                 string line = ledger.Split('\n').FirstOrDefault(l => Names(l, name));
                 if (line == null)
                     report.Add("licences", $"'{name}' has no line in assets/LICENSES.md");
-                else if (!System.Text.RegularExpressions.Regex.IsMatch(line, @"\bCC0\b|\bCC-?BY\b",
+                else if (!System.Text.RegularExpressions.Regex.IsMatch(line, AllowedLicence,
                              System.Text.RegularExpressions.RegexOptions.IgnoreCase))
                     report.Add("licences",
                         $"'{name}' is not CC0 or CC-BY, so it cannot be committed -> {line.Trim()}");

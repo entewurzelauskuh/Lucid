@@ -18,7 +18,17 @@ import sys
 from pathlib import Path
 
 ASSET_DIR = re.compile(r"(?P<cube>(?:.*/)?Packs/[^/]+/Cubes/[^/]+)/assets/(?P<rel>.+)")
-ALLOWED = re.compile(r"\bCC0\b|\bCC-?BY\b", re.IGNORECASE)
+# Only a bare attribution licence. The old pattern, r"\bCC0\b|\bCC-?BY\b",
+# accepted CC-BY-NC, -ND and -SA — a word boundary sits between the Y and
+# the hyphen — which are exactly the licences rule 5 exists to keep out of a
+# public MIT repository. It also rejected "CC BY 4.0", which is Creative
+# Commons' own spelling.
+#
+# Kept character-for-character identical to the copy in
+# Lucid/Assets/_Lucid/Editor/Cubes/CubeValidator.cs, so a cube cannot build
+# clean and then fail at commit. LicenceRuleTests asserts the two are equal.
+ALLOWED_PATTERN = r"\bCC0\b|\bCC[- ]?BY\b(?![- ]?(?:NC|ND|SA)\b)"
+ALLOWED = re.compile(ALLOWED_PATTERN, re.IGNORECASE)
 # Text that lives with the assets rather than being one.
 EXEMPT = {"LICENSES.md"}
 
