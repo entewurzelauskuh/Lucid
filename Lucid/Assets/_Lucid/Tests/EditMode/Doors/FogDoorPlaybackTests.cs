@@ -1,7 +1,9 @@
 using Lucid.Core;
 using Lucid.Runtime;
 using NUnit.Framework;
+using System.Text.RegularExpressions;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace Lucid.Tests.EditMode.Doors
 {
@@ -123,9 +125,70 @@ namespace Lucid.Tests.EditMode.Doors
         }
 
         [Test]
+        public void DissolvePlaysThroughToAnOpening()
+        {
+            // The transition with its own shader path: an opening clears in
+            // wisps rather than fading evenly, so the end state has to be
+            // reached through the blend and not asserted as a constant.
+            var visual = _go.AddComponent<FogDoorVisual>();
+            visual.Refresh();
+
+            _door.SetState(ConnectorState.Attached);
+            Assert.That(_door.Playing, Is.EqualTo(FogDoorTransition.Dissolve));
+
+            _door.Tick(0.1f);
+            visual.Refresh();
+            Assert.That(visual.Shown.Dissolve, Is.GreaterThan(0f).And.LessThan(1f),
+                "the door was not part-way through dissolving");
+
+            _door.Tick(1000f);
+            visual.Refresh();
+            Assert.That(visual.Shown.Dissolve, Is.EqualTo(1f).Within(1e-3f));
+            Assert.That(visual.Shown.Density, Is.EqualTo(0f).Within(1e-3f));
+        }
+
+        [Test]
+        public void CondensePlaysThroughToSomethingThatHasStoppedMoving()
+        {
+            var visual = _go.AddComponent<FogDoorVisual>();
+            visual.Refresh();
+            float drifting = visual.Shown.Drift;
+            Assert.That(drifting, Is.GreaterThan(0f), "fog was not drifting to begin with");
+
+            _door.SetState(ConnectorState.Solid);
+            Assert.That(_door.Playing, Is.EqualTo(FogDoorTransition.Condense));
+
+            _door.Tick(0.1f);
+            visual.Refresh();
+            Assert.That(visual.Shown.Drift, Is.LessThan(drifting).And.GreaterThan(0f),
+                "the mist did not slow gradually");
+
+            _door.Tick(1000f);
+            visual.Refresh();
+            Assert.That(visual.Shown.Drift, Is.EqualTo(0f).Within(1e-4f),
+                "a hardened door is still breathing");
+        }
+
+        [Test]
+        public void AChangeSpecForbidsIsReportedAndStillApplied()
+        {
+            // The guard the whole table exists to power, and it had no test.
+            // Applied anyway on purpose: the door's job is to show what Core
+            // derived, and a door left showing the wrong state would hide the
+            // bug rather than surface it.
+            _door.Initialise(ConnectorState.Solid);
+
+            LogAssert.Expect(LogType.Error, new Regex("Solid → Attached is not a transition"));
+            _door.SetState(ConnectorState.Attached);
+
+            Assert.That(_door.State, Is.EqualTo(ConnectorState.Attached));
+            Assert.That(_door.Playing, Is.EqualTo(FogDoorTransition.Forbidden));
+        }
+
+        [Test]
         public void FogAndExitDifferByMoreThanTheirColour()
         {
-            // docs/UI.md §5: "Door states never depend on hue alone." A viewer
+            // docs/UI.md §1: "Door states never depend on hue alone." A viewer
             // who cannot separate the two hues must still see a dense dark
             // sheet against a thin radiant one.
             FogDoorLook fog = FogDoorLook.Fog, exit = FogDoorLook.Exit;

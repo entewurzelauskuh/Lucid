@@ -7,12 +7,13 @@ namespace Lucid.Runtime
     /// How each connector state looks, as the numbers the mist shader takes.
     /// </summary>
     /// <remarks>
-    /// docs/UI.md §5: "Door states never depend on hue alone. Fog is dark and
+    /// docs/UI.md §1: "Door states never depend on hue alone. Fog is dark and
     /// matte, Exit is bright and radiant, Solid is a wall, Attached is an
     /// opening." So the states are separated by density and brightness as much
     /// as by colour — a viewer who cannot tell the two hues apart still sees a
     /// dense dark sheet against a thin radiant one. The hatch on fog and the
-    /// rays on exits that §14 asks for are accessibility work of their own.
+    /// rays on exits that §11 asks for belong to the accessibility set, which
+    /// §16 schedules for M3.
     /// </remarks>
     public readonly struct FogDoorLook
     {

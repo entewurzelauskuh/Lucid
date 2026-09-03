@@ -1,10 +1,10 @@
-// The mist that fills a fog door (docs/SPEC.md §7, docs/UI.md §5).
+// The mist that fills a fog door (docs/SPEC.md §7, docs/UI.md §1).
 //
 // Noise is generated rather than sampled: a texture would be an asset, and
 // CLAUDE.md rule 5 asks that every committed asset carry a licence line. A
 // hash-based value noise costs a few instructions and nothing else.
 //
-// The four states must not differ by hue alone (docs/UI.md §5: "Fog is dark
+// The four states must not differ by hue alone (docs/UI.md §1: "Fog is dark
 // and matte, Exit is bright and radiant"), so the parameters that separate
 // them are density, brightness and how fast the layers drift, not just colour.
 Shader "Lucid/Mist"
@@ -54,6 +54,10 @@ Shader "Lucid/Mist"
                 float  _Dissolve;
             CBUFFER_END
 
+            // The frac/dot hash in wide circulation from Inigo Quilez's
+            // articles and countless Shadertoy derivatives. Named because this
+            // repository names what it did not invent, not because two lines
+            // of arithmetic carry a licence.
             float Hash(float2 p)
             {
                 p = frac(p * float2(123.34, 456.21));

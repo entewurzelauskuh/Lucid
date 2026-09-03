@@ -110,7 +110,7 @@ namespace Lucid.Editor.Cubes
             door.Configure(face);
 
             // The mist itself. Without it a cube's doors are colliders with
-            // nothing to see, and the door language of docs/UI.md §5 is the
+            // nothing to see, and the door language of docs/UI.md §1 is the
             // only thing telling a Sleeper where the way out is.
             doorTransform.gameObject.AddComponent<FogDoorVisual>();
 

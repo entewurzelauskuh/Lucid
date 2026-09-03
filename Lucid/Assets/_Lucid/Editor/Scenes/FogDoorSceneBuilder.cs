@@ -8,7 +8,7 @@ namespace Lucid.Editor.Scenes
 {
     /// <summary>
     /// A room of fog doors, one per state, for looking at the door language
-    /// (docs/UI.md §5) with your own eyes.
+    /// (docs/UI.md §1) with your own eyes.
     /// </summary>
     /// <remarks>
     /// The M0.5 acceptance asks for the transitions to be "verified in a test
@@ -71,6 +71,8 @@ namespace Lucid.Editor.Scenes
                 Wall(x);
             }
 
+            Cycler();
+
             var runner = SleeperRig.Create(
                 new Vector3(0f, 0.1f, -6f), Vector3.forward, "Sleeper");
 
@@ -78,6 +80,32 @@ namespace Lucid.Editor.Scenes
                 GauntletSceneBuilder.InputActionsPath);
             if (actions != null)
                 runner.gameObject.AddComponent<SleeperInputSource>().Bind(actions);
+        }
+
+        /// <summary>
+        /// One door that will not hold still, set apart from the row so the
+        /// four frozen ones stay comparable beside it.
+        /// </summary>
+        static void Cycler()
+        {
+            const float z = 8f;
+            var go = new GameObject("FogDoor-Cycling");
+            go.transform.position = new Vector3(0f, 0f, z);
+            go.AddComponent<FogDoor>();
+            go.AddComponent<FogDoorVisual>();
+            go.AddComponent<Lucid.Runtime.Dev.FogDoorCycle>().Configure(
+                1.6f,
+                ConnectorState.Fog, ConnectorState.Exit,
+                ConnectorState.Fog, ConnectorState.Solid);
+
+            Label(go.transform, "cycling", new Vector3(0f, CubeMetrics.DoorHeight + 0.9f, 0f));
+
+            float pier = (Spacing - CubeMetrics.DoorWidth) / 2f;
+            float offset = (CubeMetrics.DoorWidth + pier) / 2f;
+            Box("CyclePierL", new Vector3(-offset, CubeMetrics.DoorHeight / 2f, z),
+                new Vector3(pier, CubeMetrics.DoorHeight, 0.4f));
+            Box("CyclePierR", new Vector3(offset, CubeMetrics.DoorHeight / 2f, z),
+                new Vector3(pier, CubeMetrics.DoorHeight, 0.4f));
         }
 
         /// <summary>
@@ -104,9 +132,38 @@ namespace Lucid.Editor.Scenes
             go.AddComponent<FogDoor>().Initialise(state);
             go.AddComponent<FogDoorVisual>();
 
-            var label = new GameObject($"Label-{state}");
-            label.transform.SetParent(go.transform, false);
-            label.transform.localPosition = new Vector3(0f, CubeMetrics.DoorHeight + 0.9f, 0f);
+            Label(go.transform, state.ToString(),
+                new Vector3(0f, CubeMetrics.DoorHeight + 0.9f, 0f));
+        }
+
+        /// <summary>
+        /// A name a person can read from where they are standing. The first
+        /// version of this made an empty GameObject that rendered nothing, so
+        /// the four doors were indistinguishable to the eye — which is exactly
+        /// the comparison the scene exists for.
+        /// </summary>
+        static void Label(Transform parent, string text, Vector3 localPosition)
+        {
+            var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (font == null)
+            {
+                Debug.LogWarning("no built-in font; fog door labels will be missing.");
+                return;
+            }
+
+            var go = new GameObject($"Label-{text}");
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = localPosition;
+            go.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+
+            var mesh = go.AddComponent<TextMesh>();
+            mesh.text = text;
+            mesh.font = font;
+            mesh.fontSize = 64;
+            mesh.characterSize = 0.06f;
+            mesh.anchor = TextAnchor.MiddleCenter;
+            mesh.alignment = TextAlignment.Center;
+            go.GetComponent<MeshRenderer>().sharedMaterial = font.material;
         }
 
         static void Floor() =>
