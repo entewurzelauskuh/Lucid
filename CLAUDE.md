@@ -18,7 +18,8 @@ Read in this order before doing anything: `docs/SPEC.md` (what the game is), `do
 Things the tree does not tell you:
 
 - The editor path comes from `UNITY_PATH`. `tools/run-tests.sh`, `tools/build-cube.sh` and `tools/build-scenes.sh` all refuse to run while the editor holds the project, so ask the owner to close it rather than working around them.
-- `build-cube.sh` deliberately omits `-nographics`: previews need a graphics device, and the renderer degrades to writing no images rather than failing.
+- `build-cube.sh` deliberately omits `-nographics`: previews need a graphics device, and the renderer degrades to writing no images rather than failing. `verify-generated.sh` inherits that, so it cannot run on a headless box (#70).
+- `verify-generated.sh` proves every generator still runs and still agrees its committed artefact is current. It is exactly as strong as the two comparators that decide whether to write — `CubeEquivalence` (#66) and `SceneSignature` (#67, #72) — so a hand edit to a field neither compares survives it: setting `m_Fog` in a scene by hand passes, setting `m_Text` does not. Run it when you touch a generator, and **commit** first rather than stashing, or it verifies the committed generator instead of yours.
 - Driving Unity through the MCP bridge instead? Read the console for compile errors between every refresh and test run — the bridge has no compile guard and will happily run stale assemblies (`.claude/skills/pr-review/SKILL.md` §3).
 - The git remote is HTTPS. This machine has two GitHub accounts and the SSH key is the wrong one.
 - Steam is deferred, not blocked; see the pinned #28.
@@ -46,6 +47,7 @@ LUCID_ALL_ASSEMBLIES=1 …         include tests that ship inside packages
 tools/build-cube.sh <pack>/<cube>  build one cube from cube.spec.json, validate, render previews
 tools/build-cube.sh <pack>         rebuild a whole pack (after template changes)
 tools/build-scenes.sh              regenerate the generated scenes (gauntlet, fog doors)
+tools/verify-generated.sh          rebuild every generated file; fail if a generator changed one
 tools/check-licenses.py            what the pre-commit hook runs
 tools/install-hooks.sh             install that hook; once per clone
 ```
