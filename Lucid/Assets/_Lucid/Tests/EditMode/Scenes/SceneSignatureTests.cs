@@ -1,8 +1,12 @@
 using System.Collections.Generic;
 using Lucid.Editor.Scenes;
+using Lucid.Runtime;
 using Lucid.Runtime.Dev;
 using NUnit.Framework;
+using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Lucid.Tests.EditMode.Scenes
 {
@@ -175,6 +179,116 @@ namespace Lucid.Tests.EditMode.Scenes
             light.cullingMask = 1;
 
             Assert.That(Of(go), Is.Not.EqualTo(before));
+        }
+
+        [Test]
+        public void WhetherAComponentIsSwitchedOnIsCompared()
+        {
+            // m_Enabled is serialized, but Unity draws it in the component
+            // header rather than as a field row, so the property walk never
+            // reaches it. Measured: disabling this collider left the signature
+            // identical until it was read explicitly.
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            _spawned.Add(go);
+            string before = Of(go);
+
+            go.GetComponent<BoxCollider>().enabled = false;
+
+            Assert.That(Of(go), Is.Not.EqualTo(before));
+        }
+
+        [Test]
+        public void TheGameObjectsOwnFieldsAreCompared()
+        {
+            // A GameObject is not a Component, so walking the components alone
+            // never saw its tag, its static flags or its icon.
+            var go = new GameObject("Thing");
+            _spawned.Add(go);
+            string before = Of(go);
+
+            go.tag = "Respawn";
+
+            Assert.That(Of(go), Is.Not.EqualTo(before));
+        }
+
+        [Test]
+        public void TwoAssetsInOneFileAreToldApart()
+        {
+            // Every built-in mesh lives in one file and shares its GUID, so a
+            // GUID alone made Cube and Sphere the same asset.
+            var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var sphere = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            _spawned.Add(cube);
+            _spawned.Add(sphere);
+            sphere.name = cube.name;
+            sphere.GetComponent<MeshFilter>().sharedMesh =
+                Resources.GetBuiltinResource<Mesh>("Sphere.fbx");
+
+            Assert.That(Of(sphere), Is.Not.EqualTo(Of(cube)));
+        }
+
+        [Test]
+        public void ANestedSerializedClassIsCompared()
+        {
+            // SleeperMotor keeps the whole movement kit in a nested
+            // [Serializable] class. If the walk did not descend into it, the
+            // committed scene could keep one set of numbers while the code
+            // said another.
+            var go = new GameObject("Sleeper");
+            _spawned.Add(go);
+            var motor = go.AddComponent<SleeperMotor>();
+            string before = Of(go);
+
+            var serialized = new SerializedObject(motor);
+            serialized.FindProperty("_settings").FindPropertyRelative("_runSpeed").floatValue = 99f;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+
+            Assert.That(Of(go), Is.Not.EqualTo(before));
+        }
+
+        [Test]
+        public void ASignatureSurvivesBeingSavedAndReloaded()
+        {
+            // The comparison the builder actually performs is between a
+            // hierarchy in memory and one read back out of YAML. Every other
+            // test here compares two in-memory hierarchies, which would not
+            // notice a value that fails to survive the round trip — and that
+            // failure rewrites the scene on every single build.
+            const string temp = "Assets/_Lucid/Tests/SceneSignatureRoundTrip.unity";
+
+            // Unity refuses to open a scene beside an untitled one, and the
+            // test runner's scene is untitled in batch mode. Replacing it is
+            // safe when it is empty and never safe when it is not, which is
+            // the same judgement GauntletSceneBuilder has to make.
+            var active = SceneManager.GetActiveScene();
+            bool untitled = string.IsNullOrEmpty(active.path);
+            if (untitled && active.isDirty)
+                Assert.Ignore("an unsaved untitled scene is open; running this would discard it");
+
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,
+                untitled ? NewSceneMode.Single : NewSceneMode.Additive);
+            try
+            {
+                var previous = SceneManager.GetActiveScene();
+                SceneManager.SetActiveScene(scene);
+                GauntletBuilder.Build(GauntletLayout.Standard);
+                var sun = new GameObject("Sun").AddComponent<Light>();
+                sun.type = LightType.Directional;
+                sun.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+                if (!untitled) SceneManager.SetActiveScene(previous);
+
+                string built = SceneSignature.Of(scene.GetRootGameObjects());
+                Assert.That(EditorSceneManager.SaveScene(scene, temp), Is.True, "could not save");
+
+                var reloaded = EditorSceneManager.OpenScene(temp, OpenSceneMode.Single);
+                Assert.That(SceneSignature.Of(reloaded.GetRootGameObjects()), Is.EqualTo(built),
+                    "the signature changed by being written to YAML and read back");
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(temp);
+                EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            }
         }
 
         [Test]

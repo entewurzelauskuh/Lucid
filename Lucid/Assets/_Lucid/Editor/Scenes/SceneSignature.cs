@@ -34,7 +34,19 @@ namespace Lucid.Editor.Scenes
     /// </remarks>
     public static class SceneSignature
     {
-        /// <summary>Properties that carry Unity's bookkeeping rather than content.</summary>
+        /// <summary>
+        /// Properties skipped because they carry Unity's own bookkeeping —
+        /// fileIDs and hierarchy links that differ on every save.
+        /// </summary>
+        /// <remarks>
+        /// The three prefab entries are the exception, and a known limit
+        /// rather than bookkeeping: they record which prefab an object came
+        /// from, so a generator that switched from building an object in code
+        /// to instantiating an identical prefab would not be noticed. No
+        /// generator does — <see cref="Lucid.Runtime.SleeperRig"/> builds in
+        /// code on purpose — and skipping them is what keeps a fileID out of
+        /// the signature.
+        /// </remarks>
         static readonly HashSet<string> Ignored = new HashSet<string>(StringComparer.Ordinal)
         {
             "m_ObjectHideFlags",
@@ -46,6 +58,7 @@ namespace Lucid.Editor.Scenes
             "m_Children",
             "m_LocalIdentfierInFile",
             "m_RootOrder",
+            "m_Component",
         };
 
         public static string Of(IEnumerable<GameObject> roots)
@@ -84,7 +97,7 @@ namespace Lucid.Editor.Scenes
 
         static void Append(StringBuilder sb, Transform t, string path)
         {
-            sb.Append("N ").Append(path)
+            sb.Append("N ").Append(Escape(path))
               .Append(" p").Append(V(t.localPosition))
               .Append(" r").Append(V(t.localRotation.eulerAngles))
               .Append(" s").Append(V(t.localScale))
@@ -92,28 +105,53 @@ namespace Lucid.Editor.Scenes
               .Append(" layer=").Append(t.gameObject.layer)
               .Append('\n');
 
+            // The GameObject's own properties: tag, static flags, icon. It is
+            // not a Component, so walking the components alone never saw them.
+            Append(sb, t.gameObject, path, "G");
+
             foreach (Component component in Components(t.gameObject))
-                Append(sb, component, path);
+                Append(sb, component, path, "C");
 
             foreach (string block in Blocks(Children(t), c => path + "/" + c.name))
                 sb.Append(block);
         }
 
-        static void Append(StringBuilder sb, Component component, string path)
+        static void Append(StringBuilder sb, UnityEngine.Object target, string path, string kind)
         {
-            sb.Append("C ").Append(path).Append(' ').Append(component.GetType().FullName).Append('\n');
+            sb.Append(kind).Append(' ').Append(Escape(path)).Append(' ')
+              .Append(target.GetType().FullName);
 
-            // Transform's own values are already recorded above, and its
-            // property set is full of hierarchy bookkeeping.
-            if (component is Transform) return;
+            // Whether a component is switched on is serialized but drawn in the
+            // component header rather than as a field, so NextVisible never
+            // reaches it. Measured: disabling a BoxCollider left the signature
+            // identical.
+            if (Enabled(target) is bool on) sb.Append(" enabled=").Append(on);
+            sb.Append('\n');
 
-            var serialized = new SerializedObject(component);
+            // Transform's own values are recorded on the node line, and the
+            // rest of its property set is hierarchy bookkeeping. RectTransform
+            // is not exempt: its anchors and sizeDelta move nothing that the
+            // node line records.
+            if (target.GetType() == typeof(Transform)) return;
+
+            using var serialized = new SerializedObject(target);
             SerializedProperty property = serialized.GetIterator();
             while (property.NextVisible(true))
             {
                 if (Ignored.Contains(property.name)) continue;
                 sb.Append("  ").Append(property.propertyPath).Append('=')
-                  .Append(Value(property)).Append('\n');
+                  .Append(Escape(Value(property))).Append('\n');
+            }
+        }
+
+        static bool? Enabled(UnityEngine.Object target)
+        {
+            switch (target)
+            {
+                case Behaviour b: return b.enabled;
+                case Collider c: return c.enabled;
+                case Renderer r: return r.enabled;
+                default: return null;
             }
         }
 
@@ -196,14 +234,26 @@ namespace Lucid.Editor.Scenes
         {
             if (target == null) return "null";
 
-            string assetPath = AssetDatabase.GetAssetPath(target);
-            if (!string.IsNullOrEmpty(assetPath))
-                return "asset:" + AssetDatabase.AssetPathToGUID(assetPath);
+            // The GUID alone is not enough: every built-in mesh lives in one
+            // file, so Cube and Sphere share a GUID and signed identically.
+            // The local id is what tells them apart.
+            if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(target, out string guid, out long localId))
+                return $"asset:{guid}:{localId}";
 
             if (target is Component c) return "scene:" + Path(c.transform) + ":" + c.GetType().Name;
             if (target is GameObject go) return "scene:" + Path(go.transform);
             return "object:" + target.GetType().FullName;
         }
+
+        /// <summary>
+        /// Renders a value so it cannot be mistaken for the structure around
+        /// it. A GameObject name may contain a slash and a string field may
+        /// contain a newline, either of which could otherwise forge a path or
+        /// a node line and make two different hierarchies sign alike.
+        /// </summary>
+        static string Escape(string value) => value == null
+            ? "null"
+            : value.Replace("\\", "\\\\").Replace("\n", "\\n").Replace("/", "\\s");
 
         static string Path(Transform t)
         {

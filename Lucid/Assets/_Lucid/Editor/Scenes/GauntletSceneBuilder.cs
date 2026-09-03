@@ -55,6 +55,7 @@ namespace Lucid.Editor.Scenes
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,
                 additive ? NewSceneMode.Additive : NewSceneMode.Single);
 
+            bool saved = false;
             try
             {
                 SceneManager.SetActiveScene(scene);
@@ -77,6 +78,7 @@ namespace Lucid.Editor.Scenes
                 Directory.CreateDirectory(Path.GetDirectoryName(ScenePath));
                 if (!EditorSceneManager.SaveScene(scene, ScenePath))
                     throw new Exception($"could not save {ScenePath}");
+                saved = true;
 
                 Debug.Log($"gauntlet: wrote {ScenePath} with {gauntlet.Lanes.Count} lanes");
             }
@@ -86,6 +88,14 @@ namespace Lucid.Editor.Scenes
                 {
                     if (previous.IsValid()) SceneManager.SetActiveScene(previous);
                     EditorSceneManager.CloseScene(scene, removeScene: true);
+                }
+                else if (!saved && File.Exists(ScenePath))
+                {
+                    // Nothing was written, so the scene built here is untitled
+                    // and dirty. Leaving it open means the next build refuses
+                    // (the untitled-and-dirty guard above) and the developer is
+                    // holding unsaved work they never asked for.
+                    EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
                 }
                 AssetDatabase.Refresh();
             }
@@ -104,7 +114,22 @@ namespace Lucid.Editor.Scenes
             // caller has already established is not worth keeping — and Unity
             // refuses to open anything additively beside it.
             var mode = additive ? OpenSceneMode.Additive : OpenSceneMode.Single;
-            var existing = EditorSceneManager.OpenScene(ScenePath, mode);
+
+            Scene existing;
+            try
+            {
+                existing = EditorSceneManager.OpenScene(ScenePath, mode);
+            }
+            catch (Exception e)
+            {
+                // The question this answers is "may I skip the write?", and the
+                // answer for a scene that cannot be read is no. Overwriting a
+                // corrupt file is the recovery; failing the build would leave
+                // the developer deleting it by hand.
+                Debug.LogWarning($"gauntlet: could not read {ScenePath} ({e.Message}); rewriting it");
+                return null;
+            }
+
             try
             {
                 return SceneSignature.Of(existing.GetRootGameObjects());
