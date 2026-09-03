@@ -26,20 +26,37 @@ namespace Lucid.Tests.EditMode.Sleeper
         Keyboard _keyboard;
         GameObject _body;
         SleeperInputSource _source;
+        InputActionAsset _actions;
 
         [SetUp]
         public void BindASleeper()
         {
             _keyboard = InputSystem.AddDevice<Keyboard>();
 
+            // A copy, not the committed asset itself. An InputActionAsset
+            // carries enabled/disabled state, so binding the shared one made
+            // these tests fight anything else holding it — and something does
+            // the moment a scene containing a Sleeper is open in the editor.
+            // The copy still proves what the committed asset says, which is
+            // the whole point; it just stops the test from being about the
+            // editor's mood.
+            var committed = AssetDatabase.LoadAssetAtPath<InputActionAsset>(
+                GauntletSceneBuilder.InputActionsPath);
+            Assert.That(committed, Is.Not.Null,
+                $"no InputActionAsset at {GauntletSceneBuilder.InputActionsPath}");
+            _actions = Object.Instantiate(committed);
+
             _body = new GameObject("Sleeper");
             _source = _body.AddComponent<SleeperInputSource>();
-            _source.Bind(AssetDatabase.LoadAssetAtPath<InputActionAsset>(
-                GauntletSceneBuilder.InputActionsPath));
+            _source.Bind(_actions);
         }
 
         [TearDown]
-        public void DestroyTheSleeper() => Object.DestroyImmediate(_body);
+        public void DestroyTheSleeper()
+        {
+            Object.DestroyImmediate(_body);
+            if (_actions != null) Object.DestroyImmediate(_actions);
+        }
 
         [Test]
         public void NothingHeldIsNoIntent()
