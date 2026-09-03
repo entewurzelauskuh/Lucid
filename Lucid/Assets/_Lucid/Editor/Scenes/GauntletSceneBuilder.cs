@@ -41,6 +41,9 @@ namespace Lucid.Editor.Scenes
             // Beside a saved scene, additively, and put back afterwards: no
             // reason to close what the person at the keyboard is working on.
             bool additive = !untitled;
+
+            string committed = CommittedSignature(additive);
+
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,
                 additive ? NewSceneMode.Additive : NewSceneMode.Single);
 
@@ -51,6 +54,17 @@ namespace Lucid.Editor.Scenes
                 var gauntlet = GauntletBuilder.Build();
                 AddSun();
                 AddRunner(gauntlet);
+
+                string built = SceneSignature.Of(scene.GetRootGameObjects());
+
+                // Saving mints fresh fileIDs and reorders the file, so writing
+                // an unchanged scene rewrites most of it (#59). Nothing but a
+                // real difference is allowed to touch the disk.
+                if (built == committed)
+                {
+                    Debug.Log($"gauntlet: unchanged {ScenePath}");
+                    return;
+                }
 
                 Directory.CreateDirectory(Path.GetDirectoryName(ScenePath));
                 if (!EditorSceneManager.SaveScene(scene, ScenePath))
@@ -66,6 +80,30 @@ namespace Lucid.Editor.Scenes
                     EditorSceneManager.CloseScene(scene, removeScene: true);
                 }
                 AssetDatabase.Refresh();
+            }
+        }
+
+        /// <summary>
+        /// The signature of the scene already on disk, or null when there is
+        /// none. Opened and closed again here rather than held open, so the
+        /// build never has two scenes loaded at once.
+        /// </summary>
+        static string CommittedSignature(bool additive)
+        {
+            if (!File.Exists(ScenePath)) return null;
+
+            // Untitled means the empty scene batch mode starts with, which the
+            // caller has already established is not worth keeping — and Unity
+            // refuses to open anything additively beside it.
+            var mode = additive ? OpenSceneMode.Additive : OpenSceneMode.Single;
+            var existing = EditorSceneManager.OpenScene(ScenePath, mode);
+            try
+            {
+                return SceneSignature.Of(existing.GetRootGameObjects());
+            }
+            finally
+            {
+                if (additive) EditorSceneManager.CloseScene(existing, removeScene: true);
             }
         }
 
