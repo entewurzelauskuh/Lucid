@@ -28,13 +28,45 @@ behaviour, and *tests that pass for the wrong reason*. Require a concrete
 failure scenario for each finding: exact inputs, expected versus actual.
 Require it to separate PROVEN from SUSPECTED.
 
-**Reviewer B — specification conformance.** Audit against the normative
+**Reviewer B — the lens that fits the change.** Two reviewers only pay off if
+their lenses genuinely differ; a second one covering the same ground is an echo,
+not a check.
+
+Pick by **where the change's new risk sits**, not by whether a spec surface
+exists. "It touches the spec, so use the spec lens" is the wrong test, and this
+repository paid for it: #60 touched `docs/SPEC.md` §9 *and* the test harness,
+the spec lens was the obvious pick, and the operational half went unreviewed —
+**#64, #65, #68 and #69 are all downstream of that one omission.**
+
+When a change carries both kinds of risk, give Reviewer B the half Reviewer A
+is least likely to reach, and **say in the triage which lens B took and which
+half nobody covered.** A wrong choice is then visible instead of silent.
+
+*Specification conformance* — where the change makes a normative claim: new
+behaviour under a spec section, a document marked **[S]**, a rule in
+`CLAUDE.md`. It caught a deviation owing a DECISIONS
+entry on #71 and seven wrong document citations. Audit against the normative
 documents only, not personal taste. For `Lucid.Core` that is
 `docs/CORE-API.md` — its §12 lists required tests by group, so demand an
 explicit COVERED / MISSING checklist naming the test for each bullet, and
 treat a test whose *body* checks something else as MISSING. Also check §11
 invariants, signature fidelity, scope creep from later issues, and
 `CLAUDE.md` conventions.
+
+*Operational* — where the change makes an environmental claim: a script, a
+generator, the harness, anything that has to run on another machine, on a fresh
+clone, with LFS unsmudged, on a headless box, with the editor open, or fail
+cleanly half way. That is where the remaining risk in `tools/` lives, and it is
+the lens that found a rule-7 breach in the process rules themselves — a change
+having a spec surface does not mean the spec lens is the one that will find the
+defect.
+
+Keep them **parallel**, and never let the second read the first. Independent
+convergence is the strongest signal available — when both land on one defect
+separately it settles the matter without argument — and it is worth nothing if
+one has seen the other. Anchoring is the other half: the most valuable findings
+in this project have come from one reviewer only, because neither was primed by
+the other's framing.
 
 Tell both: **do not modify any file**, and say plainly when a category is
 clean rather than manufacturing findings.
@@ -113,6 +145,32 @@ reasoning — a wrong diagnosis left standing gets re-raised later.
 Correct any claim in the pull request body that the review disproved. On #36
 the description claimed "wall-to-wall accepted" was covered; it was not.
 
+Say which lens Reviewer B took, and if the change had two kinds of risk, which
+half nobody covered. A lens chosen badly is then visible rather than silent.
+
+If a reviewer returned nothing — an error, an empty report — say so and
+dispatch again. A pull request opened on one review says that in the triage.
+
+When the two reviewers **contradict each other**, that is a finding about the
+change, not noise to average away. It has happened here: one wanted a fix
+widened to the whole file, the other wanted it narrowed. Put both positions in
+the triage with the call and the reason. Where the disagreement is about what
+the design *should* be rather than what it *is*, §5 applies — label it
+`question` and leave it to the owner.
+
+## 4b. Re-review the fixes, once, when they are substantial
+
+The triage and the repairs are written by the author, who is by definition not
+independent, and nothing else looks at them. Fixes written in response to
+review currently reach the owner unreviewed, which is the one gap the parallel
+protocol does not close.
+
+So when the fixes are a defect class rather than a typo — new behaviour, a
+changed invariant, a test rewritten because it could not fail — dispatch **one**
+reviewer on the fix commits alone before opening. This is the only place
+sequential review earns its keep: there is nothing to anchor to yet, because
+the diff it reads did not exist when the first pair ran.
+
 ## 5. File what is out of scope
 
 Findings in adjacent or already-merged code become issues with the repro,
@@ -123,4 +181,4 @@ Design gaps where the code follows the spec faithfully get labelled
 ## Then
 
 Paste the `tools/run-tests.sh` summary into the pull request, per rule 6, and
-open it. Stop there: the owner reviews and merges.
+open it. Stop there: the owner reviews it and says whether to merge (CLAUDE.md rule 1).
