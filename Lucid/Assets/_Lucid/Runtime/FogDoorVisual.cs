@@ -41,16 +41,28 @@ namespace Lucid.Runtime
 
         public int Layers => _layers;
 
-        void Awake()
+        void Awake() => EnsureReady();
+
+        void LateUpdate() => Refresh();
+
+        /// <summary>
+        /// Finds the door and builds the stack, once. Not left to Awake alone
+        /// for the reason SleeperMotor learned the hard way: a component added
+        /// in edit mode never gets one, so anything that depended on it was
+        /// silently inert until play began.
+        /// </summary>
+        void EnsureReady()
         {
+            if (_door != null) return;
+
             _door = GetComponent<FogDoor>();
+            if (_door == null) return;
+
             Build();
             _from = _to = Shown = FogDoorLook.For(_door.State);
             _rendered = new ConnectorStateCache(_door.State);
             Apply();
         }
-
-        void LateUpdate() => Refresh();
 
         /// <summary>
         /// Bring the mist up to date with the door. Public and side-effect
@@ -59,6 +71,7 @@ namespace Lucid.Runtime
         /// </summary>
         public void Refresh()
         {
+            EnsureReady();
             if (_door == null) return;
 
             if (!_rendered.Matches(_door.State))
