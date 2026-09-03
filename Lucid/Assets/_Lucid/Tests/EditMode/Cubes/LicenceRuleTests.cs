@@ -179,6 +179,13 @@ namespace Lucid.Tests.EditMode.Cubes
             ("| cc0-wall.png | https://polyhaven.com/x | Unity Asset Store Standard EULA |", false),
             ("| wall.png | https://cc0-textures.com/a/Wall | All rights reserved |", false),
             ("| wall.png | https://cc0-textures.com/a/Wall | CC-BY-NC 4.0 |", false),
+
+            // U+001C ends a line for Python's splitlines() and not for
+            // String.Split('\n'). With splitlines() the hook would see
+            // "| wall.png | https://ambientcg.com/a/Wall" — no licence column —
+            // and refuse an asset the validator accepts. Reading the ledger
+            // with split("\n") on both sides is what this row pins.
+            ("| wall.png | https://ambientcg.com/a/Wall\u001CBricks | CC0 |", true),
         };
 
         [Test]
@@ -409,7 +416,91 @@ namespace Lucid.Tests.EditMode.Cubes
             ("[ { \"file\": \"statue.fbx\" } ]", "a top-level array"),
             ("{ \"assets\": [ { \"file\": null, \"path\": \"statue.fbx\" } ] }", "a JSON null before the key that has it"),
             ("{ \"assets\": [ { \"file\": \"\", \"path\": \"statue.fbx\" } ] }", "an empty string before the key that has it"),
+            ("{ \"assets\": [ { \"file\": \"props/statue.fbx\" } ] }", "a path, not a bare name"),
+            ("{ \"assets\": [ { \"name\": \"statue.fbx\" } ] }", "the third key"),
+            ("{ \"assets\": [ { \"dest\": \"statue.fbx\" } ] }", "the fourth key"),
+            ("{ \"assets\": [ { \"file\": 42, \"path\": \"statue.fbx\" } ] }", "a number where a name goes"),
         };
+
+        /// <summary>
+        /// Manifests neither gate can read. Newtonsoft forgives a trailing
+        /// comma, a comment and a BOM where json.loads forgives none of them,
+        /// so "unreadable means empty" made the hook stop enforcing the rule
+        /// on exactly the files a human had hand-edited.
+        /// </summary>
+        static readonly (string Json, string Why)[] Unreadable =
+        {
+            ("{ \"assets\": [ { \"file\": \"statue.fbx\" }, ] }", "a trailing comma"),
+            ("{ /* fetched at build time */ \"assets\": [ { \"file\": \"statue.fbx\" } ] }", "a comment"),
+            ("{ \"assets\": [", "cut off"),
+        };
+
+        [Test]
+        public void AManifestNeitherGateCanReadStopsBoth()
+        {
+            string script = HookPath();
+            foreach ((string json, string why) in Unreadable)
+            {
+                Asset("statue.fbx");
+                Ledger("| statue.fbx | https://example.com/s | CC0 |");
+                File.WriteAllText($"{Folder}/assets.manifest.json", json);
+
+                bool? hook = HookAccepts(script, AssetPath("statue.fbx"));
+                if (hook == null) Assert.Ignore("python3 is not on PATH");
+                Assert.That(hook, Is.False, $"hook: {why}");
+
+                // The validator blames it either as unreadable or, where
+                // Newtonsoft reads what json.loads will not, as a committed
+                // asset the manifest lists. Both refuse; that is the point.
+                Assert.That(Validate().Problems.Where(p => p.Rule == "licences"),
+                    Is.Not.Empty, $"validator: {why}");
+
+                File.Delete($"{Folder}/assets.manifest.json");
+            }
+        }
+
+        [Test]
+        public void WhereTheParsersDifferTheHookOverRejects()
+        {
+            // Newtonsoft reads a comment and json.loads does not, and no
+            // pre-pass can close that honestly — a manifest is full of URLs,
+            // and stripping "//" would eat every one of them. So the residual
+            // divergence is pinned in the only direction that is safe: the hook
+            // refuses a manifest it cannot read, and the validator, which lists
+            // nothing here, has nothing to refuse. An asset that is fetched can
+            // never reach the repository this way; a contributor with a
+            // comment in their manifest is told to remove it.
+            Asset("statue.fbx");
+            Ledger("| statue.fbx | https://example.com/s | CC0 |");
+            File.WriteAllText($"{Folder}/assets.manifest.json",
+                "{ /* fetched at build time */ \"assets\": [] }");
+
+            Assert.That(Validate().Problems.Select(p => p.Rule), Has.None.EqualTo("licences"));
+            bool? hook = HookAccepts(HookPath(), AssetPath("statue.fbx"));
+            if (hook == null) Assert.Ignore("python3 is not on PATH");
+            Assert.That(hook, Is.False, "the hook refuses what it cannot read");
+        }
+
+        [Test]
+        public void ABomIsReadRatherThanRefused()
+        {
+            // A BOM is what PowerShell's Set-Content and Visual Studio write,
+            // and Newtonsoft reads straight through it. Refusing it here would
+            // be a divergence dressed up as strictness.
+            //
+            // The manifest has to list *nothing* for this to prove anything: a
+            // manifest that lists the asset is refused whether the BOM was read
+            // or choked on, so that version of this test passed either way.
+            Asset("statue.fbx");
+            Ledger("| statue.fbx | https://example.com/s | CC0 |");
+            File.WriteAllText($"{Folder}/assets.manifest.json",
+                "\uFEFF{ \"assets\": [] }", new System.Text.UTF8Encoding(false));
+
+            Assert.That(Validate().Problems.Select(p => p.Rule), Has.None.EqualTo("licences"));
+            bool? hook = HookAccepts(HookPath(), AssetPath("statue.fbx"));
+            if (hook == null) Assert.Ignore("python3 is not on PATH");
+            Assert.That(hook, Is.True, "a BOM is read, not refused");
+        }
 
         [Test]
         public void BothGatesReadTheSameManifestShapes()

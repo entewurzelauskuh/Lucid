@@ -289,6 +289,14 @@ namespace Lucid.Editor.Cubes
             string ledger = File.Exists(ledgerPath) ? File.ReadAllText(ledgerPath) : null;
 
             string[] fetched = ManifestNames(cubeFolder);
+            if (fetched == null)
+            {
+                report.Add("licences",
+                    "assets.manifest.json is not valid JSON. It says which assets are " +
+                    "fetched rather than committed, so an unreadable one cannot be " +
+                    "treated as empty (CLAUDE.md rule 5)");
+                fetched = new string[0];
+            }
 
             foreach (string file in Directory.GetFiles(assets, "*", SearchOption.AllDirectories))
             {
@@ -328,13 +336,10 @@ namespace Lucid.Editor.Cubes
         }
 
         /// <summary>
-        /// The file names the manifest says are fetched. Mirrors the shape
-        /// tools/check-licenses.py reads, so the two gates agree.
-        /// </summary>
-        /// <summary>
-        /// The first of the name keys that carries a non-empty string, which is
-        /// what `if entry.get(key)` means on the hook's side. `??` stops at a
-        /// JSON null, because a JValue.Null is not a C# null.
+        /// The first of the name keys holding a non-empty string. `??` would
+        /// stop at a JSON null, because a JValue.Null is not a C# null, and
+        /// strings only because the hook reads strings only — a manifest with
+        /// a number in "file" must mean the same thing to both gates.
         /// </summary>
         static string FirstName(Newtonsoft.Json.Linq.JObject entry)
         {
@@ -348,6 +353,10 @@ namespace Lucid.Editor.Cubes
             return null;
         }
 
+        /// <summary>
+        /// The file names the manifest says are fetched. Mirrors the shape
+        /// tools/check-licenses.py reads, so the two gates agree.
+        /// </summary>
         static string[] ManifestNames(string cubeFolder)
         {
             string path = Path.Combine(cubeFolder, "assets.manifest.json");
@@ -369,9 +378,10 @@ namespace Lucid.Editor.Cubes
             }
             catch (Newtonsoft.Json.JsonException)
             {
-                // The hook reports this; here it just means nothing is known to
-                // be fetched, and the ledger rule below still applies.
-                return new string[0];
+                // Not an empty manifest: an unreadable one. Saying "nothing is
+                // fetched" here let a cube build clean while the hook refused
+                // the commit — the split sharing this rule exists to prevent.
+                return null;
             }
         }
 

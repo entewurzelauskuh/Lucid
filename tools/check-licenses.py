@@ -95,8 +95,10 @@ def repo_root() -> Path | None:
 
 
 def staged_paths() -> list[str]:
+    # T as well as ACMR: a path that was a symlink and is now a regular file is
+    # a type change, and without T the blob it became is never judged.
     out = subprocess.run(
-        ["git", "diff", "--cached", "--name-only", "--diff-filter=ACMR"],
+        ["git", "diff", "--cached", "--name-only", "--diff-filter=ACMRT"],
         capture_output=True, text=True, check=True,
     ).stdout
     return [line for line in out.splitlines() if line.strip()]
@@ -137,16 +139,21 @@ def ledger_entry(ledger: Path, name: str) -> str | None:
     return None
 
 
+class UnreadableManifest(Exception):
+    """The manifest exists and cannot be parsed, which is not the same as empty."""
+
+
 def manifest_names(cube: Path) -> set[str]:
     """Files the manifest says are fetched, so must never be committed."""
     manifest = cube / "assets.manifest.json"
     if not manifest.is_file():
         return set()
     try:
-        data = json.loads(manifest.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
-        print(f"  {manifest}: not valid JSON ({exc})", file=sys.stderr)
-        return set()
+        # utf-8-sig, because a BOM is what PowerShell's Set-Content and Visual
+        # Studio write and Newtonsoft reads straight through.
+        data = json.loads(manifest.read_text(encoding="utf-8-sig"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        raise UnreadableManifest(f"{manifest}: not valid JSON ({exc})") from exc
     entries = data if isinstance(data, list) else (
         data.get("assets", []) if isinstance(data, dict) else []
     )
@@ -156,8 +163,9 @@ def manifest_names(cube: Path) -> set[str]:
     for entry in entries:
         if isinstance(entry, dict):
             for key in ("file", "path", "name", "dest"):
-                if entry.get(key):
-                    names.add(Path(str(entry[key])).name)
+                value = entry.get(key)
+                if isinstance(value, str) and value:
+                    names.add(Path(value).name)
                     break
     return names
 
@@ -182,12 +190,20 @@ def check(paths: list[str], base: Path | None = None) -> list[str]:
         if name.endswith(".meta"):
             continue
         subject = name
-        if subject in EXEMPT:
-            continue
 
         cube = Path(match.group("cube"))
 
-        if subject in manifest_names(cube):
+        try:
+            fetched = manifest_names(cube)
+        except UnreadableManifest as exc:
+            problems.append(
+                f"{exc}. The manifest says which assets are fetched rather than "
+                f"committed, so an unreadable one cannot be treated as empty "
+                f"(CLAUDE.md rule 5)"
+            )
+            continue
+
+        if subject in fetched:
             problems.append(
                 f"{path}: listed in {cube}/assets.manifest.json, so it is fetched "
                 f"and must not be committed (CLAUDE.md rule 5)"
