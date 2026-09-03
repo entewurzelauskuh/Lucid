@@ -38,12 +38,19 @@ ASSET_DIR = re.compile(r"(?P<cube>(?:.*/)?Packs/[^/]+/Cubes/[^/]+)/assets/(?P<re
 # where SA and ND are the first letters of an ordinary word. The + is for
 # CC-BY-NCSA, where one clause abuts the next.
 #
+# Neither pattern uses \s, and the cell is trimmed of an explicit set. Python
+# and .NET disagree about \s: Python's matches U+001C-001F, .NET's does not, so
+# "CC-BY\x1cNC 4.0" was rejected here and accepted by the validator — a cube
+# building clean and failing at commit, which is the one thing sharing the
+# pattern is meant to prevent. str.strip() and String.Trim() differ over the
+# same characters.
+#
 # Kept character-for-character identical to CubeValidator.AllowedLicence and
 # CubeValidator.DeniedLicence; LicenceRuleTests runs this script and compares
 # its verdicts against the validator's, which is the only check that proves the
 # two agree rather than merely look alike.
 ALLOWED_PATTERN = r"\bCC0\b|\bCC[- ]?BY\b"
-DENIED_PATTERN = r"[-\s_](?:NC|ND|SA)+(?![A-Za-z])|NonCommercial|NoDerivat|ShareAlike"
+DENIED_PATTERN = r"[- \t_](?:NC|ND|SA)+(?![A-Za-z])|NonCommercial|NoDerivat|ShareAlike"
 ALLOWED = re.compile(ALLOWED_PATTERN, re.IGNORECASE)
 DENIED = re.compile(DENIED_PATTERN, re.IGNORECASE)
 # Text that lives with the assets rather than being one.
@@ -62,7 +69,7 @@ def licence_cell(entry: str) -> str | None:
     # a CC-BY-NC licence opened the gate — and dropping empty cells refused a
     # row whose source column was blank.
     cells = entry.split("|")
-    return cells[3].strip() if len(cells) >= 5 else None
+    return cells[3].strip(" \t") if len(cells) >= 5 else None
 
 
 def is_redistributable(entry: str) -> bool:
@@ -115,7 +122,13 @@ def ledger_entry(ledger: Path, name: str) -> str | None:
     if not ledger.is_file():
         return None
     token = re.compile(rf"(?<![\w.\-]){re.escape(name)}(?![\w.\-])")
-    for line in ledger.read_text(encoding="utf-8", errors="replace").splitlines():
+    # split("\n"), not splitlines(). Python's splitlines() also breaks on
+    # U+001C-001E, U+0085, U+2028 and U+2029, and C# String.Split('\n') does
+    # not — so a ledger line containing one of those was two lines here and one
+    # line to the validator. The row then looked malformed to the hook and fine
+    # to the build: a cube building clean and failing at commit, which is the
+    # one thing sharing the rule is meant to prevent.
+    for line in ledger.read_text(encoding="utf-8", errors="replace").split("\n"):
         if token.search(line):
             return line
     return None

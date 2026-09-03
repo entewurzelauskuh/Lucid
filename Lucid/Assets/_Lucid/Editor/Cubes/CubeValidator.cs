@@ -217,6 +217,14 @@ namespace Lucid.Editor.Cubes
         /// cleared" accepted, where SA and ND begin an ordinary word. The + is
         /// for CC-BY-NCSA, where one clause abuts the next.
         ///
+        /// Neither pattern uses <c>\s</c>, and the cell is trimmed of an
+        /// explicit set. Python and .NET disagree about <c>\s</c>: Python's
+        /// matches U+001C-001F and .NET's does not, so "CC-BY\x1cNC 4.0" was
+        /// accepted here and rejected by the hook — a cube building clean and
+        /// failing at commit, which is the one thing sharing the pattern is
+        /// meant to prevent. str.strip() and String.Trim() differ over the
+        /// same characters.
+        ///
         /// Character-for-character identical to the patterns in
         /// tools/check-licenses.py. LicenceRuleTests runs that script and
         /// compares its verdicts against these, which is the only check that
@@ -226,7 +234,7 @@ namespace Lucid.Editor.Cubes
 
         /// <summary>The extra clauses that disqualify an otherwise CC licence.</summary>
         internal const string DeniedLicence =
-            @"[-\s_](?:NC|ND|SA)+(?![A-Za-z])|NonCommercial|NoDerivat|ShareAlike";
+            @"[- \t_](?:NC|ND|SA)+(?![A-Za-z])|NonCommercial|NoDerivat|ShareAlike";
 
         /// <summary>
         /// The licence column of a ledger row, or null if the line is not one.
@@ -245,7 +253,7 @@ namespace Lucid.Editor.Cubes
             // "CC0 base" beside a CC-BY-NC licence opened the gate — and
             // dropping empty cells refused a row whose source column was blank.
             string[] cells = line.Split('|');
-            return cells.Length >= 5 ? cells[3].Trim() : null;
+            return cells.Length >= 5 ? cells[3].Trim(' ', '\t') : null;
         }
 
         /// <summary>Whether a ledger row names a licence rule 5 admits.</summary>

@@ -136,6 +136,13 @@ namespace Lucid.Tests.EditMode.Cubes
             // False rejects the clause pattern must not produce: SA and ND here
             // begin an ordinary word, not a licence clause.
             ("CC-BY 4.0 - SAmple pack", true), ("CC0 - NDA cleared", true),
+
+            // U+001C is whitespace to Python's \s and not to .NET's, so while
+            // the pattern used \s this was rejected by the hook and accepted
+            // here — a cube building clean and failing at commit. Neither
+            // pattern uses \s now, so both read it as an ordinary character
+            // and both accept.
+            ("CC-BY\u001CNC 4.0", true),
         };
 
         /// <summary>
