@@ -12,6 +12,13 @@ Reason: why this over the alternatives.
 Spec: sections changed.
 ```
 
+## 2026-09-04 — The first playable build comes before the network
+
+Context: #78. `docs/WORKPLAN.md` §4 scheduled M0.9b Sandbox — build a maze offline, F5 into it as a Sleeper — after M0.8 Netcode and M0.9 Round flow. Its own text says it reuses `DreamInstance` (M0.6) and the god view (M0.7) and nothing else; the numbering was the only thing putting it last. The owner asked whether a playable demonstrator was planned and when, and the honest answer was "yes, and two milestones later than it needs to be".
+Decision: M0.9b follows M0.7. A new item, M0.6b (#79), sits between M0.6 and M0.7 and settles the scene architecture — a persistent Boot scene with the `Services` locator, additive loading, a `GameFlow` state machine that owns every transition, input maps per state, a UXML placeholder Title — before M0.6 and M0.7 create scenes of their own. §1 rule 2 now picks work by the plan's order rather than the issue number, because a reorder cannot survive a rule that sorts by tracker number.
+Reason: the plan's own goal for M0 is "if this is not at least a little fun, stop and rethink before M1", and the sandbox is the earliest point at which anyone can find out. Netcode is easier to debug against a working offline reference than alongside it. The flow skeleton is pulled forward for the opposite reason: M1's UI work (#26) would otherwise begin by tearing out whatever scene loading M0.6 and M0.7 improvised. The title, lobby, options and pause polish stay in M1 as `docs/UI.md` §16 maps them; only the load-bearing structure moves.
+Spec: none. `docs/UI.md` §2 and §12 already describe exactly this flow and this sandbox; nothing there changes. `docs/WORKPLAN.md` §1 rule 2, §4 M0.6b and §4 M0.9b are the edits.
+
 ## 2026-09-03 — ShareAlike is refused, though it is redistributable
 
 Context: #75. The licence gate accepted `CC-BY-NC`, `-ND` and `-SA` because a word boundary sits between the Y and the hyphen in `\bCC-?BY\b`. Closing that meant deciding what to do about SA, which is not the same question as NC and ND.
