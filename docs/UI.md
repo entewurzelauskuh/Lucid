@@ -179,7 +179,7 @@ Strings are the rules made visible; keep them exact so every screen says the sam
 
 ## 16. Milestone mapping
 
-- **M0:** Sleeper HUD (timer, lives placeholder), Nightmare HUD (budget, timer, palette v0, ghost with reasons), head-start banner, results overlay v0, sandbox switch (dev tool).
+- **M0:** Sleeper HUD (timer, lives placeholder), Nightmare HUD (budget, timer, palette v0, ghost with reasons), head-start banner, results overlay v0, sandbox switch (dev tool), and a placeholder Title with only the entries that work offline — Sandbox and Quit — so the sandbox has somewhere to start from (work plan M0.6b).
 - **M1:** Title, lobby with Steam avatars and settings presets, Sleeper panel, target selector, toasts, spectator view, results v1, pause menu, options v0, edge flows.
 - **M2:** health, lives and damage feedback, weak-point ring, gamepad UI navigation, rebinding, aim-assist option.
 - **M3:** possession overlay, effects bar, accessibility set, results badges, options v1 (painterly pass and friends).

@@ -14,7 +14,7 @@ This is the document Claude Code works from. The spec says *what the game is*; t
 ## 1. How Claude Code uses this document
 
 1. Sources of truth, in order: `docs/SPEC.md` (design), `docs/WORKPLAN.md` (order and acceptance), `CLAUDE.md` (conventions and commands), `docs/DECISIONS.md` (recorded deviations). If code and spec disagree, the spec wins unless a DECISIONS entry says otherwise.
-2. Pick the lowest-numbered open issue in the current milestone. Do not start the next milestone while the current one has open issues, unless an issue is labelled `parallel-ok`.
+2. Pick the earliest entry in the current milestone's section below that still has an open issue — §4's order is the schedule, and issue numbers only record when something was filed (M0.9b is #10 and comes before M0.8, which is #8). A milestone issue that is no entry of its own — a bug — is taken with the entry it touches, otherwise after the last entry, lowest number first; either way it is an open issue for the next sentence. Do not start the next milestone while the current one has open issues, unless an issue is labelled `parallel-ok`.
 3. One issue → one branch → one pull request. Branch names `m0/03-cube-pipeline`; conventional commits (`feat:`, `fix:`, `docs:`, `test:`, `chore:`).
 4. **Claude opens the pull request and stops.** The owner reviews and requests changes or gives the word to merge; the squash merge then follows on that word, for that pull request (`CLAUDE.md` rule 1). Claude never merges unasked and never pushes to `main`. Requested changes go on the same branch.
 5. Keep pull requests reviewable: one concern, roughly under 500 changed lines of hand-written code; generated prefabs, assets and previews do not count but are listed in the description.
@@ -115,9 +115,17 @@ Goal: one Nightmare and one Sleeper play a full round over the network, with eve
 - `DreamInstance`: instantiates cubes from the event log at lattice positions and rotations, wires fog doors to derived states, detects first entry per cube (trigger volume) and exit touches, respawns in the start cube.
 - Accept: PlayMode test: replaying a log builds the expected geometry; entering a cube raises `Explored` exactly once; walking into a white door raises `TouchedExit`.
 
+**M0.6b Scene flow skeleton: Boot, Title, additive Dream, GameFlow**
+- One persistent Boot scene holding the `Services` locator; every other scene additive, never a single-mode `LoadScene`, loaded async behind a loading state. A `GameFlow` state machine owns every transition, scenes never load each other; M0 states `Title → Sandbox → Title`, with Sandbox shaped to hold M0.9b's god-view ⇄ Sleeper switch as a sub-state, and the whole shaped so M0.9's `Lobby → Round → Results → Lobby` are more states rather than a rewrite. Input maps enabled per state. Title is a UXML placeholder with the two entries that work offline, Sandbox and Quit (UI doc §3, §15); the rest of the title, lobby, options and pause is M1 (UI doc §16).
+- Accept: from Title, Sandbox loads the Dream additively and returns to Title with nothing leaked — the same `Services` instance on both sides of the round trip and no Dream objects left behind, proven by a PlayMode test; `GameFlow` refuses a transition not in its table, with a test; the gauntlet and fog-door dev scenes still load directly in play mode.
+
 **M0.7 Nightmare god view and palette**
 - Orbit / top-down camera with a layer slider and cut-away; fog and exit door highlights; palette (connectors only), ghost placement with rotation, red ghost with the Core reason on rejection; budget and timer HUD, all driven by Core.
 - Accept: every connector type can be placed on any fog door; every rejection reason renders; placements go through `Validate`.
+
+**M0.9b Sandbox (dev tool)** — after M0.7, not after M0.9: it needs `DreamInstance` and the god view and nothing from the network. This is the first playable build, and M0.8 is debugged against it.
+- Offline mode from the title: unlimited budget, no timer, F5 switches between the god view and a Sleeper in the current lattice (UI doc §12). Reuses `DreamInstance` and the god view; no netcode.
+- Accept: build ten cubes, drop in, walk to an exit, return to the god view, all without a network session.
 
 **M0.8 Netcode v0** — messages 001, 101–103, 201–203, 301–304, 311, 401, 402, 408 of `docs/NETCODE.md`.
 - NGO host mode over Unity Transport; `Approval` with the `Hello` payload; `RoundSync` (host applies validated events through `Round`, broadcasts `LatticeEvent`, answers requests); `LatticeMirror` on clients with `HashReport`; 10 Hz `Telemetry`; Multiplayer Play Mode setup for the dev loop.
@@ -126,10 +134,6 @@ Goal: one Nightmare and one Sleeper play a full round over the network, with eve
 **M0.9 Round flow v0**
 - Head start with the start door misted and a countdown; run phase; dawn; wake and consume; a minimal results overlay; return to a bare "again" screen.
 - Accept: a full round can be played end to end with one Nightmare and one Sleeper, both outcomes reachable.
-
-**M0.9b Sandbox (dev tool)**
-- Offline mode from the title: unlimited budget, no timer, F5 switches between the god view and a Sleeper in the current lattice (UI doc §12). Reuses `DreamInstance` and the god view; no netcode.
-- Accept: build ten cubes, drop in, walk to an exit, return to the god view, all without a network session.
 
 **M0.9c Tuning console, log report, dev build**
 - `F8` dev panel on the host: head start, round length, starting budget, trickle interval, exit hysteresis, Sleeper speed multiplier; values stamped into the `.lucidlog` header. Observer overlay: elapsed, cubes placed, exit depth, Sleeper depth. `PlaceRequest`s logged even when rejected, with timestamps.
