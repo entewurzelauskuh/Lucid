@@ -197,6 +197,84 @@ namespace Lucid.Editor.Cubes
         }
 
         /// <summary>
+        /// Rule 5 admits CC0 and a <i>bare</i> attribution CC-BY, and nothing
+        /// else. Two patterns rather than one clever one, because the clause
+        /// forms are the part that keeps going wrong.
+        /// </summary>
+        /// <remarks>
+        /// Both are matched against the licence <i>cell</i> of the ledger row,
+        /// never the whole line. Matching the line let anything through that
+        /// merely mentioned a licence somewhere else on it: an asset named
+        /// cc0-hero.png, or a source URL on cc0-textures.com — which is
+        /// ambientCG, a source docs/SPEC.md §17 recommends — opened the gate
+        /// for an Asset Store EULA.
+        ///
+        /// <see cref="DeniedLicence"/> matches a clause only as a whole token,
+        /// and repeated. A trailing word boundary let CC-BY-NC4.0 and
+        /// CC-BY-NC_4.0 past, because a digit and an underscore are word
+        /// characters and the boundary never fired; forbidding any following
+        /// letter instead keeps "CC BY 4.0 - SAmple pack" and "CC0 - NDA
+        /// cleared" accepted, where SA and ND begin an ordinary word. The + is
+        /// for CC-BY-NCSA, where one clause abuts the next.
+        ///
+        /// Neither pattern uses <c>\s</c>, and the cell is trimmed of an
+        /// explicit set. Python and .NET disagree about <c>\s</c>: Python's
+        /// matches U+001C-001F and .NET's does not, so "CC-BY\x1cNC 4.0" was
+        /// accepted here and rejected by the hook — a cube building clean and
+        /// failing at commit, which is the one thing sharing the pattern is
+        /// meant to prevent. str.strip() and String.Trim() differ over the
+        /// same characters.
+        ///
+        /// Character-for-character identical to the patterns in
+        /// tools/check-licenses.py. LicenceRuleTests runs that script and
+        /// compares its verdicts against these, which is the only check that
+        /// proves the two agree rather than merely look alike.
+        /// </remarks>
+        internal const string AllowedLicence = @"\bCC0\b|\bCC[- ]?BY\b";
+
+        /// <summary>The extra clauses that disqualify an otherwise CC licence.</summary>
+        internal const string DeniedLicence =
+            @"(?:^|[^A-Za-z0-9])(?:NC|ND|SA)+(?![A-Za-z])" +
+            @"|Non[^A-Za-z0-9]*Commercial|No[^A-Za-z0-9]*Deriv|Share[^A-Za-z0-9]*Alike";
+
+        /// <summary>
+        /// The licence column of a ledger row, or null if the line is not one.
+        /// </summary>
+        /// <remarks>
+        /// docs/SPEC.md §18 fixes the shape: | file | source | licence |.
+        /// A line that is not a table row names no licence, and guessing from
+        /// the whole line is what let a URL decide the verdict.
+        /// </remarks>
+        internal static string LicenceCell(string line)
+        {
+            if (line == null) return null;
+
+            // By position, not "the last non-empty cell". Taking the last one
+            // read a fourth column when a ledger had one — so a note saying
+            // "CC0 base" beside a CC-BY-NC licence opened the gate — and
+            // dropping empty cells refused a row whose source column was blank.
+            string[] cells = line.Split('|');
+            return cells.Length == 5 ? cells[3].Trim(' ', '\t') : null;
+        }
+
+        /// <summary>Whether a ledger row names a licence rule 5 admits.</summary>
+        internal static bool IsRedistributable(string line)
+        {
+            string cell = LicenceCell(line);
+            if (cell == null) return false;
+
+            // CultureInvariant matters: IgnoreCase alone follows the current
+            // culture, and under tr-TR the dotless i made CC-BY-NONCOMMERCIAL
+            // match nothing and pass. Python's re is culture-independent, so
+            // this was a hole in the validator and a divergence at once.
+            const System.Text.RegularExpressions.RegexOptions ignore =
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase |
+                System.Text.RegularExpressions.RegexOptions.CultureInvariant;
+            return System.Text.RegularExpressions.Regex.IsMatch(cell, AllowedLicence, ignore)
+                && !System.Text.RegularExpressions.Regex.IsMatch(cell, DeniedLicence, ignore);
+        }
+
+        /// <summary>
         /// Only CC0 and CC-BY assets may be committed, each with a line in the
         /// cube's ledger (CLAUDE.md rule 5). The pre-commit hook enforces the
         /// same rule; running it here means an author finds out at build time
@@ -211,11 +289,20 @@ namespace Lucid.Editor.Cubes
             string ledger = File.Exists(ledgerPath) ? File.ReadAllText(ledgerPath) : null;
 
             string[] fetched = ManifestNames(cubeFolder);
+            if (fetched == null)
+            {
+                report.Add("licences",
+                    "assets.manifest.json is not valid JSON. It says which assets are " +
+                    "fetched rather than committed, so an unreadable one cannot be " +
+                    "treated as empty (CLAUDE.md rule 5)");
+                fetched = new string[0];
+            }
 
             foreach (string file in Directory.GetFiles(assets, "*", SearchOption.AllDirectories))
             {
                 string name = Path.GetFileName(file);
                 if (name == "LICENSES.md" || name.EndsWith(".meta")) continue;
+
 
                 // Anything the manifest lists is fetched at build time and must
                 // never be committed (CLAUDE.md rule 5).
@@ -236,11 +323,34 @@ namespace Lucid.Editor.Cubes
                 string line = ledger.Split('\n').FirstOrDefault(l => Names(l, name));
                 if (line == null)
                     report.Add("licences", $"'{name}' has no line in assets/LICENSES.md");
-                else if (!System.Text.RegularExpressions.Regex.IsMatch(line, @"\bCC0\b|\bCC-?BY\b",
-                             System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                else if (LicenceCell(line) == null)
                     report.Add("licences",
-                        $"'{name}' is not CC0 or CC-BY, so it cannot be committed -> {line.Trim()}");
+                        $"the ledger line for '{name}' is not a | file | source | licence | " +
+                        $"row, so it names no licence -> {line.Trim()}");
+                else if (!IsRedistributable(line))
+                    report.Add("licences",
+                        $"'{name}' is not CC0 or a bare CC-BY. NonCommercial, NoDerivatives " +
+                        $"and ShareAlike are not accepted (CLAUDE.md rule 5, docs/SPEC.md §18) " +
+                        $"-> {LicenceCell(line)}");
             }
+        }
+
+        /// <summary>
+        /// The first of the name keys holding a non-empty string. `??` would
+        /// stop at a JSON null, because a JValue.Null is not a C# null, and
+        /// strings only because the hook reads strings only — a manifest with
+        /// a number in "file" must mean the same thing to both gates.
+        /// </summary>
+        static string FirstName(Newtonsoft.Json.Linq.JObject entry)
+        {
+            foreach (string key in new[] { "file", "path", "name", "dest" })
+            {
+                string value = entry[key]?.Type == Newtonsoft.Json.Linq.JTokenType.String
+                    ? (string)entry[key]
+                    : null;
+                if (!string.IsNullOrEmpty(value)) return value;
+            }
+            return null;
         }
 
         /// <summary>
@@ -254,21 +364,24 @@ namespace Lucid.Editor.Cubes
 
             try
             {
-                var root = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(path));
-                var list = root["assets"] as Newtonsoft.Json.Linq.JArray;
+                var root = Newtonsoft.Json.Linq.JToken.Parse(File.ReadAllText(path));
+                var list = root as Newtonsoft.Json.Linq.JArray
+                    ?? (root as Newtonsoft.Json.Linq.JObject)?["assets"]
+                        as Newtonsoft.Json.Linq.JArray;
                 if (list == null) return new string[0];
 
                 return list.OfType<Newtonsoft.Json.Linq.JObject>()
-                    .Select(e => (string)(e["file"] ?? e["path"] ?? e["name"] ?? e["dest"]))
+                    .Select(FirstName)
                     .Where(n => !string.IsNullOrEmpty(n))
                     .Select(Path.GetFileName)
                     .ToArray();
             }
             catch (Newtonsoft.Json.JsonException)
             {
-                // The hook reports this; here it just means nothing is known to
-                // be fetched, and the ledger rule below still applies.
-                return new string[0];
+                // Not an empty manifest: an unreadable one. Saying "nothing is
+                // fetched" here let a cube build clean while the hook refused
+                // the commit — the split sharing this rule exists to prevent.
+                return null;
             }
         }
 

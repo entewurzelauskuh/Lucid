@@ -41,7 +41,10 @@ the generated files, but change them by changing their inputs.
 
 **The asset rule.** Free does not mean redistributable. Only CC0 and CC-BY
 assets may be committed, each with a line in its cube's `assets/LICENSES.md`
-giving the source URL and licence. Everything else — including free Unity Asset
+giving the source URL and licence. Plain CC0 or plain CC-BY: **NonCommercial,
+NoDerivatives and ShareAlike are refused**, even though SA material is
+redistributable — `docs/SPEC.md` §18 says why. The gate reads the licence
+column of that row, so the row has to be `| file | source | licence |`. Everything else — including free Unity Asset
 Store content — goes in `assets.manifest.json` and is fetched locally, never
 committed. The pre-commit hook enforces this; do not bypass it.
 

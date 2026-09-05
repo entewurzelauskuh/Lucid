@@ -71,3 +71,8 @@ steam_appid.txt
 .LSOverride
 ._*
 Thumbs.db
+
+# Python bytecode. tools/check-licenses.py is imported by its tests, and the
+# .pyc that produces was committed twice by `git add -A` before anyone noticed.
+__pycache__/
+*.py[cod]
