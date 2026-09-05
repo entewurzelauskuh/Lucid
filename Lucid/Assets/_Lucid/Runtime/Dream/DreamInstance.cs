@@ -85,28 +85,44 @@ namespace Lucid.Runtime
             Derived = derived;
             if (Registry == null) Registry = BuildRegistry();
 
+            Retire(lattice);
+
             foreach (Coord coord in lattice.CoordsInOrder())
             {
-                if (!_cubes.TryGetValue(coord, out DreamCube cube))
+                if (_cubes.TryGetValue(coord, out DreamCube standing) && standing == null)
                 {
-                    cube = Spawn(coord, lattice.At(coord));
-                    _cubes.Add(coord, cube);
-
-                    // The start cube is exempt from the explored rule, and a
-                    // cube the log already explored was explored by whoever
-                    // walked there, not by this runtime coming up.
-                    if (coord == lattice.Start || lattice.IsExplored(coord)) cube.MarkEntered();
-
-                    cube.Entered += OnCubeEntered;
-                    cube.DoorTouched += OnDoorTouched;
+                    // Destroyed from under us. Better to build it again than to
+                    // throw on the next field access.
+                    _cubes.Remove(coord);
+                    standing = null;
                 }
 
-                cube.Apply(derived);
+                if (standing == null)
+                {
+                    standing = Spawn(coord, lattice.At(coord));
+                    _cubes[coord] = standing;
+
+                    // docs/SPEC.md §7 exempts the start cube from the explored
+                    // rule outright; every other cube reconciles with the
+                    // lattice on each Apply.
+                    if (coord == lattice.Start) standing.Exempt();
+
+                    standing.Entered += OnCubeEntered;
+                    standing.DoorTouched += OnDoorTouched;
+                }
+
+                standing.Apply(derived, lattice.IsExplored(coord));
             }
         }
 
         /// <summary>Where a Sleeper stands at the start of a round, and again after a fall.</summary>
-        public Vector3 SpawnPoint => DreamSpace.Origin(Start);
+        /// <remarks>
+        /// Through this instance's transform, because the cubes are laid out in
+        /// its frame: docs/NETCODE.md §8 has every subscriber rebuilding the
+        /// dream from the lattice it already holds, and two of them at the
+        /// world origin would interpenetrate.
+        /// </remarks>
+        public Vector3 SpawnPoint => transform.TransformPoint(DreamSpace.Origin(Start));
 
         /// <summary>
         /// Which way they face: towards the start cube's own door, so the way
@@ -121,10 +137,11 @@ namespace Lucid.Runtime
                 FaceMask doors = Lattice.ConnectorsAt(Start, Registry);
                 foreach (Face f in Faces.Of(doors))
                 {
-                    if (!Faces.IsVertical(f)) return DreamSpace.Direction(f);
+                    if (!Faces.IsVertical(f))
+                        return transform.TransformDirection(DreamSpace.Direction(f));
                 }
 
-                return Vector3.forward;
+                return transform.forward;
             }
         }
 
@@ -132,12 +149,54 @@ namespace Lucid.Runtime
         public void Respawn(SleeperMotor sleeper)
         {
             if (sleeper == null) throw new ArgumentNullException(nameof(sleeper));
+            if (Lattice == null)
+                throw new InvalidOperationException(
+                    $"{name}: nothing has been built, so there is no start cube to return to");
 
             sleeper.Warp(SpawnPoint);
 
             Vector3 flat = new Vector3(SpawnFacing.x, 0f, SpawnFacing.z);
             if (flat.sqrMagnitude > 0f)
                 sleeper.transform.rotation = Quaternion.LookRotation(flat.normalized, Vector3.up);
+        }
+
+        /// <summary>
+        /// Takes the dream down when it is handed a different one.
+        /// </summary>
+        /// <remarks>
+        /// A lattice never loses a cube within a round — <c>Lattice.WithCube</c>
+        /// is add-only — so a cube that is standing here and missing there
+        /// means a different lattice, which is to say the next round. Then
+        /// everything goes, not just the cubes that are gone: the survivors
+        /// would otherwise keep last round's door states and be asked to walk
+        /// back to them, and the start cube's own door going Attached → Exit is
+        /// a transition docs/SPEC.md §7 does not have. A new round is a new
+        /// dream, and its doors arrive in their states rather than animating
+        /// back into them.
+        /// </remarks>
+        void Retire(Lattice lattice)
+        {
+            bool different = false;
+            foreach (KeyValuePair<Coord, DreamCube> pair in _cubes)
+            {
+                if (lattice.Has(pair.Key)) continue;
+                different = true;
+                break;
+            }
+
+            if (!different) return;
+
+            foreach (KeyValuePair<Coord, DreamCube> pair in _cubes)
+            {
+                DreamCube cube = pair.Value;
+                if (cube == null) continue;
+
+                cube.Entered -= OnCubeEntered;
+                cube.DoorTouched -= OnDoorTouched;
+                Destroy(cube.gameObject);
+            }
+
+            _cubes.Clear();
         }
 
         CubeRegistry BuildRegistry()
@@ -160,9 +219,6 @@ namespace Lucid.Runtime
 
         DreamCube Spawn(Coord coord, CubeInstance instance)
         {
-            if (instance == null)
-                throw new InvalidOperationException($"{name}: nothing to build at {coord}");
-
             if (!_definitions.TryGetValue(instance.TypeId, out CubeDefinition definition))
                 throw new InvalidOperationException(
                     $"{name}: the lattice has '{instance.TypeId}' at {coord}, and the pack " +
@@ -172,7 +228,9 @@ namespace Lucid.Runtime
                 throw new InvalidOperationException(
                     $"{name}: cube '{instance.TypeId}' has no prefab, so {coord} would be a hole");
 
-            return DreamCube.Create(definition.Prefab, coord, instance.Rotation, transform);
+            FaceMask expected = Faces.Rotate(definition.Connectors, instance.Rotation);
+            return DreamCube.Create(
+                definition.Prefab, coord, instance.Rotation, expected, transform);
         }
 
         void OnCubeEntered(DreamCube cube) => Explored?.Invoke(cube.Coord);

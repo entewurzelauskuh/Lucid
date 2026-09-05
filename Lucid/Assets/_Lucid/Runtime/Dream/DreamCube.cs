@@ -29,17 +29,31 @@ namespace Lucid.Runtime
         /// </remarks>
         public const float EntryInset = 0.5f;
 
-        const string InteriorName = "Interior";
+        /// <summary>
+        /// The entry volume's node. Deliberately not "Interior": that name is
+        /// the template's own (docs/SPEC.md §17), and adopting whatever
+        /// collider a cube put there would turn a floor or a wall into a
+        /// trigger the moment any cube used it for what it is for.
+        /// </summary>
+        const string EntryVolumeName = "EntryVolume";
 
         [SerializeField] Coord _coord;
         [SerializeField] Rotation _rotation;
-        [SerializeField] bool _entered;
+        [SerializeField] bool _exempt;
+        [SerializeField] bool _reported;
+
+        DreamEntryVolume _volume;
 
         readonly Dictionary<Face, FogDoor> _doors = new Dictionary<Face, FogDoor>();
 
         bool _fresh = true;
 
-        /// <summary>A Sleeper set foot in here for the first time.</summary>
+        /// <summary>
+        /// A Sleeper is in here and the lattice does not know it yet. Raised on
+        /// first entry, and again on any lattice change that still does not
+        /// show this cube explored — the report is the host's to act on, and a
+        /// dropped one has no other way back.
+        /// </summary>
         public event Action<DreamCube> Entered;
 
         /// <summary>A Sleeper walked into one of this cube's exit doors.</summary>
@@ -48,8 +62,11 @@ namespace Lucid.Runtime
         public Coord Coord => _coord;
         public Rotation Rotation => _rotation;
 
-        /// <summary>Whether a Sleeper has already been counted in here.</summary>
-        public bool HasBeenEntered => _entered;
+        /// <summary>Whether an entry here is already on its way to the host.</summary>
+        public bool HasBeenReported => _reported;
+
+        /// <summary>Whether a Sleeper is standing in here now.</summary>
+        public bool IsOccupied => _volume != null && _volume.IsOccupied;
 
         /// <summary>The doors, by the world face each one faces.</summary>
         public IReadOnlyDictionary<Face, FogDoor> Doors => _doors;
@@ -60,21 +77,22 @@ namespace Lucid.Runtime
         /// <see cref="Apply"/>.
         /// </summary>
         public static DreamCube Create(
-            GameObject prefab, Coord coord, Rotation rotation, Transform parent)
+            GameObject prefab, Coord coord, Rotation rotation, FaceMask expected, Transform parent)
         {
             if (prefab == null) throw new ArgumentNullException(nameof(prefab));
 
-            GameObject body = Instantiate(
-                prefab, DreamSpace.Origin(coord), DreamSpace.Orientation(rotation), parent);
+            GameObject body = Instantiate(prefab, parent);
+            body.transform.localPosition = DreamSpace.Origin(coord);
+            body.transform.localRotation = DreamSpace.Orientation(rotation);
             body.name = $"Cube {coord}";
 
             var cube = body.GetComponent<DreamCube>();
             if (cube == null) cube = body.AddComponent<DreamCube>();
-            cube.Configure(coord, rotation);
+            cube.Configure(coord, rotation, expected);
             return cube;
         }
 
-        void Configure(Coord coord, Rotation rotation)
+        void Configure(Coord coord, Rotation rotation, FaceMask expected)
         {
             _coord = coord;
             _rotation = rotation;
@@ -85,11 +103,36 @@ namespace Lucid.Runtime
                 if (socket.Door == null) continue;
 
                 Face world = Faces.Rotate(socket.Face, rotation);
+                if (!socket.IsDoorway)
+                {
+                    // Not a door: ShellBuilder already put a wall here, and a
+                    // FogDoor driven to Solid would add a second barrier inside
+                    // it — the one on Down standing 0.125 m above a floor whose
+                    // step offset is 0.1.
+                    socket.Door.gameObject.SetActive(false);
+                    continue;
+                }
+
+                socket.Door.gameObject.SetActive(true);
                 _doors[world] = socket.Door;
                 socket.Door.Touched += OnDoorTouched;
             }
 
-            BuildInterior();
+            // The prefab's sockets and the registry's mask are both generated
+            // from the same cube.spec.json, so a disagreement means one of them
+            // is stale. Rendering it rather than saying so would put an
+            // invisible barrier across a real doorway, or a live wake trigger
+            // inside a wall.
+            FaceMask built = FaceMask.None;
+            foreach (Face f in _doors.Keys) built |= Faces.ToMask(f);
+            if (expected != built)
+            {
+                Debug.LogError(
+                    $"{name}: the prefab has doorways {built} and the cube type says " +
+                    $"{expected}. One of them is stale; rebuild the cube.", this);
+            }
+
+            BuildEntryVolume();
         }
 
         /// <summary>
@@ -98,7 +141,7 @@ namespace Lucid.Runtime
         /// cube replayed out of an event log may arrive already explored, and
         /// its doors did not harden, they were always wall.
         /// </summary>
-        public void Apply(Derived derived)
+        public void Apply(Derived derived, bool explored)
         {
             if (derived == null) throw new ArgumentNullException(nameof(derived));
 
@@ -110,50 +153,65 @@ namespace Lucid.Runtime
             }
 
             _fresh = false;
+
+            // The lattice is the truth about what has been explored, and this
+            // is where the local flag is reconciled with it rather than left to
+            // shadow it. A report the host took is settled. One it dropped —
+            // Dawn, or a Sleeper who blinked out and back — is made again while
+            // the Sleeper is still standing here, because Unity will not
+            // re-fire OnTriggerEnter for a body that never left, and without
+            // this the cube's fog doors would never solidify for anyone.
+            if (explored) _reported = true;
+            else if (!_exempt && IsOccupied) Report();
+            else _reported = false;
         }
 
         /// <summary>
-        /// Counts this cube as already entered, without reporting it. For the
-        /// start cube, which docs/SPEC.md §7 exempts, and for cubes a replayed
-        /// log says were explored before this runtime existed.
+        /// Never report an entry here. For the start cube, which
+        /// docs/SPEC.md §7 exempts from the explored rule outright.
         /// </summary>
-        public void MarkEntered() => _entered = true;
+        public void Exempt() => _exempt = true;
 
         /// <summary>
         /// The volume that notices a Sleeper. Inset from every face so a
         /// Sleeper standing in a doorway belongs to one cube, not two.
         /// </summary>
-        void BuildInterior()
+        void BuildEntryVolume()
         {
-            Transform existing = transform.Find(InteriorName);
-            GameObject interior;
+            Transform existing = transform.Find(EntryVolumeName);
+            GameObject volume;
             if (existing != null)
             {
-                interior = existing.gameObject;
+                volume = existing.gameObject;
             }
             else
             {
-                interior = new GameObject(InteriorName);
-                interior.transform.SetParent(transform, false);
+                volume = new GameObject(EntryVolumeName);
+                volume.transform.SetParent(transform, false);
             }
 
-            var box = interior.GetComponent<BoxCollider>();
-            if (box == null) box = interior.AddComponent<BoxCollider>();
+            var box = volume.GetComponent<BoxCollider>();
+            if (box == null) box = volume.AddComponent<BoxCollider>();
 
             box.isTrigger = true;
             float side = CubeMetrics.Size - 2f * EntryInset;
             box.size = new Vector3(side, side, side);
             box.center = new Vector3(0f, CubeMetrics.Half, 0f);
 
-            var relay = interior.GetComponent<DreamCubeInterior>();
-            if (relay == null) relay = interior.AddComponent<DreamCubeInterior>();
-            relay.Bind(this);
+            _volume = volume.GetComponent<DreamEntryVolume>();
+            if (_volume == null) _volume = volume.AddComponent<DreamEntryVolume>();
+            _volume.Bind(this);
         }
 
         internal void OnSleeperInside()
         {
-            if (_entered) return;
-            _entered = true;
+            if (_reported || _exempt) return;
+            Report();
+        }
+
+        void Report()
+        {
+            _reported = true;
             Entered?.Invoke(this);
         }
 

@@ -32,9 +32,15 @@ namespace Lucid.Runtime
         /// cube straddles its origin on those axes, and the y arm floors
         /// because a cube stands on its origin.
         /// </summary>
+        /// <remarks>
+        /// Floor-of-plus-a-half rather than <c>RoundToInt</c>, which rounds a
+        /// half to even: world x 4 landed in cube 0 and x 12 in cube 2, so the
+        /// two boundaries went opposite ways. A point exactly on a boundary is
+        /// ambiguous either way; being consistent about it is not.
+        /// </remarks>
         public static Coord CoordAt(Vector3 world) => new Coord(
-            Mathf.RoundToInt(world.x / CubeMetrics.Size),
-            Mathf.RoundToInt(world.z / CubeMetrics.Size),
+            Mathf.FloorToInt(world.x / CubeMetrics.Size + 0.5f),
+            Mathf.FloorToInt(world.z / CubeMetrics.Size + 0.5f),
             Mathf.FloorToInt(world.y / CubeMetrics.Size));
 
         /// <summary>

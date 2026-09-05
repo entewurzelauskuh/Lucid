@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Lucid.Core;
@@ -26,9 +27,11 @@ namespace Lucid.Tests.PlayMode.Dream
         const string Start = "test.start";
         const string Straight = "test.straight";
         const string Corner = "test.corner";
+        const string Shaft = "test.shaft";
+        const string Riser = "test.riser";
 
         readonly List<GameObject> _spawned = new List<GameObject>();
-        readonly List<Object> _assets = new List<Object>();
+        readonly List<UnityEngine.Object> _assets = new List<UnityEngine.Object>();
 
         SimulationMode _physicsWas;
 
@@ -48,11 +51,11 @@ namespace Lucid.Tests.PlayMode.Dream
             Physics.simulationMode = _physicsWas;
 
             foreach (GameObject go in _spawned)
-                if (go != null) Object.DestroyImmediate(go);
+                if (go != null) UnityEngine.Object.DestroyImmediate(go);
             _spawned.Clear();
 
-            foreach (Object asset in _assets)
-                if (asset != null) Object.DestroyImmediate(asset);
+            foreach (UnityEngine.Object asset in _assets)
+                if (asset != null) UnityEngine.Object.DestroyImmediate(asset);
             _assets.Clear();
         }
 
@@ -71,6 +74,15 @@ namespace Lucid.Tests.PlayMode.Dream
             // part in a test. Instantiate is given an explicit pose, so where
             // the source sits does not reach the clone.
             body.transform.position = new Vector3(0f, -10000f, 0f);
+
+            // The template's own nodes (docs/SPEC.md §17). Interior is here so
+            // that the tests take the same path a real cube does — the entry
+            // volume must not adopt it.
+            foreach (string node in new[] { "Shell", "Interior", "Logic" })
+            {
+                var child = new GameObject(node);
+                child.transform.SetParent(body.transform, false);
+            }
 
             var floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
             floor.name = "floor";
@@ -113,11 +125,12 @@ namespace Lucid.Tests.PlayMode.Dream
             }
         }
 
-        CubeDefinition Definition(string id, FaceMask doorways, CubeCategory category)
+        CubeDefinition Definition(
+            string id, FaceMask doorways, CubeCategory category, bool climbable = false)
         {
             var d = ScriptableObject.CreateInstance<CubeDefinition>();
-            d.Configure(id, "test", id, category, doorways,
-                false, 1, CubePrefab(id, doorways), new[] { "*" });
+            d.Configure(id, "test", $"display name of {id}", category, doorways,
+                climbable, 1, CubePrefab(id, doorways), new[] { "*" });
             _assets.Add(d);
             return d;
         }
@@ -130,27 +143,30 @@ namespace Lucid.Tests.PlayMode.Dream
             pack.AddOrReplace(Definition(Start, FaceMask.North, CubeCategory.Start));
             pack.AddOrReplace(Definition(Straight, FaceMask.North | FaceMask.South, CubeCategory.Connector));
             pack.AddOrReplace(Definition(Corner, FaceMask.North | FaceMask.East, CubeCategory.Connector));
+            pack.AddOrReplace(Definition(Shaft, FaceMask.Down | FaceMask.North, CubeCategory.Vertical));
+            pack.AddOrReplace(Definition(
+                Riser, FaceMask.South | FaceMask.Up, CubeCategory.Vertical, climbable: true));
             _assets.Add(pack);
             return pack;
         }
 
-        DreamInstance Dream()
+        DreamInstance Dream(Rotation startRotation = Rotation.R0)
         {
             var go = new GameObject("Dream");
             _spawned.Add(go);
             var dream = go.AddComponent<DreamInstance>();
-            dream.Bind(Pack(), Start, Rotation.R0);
+            dream.Bind(Pack(), Start, startRotation);
             return dream;
         }
 
         /// <summary>A log that runs a corridor north out of the bedroom.</summary>
-        static EventLog Corridor(int cubes, Rotation rotation = Rotation.R0)
+        static EventLog Corridor(int cubes)
         {
             var log = new EventLog();
             for (int i = 1; i <= cubes; i++)
             {
                 log.Append(new CubePlaced(
-                    log.NextSeq, new Coord(0, i, 0), Straight, rotation, "*"));
+                    log.NextSeq, new Coord(0, i, 0), Straight, Rotation.R0, "*"));
             }
             return log;
         }
@@ -174,8 +190,10 @@ namespace Lucid.Tests.PlayMode.Dream
         }
 
         /// <summary>Turns on the spot. Forward is relative to where they look.</summary>
-        static void TurnAround(SleeperMotor motor) =>
-            motor.transform.rotation *= Quaternion.Euler(0f, 180f, 0f);
+        static void Turn(SleeperMotor motor, float degrees) =>
+            motor.transform.rotation *= Quaternion.Euler(0f, degrees, 0f);
+
+        static void TurnAround(SleeperMotor motor) => Turn(motor, 180f);
 
         // ---- geometry -------------------------------------------------------------
 
@@ -220,24 +238,46 @@ namespace Lucid.Tests.PlayMode.Dream
                 "the door facing the bedroom is the one the fit rule matched");
             Assert.That(cube.Doors[Face.East].State, Is.EqualTo(ConnectorState.Exit),
                 "the only fog door left in the dream is the deepest, so it is the way out");
-            Assert.That(cube.Doors[Face.North].State, Is.EqualTo(ConnectorState.Solid),
-                "world North is a wall on this cube");
+            Assert.That(cube.Doors.Keys, Is.EquivalentTo(new[] { Face.East, Face.South }),
+                "world North and the rest are wall on this cube");
         }
 
         [Test]
-        public void AWalledFaceShowsWall()
+        public void AWalledFaceHasNoDoorAtAll()
         {
             DreamInstance dream = Dream();
             dream.Build(new EventLog());
 
             DreamCube start = dream.Cubes[new Coord(0, 0, 0)];
 
-            // The start cube has one doorway, north. The other five sockets
-            // carry a FogDoor too — Derived says nothing about them, and the
-            // fallback has to be wall rather than mist a Sleeper walks through.
+            // The start cube has one doorway, north. The template carries a
+            // FogDoor on all six sockets, but ShellBuilder has already walled
+            // the other five — a door there would add a second barrier inside
+            // the wall, and the one on Down stands 0.125 m above a floor whose
+            // step offset is 0.1, so every room would have a lip in it.
+            Assert.That(start.Doors.Keys, Is.EquivalentTo(new[] { Face.North }));
             Assert.That(start.Doors[Face.North].State, Is.EqualTo(ConnectorState.Exit));
-            foreach (Face f in new[] { Face.East, Face.South, Face.West, Face.Up, Face.Down })
-                Assert.That(start.Doors[f].State, Is.EqualTo(ConnectorState.Solid), f.ToString());
+
+            foreach (Connector socket in start.GetComponentsInChildren<Connector>(true))
+            {
+                if (socket.IsDoorway) continue;
+                Assert.That(socket.Door.gameObject.activeSelf, Is.False, socket.Face.ToString());
+            }
+        }
+
+        [Test]
+        public void TheEntryVolumeDoesNotAdoptTheTemplatesInteriorNode()
+        {
+            // "Interior" is the template's own (docs/SPEC.md §17: collision
+            // geometry and chicane logic). Squatting on it meant the first cube
+            // to put a collider there had its floor turned into a 7 m trigger.
+            DreamInstance dream = Dream();
+            dream.Build(new EventLog());
+
+            Transform interior = dream.Cubes[new Coord(0, 0, 0)].transform.Find("Interior");
+            Assert.That(interior, Is.Not.Null, "the fixture no longer mirrors the template");
+            Assert.That(interior.GetComponent<Collider>(), Is.Null);
+            Assert.That(interior.GetComponent<DreamEntryVolume>(), Is.Null);
         }
 
         [Test]
@@ -272,6 +312,12 @@ namespace Lucid.Tests.PlayMode.Dream
             // round would forget where the Sleeper had been on every placement.
             Assert.That(dream.Cubes[new Coord(0, 1, 0)], Is.SameAs(wasTheEnd));
             Assert.That(wasTheEnd.Doors[Face.North].State, Is.EqualTo(ConnectorState.Attached));
+
+            // And it animated. The converse of the fresh-cube rule: a door that
+            // changes during a round plays §7's transition, so leaving `_fresh`
+            // set for ever would snap every change in the dream.
+            Assert.That(wasTheEnd.Doors[Face.North].Playing,
+                Is.EqualTo(FogDoorTransition.Dissolve));
             Assert.That(dream.Cubes[new Coord(0, 2, 0)].Doors[Face.North].State,
                 Is.EqualTo(ConnectorState.Exit));
         }
@@ -294,6 +340,111 @@ namespace Lucid.Tests.PlayMode.Dream
                 Assert.That(door.Value.Playing, Is.EqualTo(FogDoorTransition.None), door.Key.ToString());
                 Assert.That(door.Value.Progress, Is.EqualTo(1f), door.Key.ToString());
             }
+        }
+
+        [Test]
+        public void TheEntryVolumeFillsTheRoomAndNothingElse()
+        {
+            DreamInstance dream = Dream();
+            dream.Build(Corridor(1));
+
+            Transform volume = dream.Cubes[new Coord(0, 1, 0)].transform.Find("EntryVolume");
+            Assert.That(volume, Is.Not.Null);
+            Bounds b = volume.GetComponent<BoxCollider>().bounds;
+
+            // Inset half a metre from all six faces of the cube at (0,1,0),
+            // which stands on y 0 and spans z 4..12. Asserted as a box rather
+            // than by whether a Sleeper standing on the floor happens to be in
+            // it: a volume centred on the origin would still catch that one,
+            // and would also reach 3.5 m down into the layer below.
+            Assert.That(b.min, Is.EqualTo(new Vector3(-3.5f, 0.5f, 4.5f)));
+            Assert.That(b.max, Is.EqualTo(new Vector3(3.5f, 7.5f, 11.5f)));
+        }
+
+        [Test]
+        public void ACubeInTheLayerAboveStandsOnTheOneBelow()
+        {
+            // Every other test lays cubes on one floor, so the vertical arm of
+            // the mapping is never exercised through a real cube: placing the
+            // whole dream at y 0 would pass all of them.
+            var log = new EventLog();
+            log.Append(new CubePlaced(0, new Coord(0, 1, 0), Riser, Rotation.R0, "*"));
+            log.Append(new CubePlaced(1, new Coord(0, 1, 1), Shaft, Rotation.R0, "*"));
+
+            DreamInstance dream = Dream();
+            dream.Build(log);
+
+            DreamCube above = dream.Cubes[new Coord(0, 1, 1)];
+            Assert.That(above.transform.position, Is.EqualTo(new Vector3(0f, 8f, 8f)));
+
+            Bounds b = above.transform.Find("EntryVolume").GetComponent<BoxCollider>().bounds;
+            Assert.That(b.min.y, Is.EqualTo(8.5f).Within(1e-4f));
+            Assert.That(b.max.y, Is.EqualTo(15.5f).Within(1e-4f));
+        }
+
+        [Test]
+        public void APackThatCannotBuildWhatTheLatticeHoldsSaysSo()
+        {
+            // The two an author hits: a log naming a cube the pack does not
+            // ship, and a CubeDefinition whose prefab never got built. Both
+            // would otherwise be a hole in the maze, which is the kind of thing
+            // that gets debugged for an hour.
+            var go = new GameObject("Dream");
+            _spawned.Add(go);
+            var dream = go.AddComponent<DreamInstance>();
+
+            var pack = ScriptableObject.CreateInstance<DreamPack>();
+            pack.Configure("test");
+            _assets.Add(pack);
+            dream.Bind(pack, Start, Rotation.R0);
+
+            Assert.That(() => dream.Build(new EventLog()),
+                Throws.TypeOf<KeyNotFoundException>().Or.TypeOf<InvalidOperationException>());
+        }
+
+        [Test]
+        public void ACubeWithNoPrefabIsNamedRatherThanLeftAsAHole()
+        {
+            var pack = ScriptableObject.CreateInstance<DreamPack>();
+            pack.Configure("test");
+            var d = ScriptableObject.CreateInstance<CubeDefinition>();
+            d.Configure(Start, "test", "Bedroom", CubeCategory.Start, FaceMask.North,
+                false, 1, null, new[] { "*" });
+            pack.AddOrReplace(d);
+            _assets.Add(d);
+            _assets.Add(pack);
+
+            var go = new GameObject("Dream");
+            _spawned.Add(go);
+            var dream = go.AddComponent<DreamInstance>();
+            dream.Bind(pack, Start, Rotation.R0);
+
+            Assert.That(() => dream.Build(new EventLog()),
+                Throws.InvalidOperationException.With.Message.Contains("no prefab"));
+        }
+
+        [Test]
+        public void RespawningIntoADreamThatWasNeverBuiltSaysSo()
+        {
+            var go = new GameObject("Dream");
+            _spawned.Add(go);
+            var dream = go.AddComponent<DreamInstance>();
+
+            SleeperMotor motor = Runner(new Vector3(0f, 0.1f, 0f));
+            Assert.That(() => dream.Respawn(motor), Throws.InvalidOperationException);
+        }
+
+        [Test]
+        public void EveryCubeHangsUnderTheDream()
+        {
+            // docs/NETCODE.md §8 has every subscriber rebuilding the dream from
+            // its own lattice, so the cubes have to be somewhere that can be
+            // moved as one — and unparented they would also outlive the dream.
+            DreamInstance dream = Dream();
+            dream.Build(Corridor(2));
+
+            foreach (KeyValuePair<Coord, DreamCube> pair in dream.Cubes)
+                Assert.That(pair.Value.transform.parent, Is.SameAs(dream.transform), pair.Key.ToString());
         }
 
         // ---- exploration ----------------------------------------------------------
@@ -322,7 +473,7 @@ namespace Lucid.Tests.PlayMode.Dream
             // room a Sleeper already stood in reports nothing.
             TurnAround(motor);
             WalkForward(motor, 1.5f);
-            Assert.That(motor.Feet.z, Is.LessThan(4f), "never made it back to the bedroom");
+            Assert.That(motor.Feet.z, Is.LessThan(3.5f), "never got clear of the corridor's volume");
             TurnAround(motor);
             WalkForward(motor, 1.5f);
 
@@ -394,6 +545,17 @@ namespace Lucid.Tests.PlayMode.Dream
             Physics.Simulate(1f / 60f);
 
             Assert.That(reported, Is.Empty);
+
+            // The positive control. Without it "nothing was reported" could
+            // just as well mean "a body that starts inside a trigger never
+            // fires one", and the test would pass with the Sleeper check gone.
+            SleeperMotor motor = Runner(DreamSpace.Origin(new Coord(0, 1, 0)) + new Vector3(0f, 0.1f, 0f));
+            yield return null;
+            Physics.Simulate(1f / 60f);
+            Physics.Simulate(1f / 60f);
+
+            Assert.That(reported, Is.EqualTo(new[] { new Coord(0, 1, 0) }),
+                $"a Sleeper standing at {motor.Feet} was not noticed either");
         }
 
         [UnityTest]
@@ -419,6 +581,57 @@ namespace Lucid.Tests.PlayMode.Dream
 
             Assert.That(reported, Is.EqualTo(new[] { new Coord(0, 2, 0) }),
                 $"stopped at z {motor.Feet.z:0.00}");
+        }
+
+        [UnityTest]
+        public IEnumerator ASecondApplyDoesNotSubscribeToTheSameCubeTwice()
+        {
+            // The host pushes every new lattice back through Apply, so a
+            // subscription made outside the spawn branch would be added once
+            // per placement and Explored would fire once per placement so far.
+            DreamInstance dream = Dream();
+            dream.Build(Corridor(1));
+            dream.Build(Corridor(2));
+            dream.Build(Corridor(2));
+
+            var reported = new List<Coord>();
+            dream.Explored += reported.Add;
+
+            SleeperMotor motor = Runner(dream.SpawnPoint + new Vector3(0f, 0.1f, 0f));
+            yield return null;
+            WalkForward(motor, 1.5f);
+
+            Assert.That(reported, Is.EqualTo(new[] { new Coord(0, 1, 0) }),
+                $"stopped at z {motor.Feet.z:0.00}");
+        }
+
+        [UnityTest]
+        public IEnumerator ASecondRoundDoesNotLeaveTheLastOnesRoomsStanding()
+        {
+            DreamInstance dream = Dream();
+            dream.Build(Corridor(2));
+            GameObject orphan = dream.Cubes[new Coord(0, 2, 0)].gameObject;
+            GameObject bedroom = dream.Cubes[new Coord(0, 0, 0)].gameObject;
+
+            // A lattice never loses a cube inside a round, so this only happens
+            // when the same instance is handed the next round's log — which is
+            // exactly when a leftover room is worst: doors frozen at last
+            // round's states, and its events still wired to this instance.
+            dream.Build(new EventLog());
+            yield return null;   // Destroy lands at the end of the frame
+
+            Assert.That(dream.Cubes.Keys, Is.EquivalentTo(new[] { new Coord(0, 0, 0) }));
+            Assert.That(orphan == null, Is.True, "the room from the last round is still standing");
+
+            // The bedroom goes too, and comes back new. Kept, it would still be
+            // holding last round's Attached on the door the corridor was built
+            // on, and be asked to walk it back to Exit — which §7's table has
+            // no transition for.
+            Assert.That(bedroom == null, Is.True, "the bedroom survived into the next round");
+            Assert.That(dream.Cubes[new Coord(0, 0, 0)].Doors[Face.North].State,
+                Is.EqualTo(ConnectorState.Exit));
+            Assert.That(dream.Cubes[new Coord(0, 0, 0)].Doors[Face.North].Playing,
+                Is.EqualTo(FogDoorTransition.None), "arrived in its state rather than animating");
         }
 
         // ---- waking ---------------------------------------------------------------
@@ -463,6 +676,34 @@ namespace Lucid.Tests.PlayMode.Dream
             Assert.That(touched, Is.Empty, $"stopped at z {motor.Feet.z:0.00}");
         }
 
+        [UnityTest]
+        public IEnumerator ARotatedCubeReportsTheWorldFaceItWokeThemThrough()
+        {
+            // The rotation bug one level up. Every other walk is into a cube at
+            // R0, where the local and world faces are the same string, so a
+            // report carrying the socket's own face passes them all — and hands
+            // the host a ConnectorRef that is not a connector in the lattice,
+            // which Round.TryWake would refuse.
+            var log = new EventLog();
+            log.Append(new CubePlaced(0, new Coord(0, 1, 0), Corner, Rotation.R90, "*"));
+
+            DreamInstance dream = Dream();
+            dream.Build(log);
+
+            var touched = new List<ConnectorRef>();
+            dream.TouchedExit += touched.Add;
+
+            SleeperMotor motor = Runner(dream.SpawnPoint + new Vector3(0f, 0.1f, 0f));
+            yield return null;
+
+            WalkForward(motor, 1.5f);          // north, into the corner at (0,1,0)
+            Turn(motor, 90f);                  // now looking east
+            WalkForward(motor, 0.65f);         // into its one fog door, at x 4
+
+            Assert.That(touched, Is.EqualTo(new[] { new ConnectorRef(new Coord(0, 1, 0), Face.East) }),
+                $"stopped at {motor.Feet}");
+        }
+
         // ---- respawn --------------------------------------------------------------
 
         [UnityTest]
@@ -476,13 +717,36 @@ namespace Lucid.Tests.PlayMode.Dream
             WalkForward(motor, 2.5f);
             Assert.That(motor.Feet.z, Is.GreaterThan(4f), "never left the bedroom");
 
+            TurnAround(motor);
             dream.Respawn(motor);
 
-            Assert.That(motor.Feet, Is.EqualTo(dream.SpawnPoint));
+            // The literal, not `dream.SpawnPoint` — that is the expression
+            // under test, and comparing it with itself passes for any value.
+            Assert.That(motor.Feet, Is.EqualTo(Vector3.zero));
 
             // Facing the bedroom's own door, so the way out is in front of them
-            // rather than behind: the start cube's one connector is north.
+            // rather than behind. Turned around first, because a fresh rig
+            // already looks +z and this would hold whether Respawn set the
+            // rotation or not.
             Assert.That(motor.transform.forward.z, Is.EqualTo(1f).Within(1e-3f));
+        }
+
+        [UnityTest]
+        public IEnumerator ASleeperFacesTheDoorWhicheverWayTheBedroomIsLaid()
+        {
+            // The one test where the answer is not +z, which is what a fresh
+            // SleeperRig looks along and what R0 happens to produce.
+            DreamInstance dream = Dream(Rotation.R90);
+            dream.Build(new EventLog());
+            yield return null;
+
+            Assert.That(dream.SpawnFacing.x, Is.EqualTo(1f).Within(1e-3f),
+                "the bedroom is turned a quarter clockwise, so its door looks east");
+
+            SleeperMotor motor = Runner(new Vector3(0f, 0.1f, 0f));
+            dream.Respawn(motor);
+
+            Assert.That(motor.transform.forward.x, Is.EqualTo(1f).Within(1e-3f));
         }
     }
 }
