@@ -28,9 +28,24 @@ CC-BY-4.0, as the project's own work (`docs/SPEC.md` §18,
 
 ## Files
 
-Committed at 1600 px wide, JPEG quality 80, about 1.8 MB the set. The
-full-resolution masters (2752 × 1536, ~24 MB) are **not** committed — they
+Committed at 1600 px wide — 820 CSS px of README column at 2× device pixel
+ratio — encoded from the masters with ImageMagick at JPEG quality 80,
+progressive, metadata stripped. About 1.08 MB the set. The two UI mock-ups
+keep full 4:4:4 chroma because they carry small text; the rest are 4:2:0.
+
+```
+magick <master> -resize 1600x -strip -quality 80 \
+  -sampling-factor 4:2:0 -interlace JPEG <name>.jpg
+```
+
+The first version of these was written with `sips -s formatOptions 80`, whose
+scale is not JPEG quality: the files came out at quality 94 and 1.8 MB, and the
+line above claimed 80. Review caught the artefacts disagreeing with the note.
+
+The full-resolution masters (2752 × 1536, ~24 MB) are **not** committed — they
 would sit in git history for ever to serve a page that wants web-sized copies.
+Treat what is here as **write-once**: it is a plain blob, not LFS, so every
+re-export stays in every clone's history for good.
 `docs/concept/*.jpg` is also exempt from Git LFS in `.gitattributes`: GitHub
 serves README images out of the LFS bandwidth quota, and ten of them on the
 front page would spend it on people merely reading about the game.

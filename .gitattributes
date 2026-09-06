@@ -33,7 +33,10 @@
 # README images through the LFS bandwidth quota, so ten of them on the front
 # page would spend it on people merely reading about the game. These are
 # write-once and web-sized; ordinary git objects cost nothing to look at.
-docs/concept/*.jpg -filter -diff -merge
+docs/concept/*.jpg -filter -diff -merge -text
+# -text is repeated rather than inherited from the line above: without it the
+# file's meaning would depend on which line came first, and git's binary
+# detection (a NUL at byte 4 of a JFIF header) would be the only thing left.
 
 # Generated previews and docs are not diffable prose.
 docs/playtests/*.csv linguist-generated=true
