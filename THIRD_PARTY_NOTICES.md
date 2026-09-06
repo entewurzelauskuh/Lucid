@@ -1,7 +1,7 @@
 # Third-party notices
 
-Lucid's own code is MIT (`LICENSE`); its original text, briefs, specs and
-generated shell textures are CC-BY-4.0. Everything below belongs to someone else
+Lucid's own code is MIT (`LICENSE`); its original text, briefs, specs, concept art
+and generated shell textures are CC-BY-4.0. Everything below belongs to someone else
 and keeps its own licence.
 
 Per-cube art assets are **not** listed here. Each cube carries its own ledger at

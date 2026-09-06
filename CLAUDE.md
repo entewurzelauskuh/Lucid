@@ -8,7 +8,7 @@ Read in this order before doing anything: `docs/SPEC.md` (what the game is), `do
 
 **M0.1 through M0.6 are merged; M0.6b (#79) is next** (`docs/WORKPLAN.md` §4). Unity **6000.3.11f1** at `Lucid/`.
 
-- `Lucid.Core` implements `docs/CORE-API.md` in full — lattice, derivation, the placement and exploration rules, round, budget, powers and scoring. Every item of its §12 test list is covered.
+- `Lucid.Core` implements `docs/CORE-API.md` in full — lattice, derivation, the placement and exploration rules, round, budget, powers and scoring. Nearly every item of its §12 test list is covered — depth on a loop is not (#84).
 - The cube pipeline runs end to end: `tools/build-cube.sh core` builds Straight, Corner, T, Cross and the Bedroom from `cube.spec.json`, validates each, and renders three previews apiece. Rebuilding changes nothing on disk.
 - The Sleeper moves. `SleeperMotor` is the whole kit of `docs/SPEC.md` §9 and nothing else, and `tools/build-scenes.sh` writes the course its tests measure it on. Gravity is **derived** from the spec's rise and reach rather than set, which lands at 2.4 g; movement refuses to climb above its own feet, because a `CharacterController` mantles by itself (`docs/DECISIONS.md`).
 - Fog doors behave. `FogDoorTransitions` is `docs/SPEC.md` §7's table as a pure function — including the rule it states by omission, that an Exit never hardens, without which a Sleeper could seal the way out by walking towards it. The mist is a generated-noise shader on a quad stack; a Solid door stops moving rather than becoming the cube's wall material, which is deferred to M0.6 (`docs/DECISIONS.md`).
