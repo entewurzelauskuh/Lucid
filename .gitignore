@@ -76,3 +76,8 @@ Thumbs.db
 # .pyc that produces was committed twice by `git add -A` before anyone noticed.
 __pycache__/
 *.py[cod]
+
+# The full-resolution concept art masters, 2752x1536 and ~24 MB the set.
+# docs/concept/ holds web-sized copies of them, which is what the README needs;
+# the masters would sit in history for ever and never be looked at.
+/concept arts/

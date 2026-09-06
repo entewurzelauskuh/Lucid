@@ -29,5 +29,11 @@
 *.ogg       filter=lfs diff=lfs merge=lfs -text
 *.mp3       filter=lfs diff=lfs merge=lfs -text
 
+# ...except the concept art, which is deliberately a plain blob. GitHub serves
+# README images through the LFS bandwidth quota, so ten of them on the front
+# page would spend it on people merely reading about the game. These are
+# write-once and web-sized; ordinary git objects cost nothing to look at.
+docs/concept/*.jpg -filter -diff -merge
+
 # Generated previews and docs are not diffable prose.
 docs/playtests/*.csv linguist-generated=true
