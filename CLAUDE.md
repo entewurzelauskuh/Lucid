@@ -6,13 +6,14 @@ Read in this order before doing anything: `docs/SPEC.md` (what the game is), `do
 
 ## Status
 
-**M0.1 through M0.5 are merged; M0.6 (#6) is next** (`docs/WORKPLAN.md` §4). Unity **6000.3.11f1** at `Lucid/`.
+**M0.1 through M0.6 are merged; M0.6b (#79) is next** (`docs/WORKPLAN.md` §4). Unity **6000.3.11f1** at `Lucid/`.
 
 - `Lucid.Core` implements `docs/CORE-API.md` in full — lattice, derivation, the placement and exploration rules, round, budget, powers and scoring. Every item of its §12 test list is covered.
 - The cube pipeline runs end to end: `tools/build-cube.sh core` builds Straight, Corner, T, Cross and the Bedroom from `cube.spec.json`, validates each, and renders three previews apiece. Rebuilding changes nothing on disk.
 - The Sleeper moves. `SleeperMotor` is the whole kit of `docs/SPEC.md` §9 and nothing else, and `tools/build-scenes.sh` writes the course its tests measure it on. Gravity is **derived** from the spec's rise and reach rather than set, which lands at 2.4 g; movement refuses to climb above its own feet, because a `CharacterController` mantles by itself (`docs/DECISIONS.md`).
 - Fog doors behave. `FogDoorTransitions` is `docs/SPEC.md` §7's table as a pure function — including the rule it states by omission, that an Exit never hardens, without which a Sleeper could seal the way out by walking towards it. The mist is a generated-noise shader on a quad stack; a Solid door stops moving rather than becoming the cube's wall material, which is deferred to M0.6 (`docs/DECISIONS.md`).
-- Still no dream instance and no networking. M0.6 onwards builds those. A door raises `Touched` and nothing consumes it: waking is the host's to adjudicate (`docs/SPEC.md` §14).
+- **The dream stands up.** `DreamInstance` replays an event log into cubes, wires every door to what Core derived, and reports the two things the rules care about — a Sleeper's first entry into a cube, and a Sleeper walking into an exit. It reports and does not decide: exploration is global across every dream and waking ends a round, so both are the host's to adjudicate (`docs/SPEC.md` §5, §14), and nothing consumes either event yet. `DreamSpace` is the only place the lattice's axes meet Unity's.
+- Still no networking, and no god view — M0.6b, M0.7 and M0.8 build those.
 - **PlayMode works and is proven to fail when it should** — before M0.4 the platform had never run a test, so `0/0 passed` and "nothing ran" looked identical. It carries the Sleeper's tests now; `Lucid.Netcode` remains a stub.
 
 Things the tree does not tell you:
