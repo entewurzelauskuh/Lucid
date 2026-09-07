@@ -8,7 +8,7 @@ Settled alongside this document: audio is SFX first, music much later **[S]**; n
 
 ## 1. Principles
 
-1. **The world is painted, the UI is crisp.** The dream filter (spec §15) applies to the 3D view only; UI renders after post-processing. Panels are translucent mist, text is sharp.
+1. **The world is painted, the UI is crisp.** The dream filter (spec §15) applies to the 3D view only; UI renders after post-processing. Panels are translucent mist, text is sharp. Concretely: the UI is composited in a Screen Space Overlay pass and receives none of the world's painterly pass, bloom, grain or depth of field — no UI element is blurred, tinted or post-processed to "match" the world. The contrast between soft world and sharp interface *is* the look; a softened HUD reads as a rendering bug.
 2. **One glance.** A Sleeper needs the timer, health, lives and the door language. The Nightmare needs budget, timer, where the Sleepers are, the palette and cooldowns. Everything else is on hover or behind Tab.
 3. **Never hide a rule.** Every rejected placement shows its reason. Every state change that matters gets a toast. If a player asks "why?", the answer was on screen.
 4. **Party first.** Results are readable across a Discord call: big names, big outcomes, one screen.
@@ -130,6 +130,8 @@ One screen. Title by outcome: "Dawn." if anyone was consumed by the timer, "Ever
 - Leaderboard deltas.
 - Buttons: *Back to lobby* (host; auto after 10 s), *Save replay* (writes the `.lucidlog`).
 
+**One record.** The player cards, the leaderboard deltas and the badges are three views of one round, and written as three blocks of numbers they drift — the design system's first pass had three of four players disagreeing with themselves. Results is computed from a single session record with spec §12 applied in code: a Sleeper who wakes scores 100 + remaining seconds, a consumed Sleeper 0, the Nightmare 100 per Sleeper consumed; every figure on the screen, badges included, derives from that record. Two invariants hold for any session and are worth a test: Nightmare stints across all players equals rounds played, and each player's woke + consumed equals rounds played minus their own stints.
+
 ## 10. Pause menu
 
 There is no pausing a multiplayer round. The menu offers *Options*, *Leave*, *Quit to desktop*. Leaving as the Nightmare ends the round for everyone, with a confirm: "The dream will collapse for all Sleepers." Leaving as a Sleeper counts as consumed, with a confirm.
@@ -139,8 +141,10 @@ There is no pausing a multiplayer round. The menu offers *Options*, *Leave*, *Qu
 - **Video:** resolution, fullscreen, vsync, quality preset, painterly pass (off / low / high), depth of field strength, film grain, motion blur (off by default), field of view for Sleepers (70–110), head bob.
 - **Audio:** master, SFX, UI. A music slider appears when music exists.
 - **Controls:** rebinding for the Sleeper map (keyboard and gamepad) and the Nightmare map; invert Y; sensitivity; crouch hold / toggle; gamepad aim-assist strength.
-- **Accessibility:** text size; high-contrast doors (a faint hatch on fog, rays on exits); reduced flashes (softer Dark and Fog transitions); screen shake off; colour-blind marker shapes.
+- **Accessibility:** text size; high-contrast doors (a faint hatch on fog, rays on exits) — off by default; reduced flashes (softer Dark and Fog transitions); screen shake off; colour-blind marker shapes — off by default, because the four §15 colours are already colour-blind-safe and always carry a number and a name, so shapes are a second belt rather than the first.
 - **Gameplay:** hint cards on / off; toast verbosity.
+
+Options is built from exactly two controls, a toggle and a slider (with its value always shown as a number). A setting that cannot express itself as one of those does not belong here.
 
 ## 12. Sandbox **[D]**
 
@@ -167,15 +171,28 @@ Strings are the rules made visible; keep them exact so every screen says the sam
 - Placement: "Door is solid" · "Doesn't fit here" · "Would trap {name}" · "Not enough budget ({have} / {cost})" · "Not a door"
 - Effects: "Dark" · "Fog" · "Molasses — don't jump"
 - Possession: "Possessing a {mob} in {name}'s dream — P to let go" · "Your body died"
-- Lobby: "Nobody picked Nightmare" · "Need at least one Sleeper" · "Waiting for {name} to ready up" · "Tonight's Nightmare is… {name}"
+- Lobby: "Nobody picked Nightmare" · "Need at least one Sleeper" · "Waiting for {name} to ready up" · "Tonight's Nightmare is… {name}" · "{n} players want to be the Nightmare — one will be chosen at random." · "The first dream begins."
+- Results: "Everyone woke up" · "Dawn." · "Consumed" · "Woke at {time}" · "Consumed at {time}" · "Consumed by dawn"
+- Spectator: "You're awake. Watch the others."
+- Nightmare view: "Building paused"
+- Edge flows: "The dream collapsed" · "The Nightmare fled" · "The dream will collapse for all Sleepers." · "Round in progress, {time} left" · "Steam is offline"
+- Section captions, the one place uppercase is allowed (§15): PALETTE · BUDGET · SLEEPERS · SESSION LEADERBOARD · THE NIGHTMARE
+
+Every string a screen shows is on this list, and the Unity project reads them from one file (`design-system/unity/Runtime/LucidStrings.cs`, this section transcribed). A screen that needs a string not here adds it here first — never at the call site. The blocked-button reasons (Lobby, above) and the placement rejections replace a control's own label or ride the red ghost verbatim; §1.3 applied to controls. `{mob}` in the possession line is the mob's name — a Shade, from a Nest — and the "— P to let go" is part of the string, not layout.
 
 ## 15. Visual style of the UI **[D]**
 
-- Panels: translucent blue-black with soft, misty edges and thin light borders. Titles in a soft serif, body in a humanist sans; both under open licenses (for example Cormorant Garamond and Inter, both OFL).
-- Accents: exit white-gold, fog grey-blue, danger red.
-- Sleeper colours from a colour-blind-safe set, always with a number: orange `#E69F00`, sky blue `#56B4E9`, green `#009E73`, purple-pink `#CC79A7`.
-- Icons: thin line icons; connectors drawn as a mini cube net.
-- Implementation: UI Toolkit (UXML / USS) for every screen and HUD, so contributors can restyle without touching code; a Screen Space Overlay so the post filter never touches the UI; world markers projected from world positions into the same overlay.
+The design system in `design-system/` is the visual source of truth; `design-system/unity/CLAUDE-CODE-UI-GUIDE.md` is the implementation authority for how it looks, and where that guide and this document disagree, this document wins.
+
+- **Panels:** blue-black with thin light borders. Translucency is allocated by *lifetime*, not by surface type, because USS has no `backdrop-filter` and the Screen Space Overlay cannot sample what is behind it — a 72 % fill over a busy god view reads straight through the palette the player is aiming at. Permanent chrome (the Nightmare's docks, the powers bar, full-screen panels) is opaque; only small, short-lived surfaces — toasts, hover peeks, the reveal card, hint cards — keep the 72 % mist. Modal scrims split in two: one captured frame blurred once on open where the player has stepped away from the round (Pause, Options, Round start), and never blurred where the round is still running behind them (Tab overlay, target selector), since a frozen frame behind live play misreports the game. No custom URP render feature is needed for the UI.
+- **Type:** Cormorant Garamond (Light and SemiBold) for titles, the Results outcome line and the reveal card; Inter for everything else — every control, string and numeral. Both OFL. Five sizes and no exceptions: **64 / 34 / 22 / 16 / 13 px**.
+- **The 22 px floor.** Every *value* on Results or the scoreboard is at least 22 px, because those screens are read over a Discord screen share at 720p — 0.667×, so 22 authored is 14.7 on a friend's monitor. A value is anything a viewer reads off the screen: a name, a Sleeper number, a score, a delta, a time, a depth. Static column labels and section captions may sit at 13, because they name a thing rather than report one. Sleeper numbers are values — they are what makes the four colours safe for a colour-blind viewer, so they are never the smallest text on the screen.
+- **Four font files, not two.** Unity exposes no OpenType feature switches, so tabular and lining figures cannot be requested from a style; they are frozen into two extra files offline (`LucidInter-Tabular`, `LucidCormorant-Lining`, both OFL derivatives) and selected with the `.tabular` and `.lining` classes. Prose keeps proportional figures. Anything that ticks or aligns — the dawn timer, the budget, costs, every scoreboard cell — is tabular; any display-face digit is lining, because Cormorant's default zero is O-shaped.
+- **Accents:** exit white-gold, fog grey-blue, danger red. Exit white-gold is the only warm colour in the system and means one thing.
+- **Sleeper colours** from a colour-blind-safe set, always with a number and a name: orange `#E69F00`, sky blue `#56B4E9`, green `#009E73`, purple-pink `#CC79A7`. Three rules: chips are filled with the *raw* colour, never darkened toward the numeral (an 88 % black mix put green at 4.46:1 against its number; raw, all four clear AA); none of the four is ever used as text, since none clears 4.5:1 on mist — the name beside a chip is always primary text; and the Nightmare, who has no number, still reserves the chip's footprint on a scoreboard row, or that one name outdents every session.
+- **Icons:** one thin-line set on a 24 px grid, drawn for this project; connectors drawn as a mini cube net *generated* from the cube's six-face mask, never authored per cube.
+- **Casing:** sentence case everywhere, titles included. Uppercase only for the section captions §14 lists, at 13 px, never for anything a player must read quickly.
+- **Implementation:** UI Toolkit (UXML / USS) for every screen and HUD, so contributors can restyle without touching code; a Screen Space Overlay so the post filter never touches the UI; world markers projected from world positions into the same overlay. The platform's limits and what was decided about each are in `docs/UI-TOOLKIT-LIMITS.md`.
 
 ## 16. Milestone mapping
 
