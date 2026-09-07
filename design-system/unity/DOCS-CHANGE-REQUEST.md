@@ -5,9 +5,8 @@ implementation can be consistent with itself. Every item came out of actually bu
 the screens: each one is a place where the docs are silent, ambiguous, or — in one case —
 ask for something UI Toolkit cannot do.
 
-Work top to bottom. **Item 1 is a rule marked `[S]` that the platform cannot honour as
-written**; it needs a human decision, not a patch. Items 4 and 4a also need sign-off.
-Everything else is safe to write down as-is.
+Work top to bottom. *(As written on delivery: item 1 was thought to touch an `[S]` rule;
+it does not — see the resolution table below. Items 4 and 4a still need sign-off.)*
 
 ## Resolution (2026-09-07, #85)
 

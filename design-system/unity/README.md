@@ -5,9 +5,10 @@ Everything in here is written against what USS actually supports. Start with
 authority for the Unity implementation and tells you what may not be changed.
 
 Then read **[DOCS-CHANGE-REQUEST.md](DOCS-CHANGE-REQUEST.md)** *before touching
-`docs/`*: fourteen edits the repo's own documentation needs for the
-implementation to be consistent with itself. Three of them need a human answer —
-including one `[S]` rule that UI Toolkit cannot honour as written.
+`docs/`*: fourteen edits the repo's own documentation needed for the
+implementation to be consistent with itself. Applied in #85; two items (Dark's dim
+levels and the general readability clause) are held as *proposed* until the owner
+rules. The rule it called `[S]` and unhonourable was `[D]`.
 
 | File | What |
 |---|---|

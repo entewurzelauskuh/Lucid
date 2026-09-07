@@ -329,7 +329,7 @@ exit keeps its radiance (it is a game rule).
 
 ## 8. Per-screen notes
 
-**Title.** Wordmark in `--font-display` Light at 0.24em tracking — *there is no
+**Title.** Wordmark in `--font-display` Light at 0.22em tracking — *there is no
 logo asset and you must not create one*. Menu is Host a dream / Join / Sandbox /
 Options / Quit; in M0 only Sandbox and Quit exist (`docs/UI.md` §16) and the
 other three are absent rather than greyed, since rule 0.3 would demand a blocker
@@ -399,9 +399,9 @@ built from exactly two controls: `.toggle` and `.slider`.
 ## 10. Reference
 
 **Before you touch `docs/`:** `DOCS-CHANGE-REQUEST.md` in this folder lists every
-edit the repo's own documentation needs for the implementation to be consistent —
-including one `[S]` rule the platform cannot honour as written. Work through that
-file first; it tells you what to change, what to escalate, and what not to touch.
+edit the repo's own documentation needed for the implementation to be consistent.
+It has been applied (#85); its resolution table says what became of each item.
+The one rule it called `[S]` and unhonourable was `[D]` all along.
 
 The visual source of truth is the design system this file ships in:
 

@@ -66,6 +66,8 @@ Three columns and a bottom bar.
 | Top right | Toasts | Stack of three, four seconds each: "The exit moved", "A door hardened", "Anna woke up", "Ben was consumed", "Dark", "Fog", "Molasses — don't jump" |
 | Whole screen | Effects | Dark: HUD dims except the timer. Fog: none. Molasses: a viscous vignette and a small "70 %" icon while it lasts |
 
+No panel sits behind a HUD cluster: each gets a faint radial scrim so text stays legible without covering the maze, because a mist panel over a first-person view costs more of the maze than it buys in legibility. Every cluster sits 48 px from its screen edge, all four corners the same, so the eye learns four fixed places. **[D]**, chosen by the design system.
+
 **Death.** Screen drops and blurs. "You lost a life — 2 moons left", respawn countdown 3-2-1 in the bedroom. Last life: "Consumed" and the screen sinks to black, then the spectator view.
 
 **Waking.** White-out, "You woke up — 3:12", then the spectator view.
@@ -87,8 +89,8 @@ Free camera in any dream. Tabs for each Sleeper (1–4) and the Nightmare's god 
 | Centre | God view: orbit / top-down camera over the lattice with a layer cut-away |
 | Top centre | Dawn timer and phase banner |
 | Top left | Budget: the number, a ring showing the next trickle point, the trickle rate |
-| Left | Palette: one tab per enabled pack, category chips, cube cards |
-| Right | Sleeper panel: one row per Sleeper |
+| Left | Palette: one tab per enabled pack, category chips, cube cards — docked full height at 340 px, because it is touched every few seconds and a floating panel would be re-found each time |
+| Right | Sleeper panel: one row per Sleeper — docked full height at 320 px |
 | Bottom centre | Powers bar: target selector, effect buttons with cost and cooldown rings, possession hint |
 | Top right | Toasts |
 
@@ -172,13 +174,14 @@ Strings are the rules made visible; keep them exact so every screen says the sam
 - Effects: "Dark" · "Fog" · "Molasses — don't jump"
 - Possession: "Possessing a {mob} in {name}'s dream — P to let go" · "Your body died"
 - Lobby: "Nobody picked Nightmare" · "Need at least one Sleeper" · "Waiting for {name} to ready up" · "Tonight's Nightmare is… {name}" · "{n} players want to be the Nightmare — one will be chosen at random." · "The first dream begins."
-- Results: "Everyone woke up" · "Dawn." · "Consumed" · "Woke at {time}" · "Consumed at {time}" · "Consumed by dawn"
+- Results: "Everyone woke up" · "Woke at {time}" · "Consumed at {time}" · "Consumed by dawn" — the other two titles are "Dawn." and "Consumed" above
 - Spectator: "You're awake. Watch the others."
 - Nightmare view: "Building paused"
 - Edge flows: "The dream collapsed" · "The Nightmare fled" · "The dream will collapse for all Sleepers." · "Round in progress, {time} left" · "Steam is offline"
+- Readouts and hints: "depth {n} · exit {n}" (the Nightmare's Sleeper row, §8) · "you can accept invites from the overlay at any time" (§3)
 - Section captions, the one place uppercase is allowed (§15): PALETTE · BUDGET · SLEEPERS · SESSION LEADERBOARD · THE NIGHTMARE
 
-Every string a screen shows is on this list, and the Unity project reads them from one file (`design-system/unity/Runtime/LucidStrings.cs`, this section transcribed). A screen that needs a string not here adds it here first — never at the call site. The blocked-button reasons (Lobby, above) and the placement rejections replace a control's own label or ride the red ghost verbatim; §1.3 applied to controls. `{mob}` in the possession line is the mob's name — a Shade, from a Nest — and the "— P to let go" is part of the string, not layout.
+Every string a screen shows comes from this list, and the Unity project reads them from one file (`design-system/unity/Runtime/LucidStrings.cs`, this section transcribed). A screen that needs a string not here adds it here first — never at the call site. The blocked-button reasons (Lobby, above) and the placement rejections replace a control's own label or ride the red ghost verbatim; §1.3 applied to controls. `{mob}` in the possession line is the mob's name as spec §8 gives it — a Shade or an Eye, both possessable per spec §10 — and the "— P to let go" is part of the string, not layout. ("Possessing a Eye" is a real defect in this line's article; it is not fixed here because §14's strings are not changed in passing — **[O]**.)
 
 ## 15. Visual style of the UI **[D]**
 
@@ -191,6 +194,7 @@ The design system in `design-system/` is the visual source of truth; `design-sys
 - **Accents:** exit white-gold, fog grey-blue, danger red. Exit white-gold is the only warm colour in the system and means one thing.
 - **Sleeper colours** from a colour-blind-safe set, always with a number and a name: orange `#E69F00`, sky blue `#56B4E9`, green `#009E73`, purple-pink `#CC79A7`. Three rules: chips are filled with the *raw* colour, never darkened toward the numeral (an 88 % black mix put green at 4.46:1 against its number; raw, all four clear AA); none of the four is ever used as text, since none clears 4.5:1 on mist — the name beside a chip is always primary text; and the Nightmare, who has no number, still reserves the chip's footprint on a scoreboard row, or that one name outdents every session.
 - **Icons:** one thin-line set on a 24 px grid, drawn for this project; connectors drawn as a mini cube net *generated* from the cube's six-face mask, never authored per cube.
+- **Details the design system settled:** there is no logo — LUCID is set in the display face, Light, at 0.22em tracking wherever a mark would go; scoreboard columns are min-width, never fixed, with the name column absorbing the slack; the rank digit is `--fg-3`, since at 22 px it is body text; `--fg-4` (3.1:1 on mist) is decorative or ≥ 24 px only; the Nightmare's row keeps an unpainted chip slot.
 - **Casing:** sentence case everywhere, titles included. Uppercase only for the section captions §14 lists, at 13 px, never for anything a player must read quickly.
 - **Implementation:** UI Toolkit (UXML / USS) for every screen and HUD, so contributors can restyle without touching code; a Screen Space Overlay so the post filter never touches the UI; world markers projected from world positions into the same overlay. The platform's limits and what was decided about each are in `docs/UI-TOOLKIT-LIMITS.md`.
 

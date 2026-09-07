@@ -112,7 +112,7 @@ Every connector that has no cube attached is a **fog door**: a wall of drifting 
 
 Transitions: Fog ↔ Exit whenever the depth ranking changes; Fog or Exit → Attached when the Nightmare builds on it; Fog → Solid when a Sleeper explores the cube. Exit doors never become Solid.
 
-The rule behind the Look column is that **state is legible in greyscale**: desaturate a screenshot and all four are still told apart. Each state's non-hue channel, so four implementers do not invent four encodings — Fog is a drifting mist *sheet* filling the opening; Exit is the same sheet *blazing*, the only warm light in the frame; Solid is the opening *condensed to blank wall*, faintly hatched under the high-contrast option; Attached is an *open* passage with nothing in it.
+The rule behind the Look column is that **state is legible in greyscale**: desaturate a screenshot and all four are still told apart. Each state's non-hue channel, so four implementers do not invent four encodings — Fog is a drifting mist *sheet* filling the opening; Exit is the same sheet *blazing*, the only warm light in the frame; Solid is the opening *condensed to blank wall*; Attached is an *open* passage with nothing in it.
 
 ### The exit rule **[S]**
 
