@@ -18,29 +18,48 @@ namespace Lucid.Runtime
     [RequireComponent(typeof(EmptyDream))]
     public sealed class SandboxScene : MonoBehaviour
     {
-        public const string BackMap = "UI";
+        /// <summary>
+        /// Not "UI": that is the map name the Input System's InputForUI bridge
+        /// looks for on the project-wide asset to drive UI Toolkit, and a map
+        /// by that name with only Back in it would, the day this asset became
+        /// project-wide, silently take every click away from the Title.
+        /// </summary>
+        public const string BackMap = "Flow";
         public const string BackAction = "Back";
 
         [SerializeField] InputActionAsset _actions;
 
+        InputActionAsset _own;
         InputAction _back;
         SleeperMotor _sleeper;
 
         public SleeperMotor Sleeper => _sleeper;
 
+        /// <summary>The Back action as bound, for a test to inspect each link.</summary>
+        internal InputAction Back => _back;
+
         internal void Configure(InputActionAsset actions) => _actions = actions;
 
         void Start()
         {
-            DreamInstance dream = GetComponent<EmptyDream>().Dream;
+            DreamInstance dream = GetComponent<EmptyDream>().Ensure();
 
             _sleeper = SleeperRig.Create(dream.SpawnPoint, dream.SpawnFacing);
             _sleeper.transform.SetParent(transform, true);
             if (_actions != null)
             {
-                _sleeper.gameObject.AddComponent<SleeperInputSource>().Bind(_actions);
+                // A copy of the asset for this scene's lifetime, not the shared
+                // asset itself. An InputActionAsset carries its resolved state
+                // with it, so a map enabled here would still be enabled — and
+                // still bound to whatever devices it last saw — after this
+                // scene is gone. The dev scenes bind the shared asset directly
+                // and that state was what the Esc test tripped over when they
+                // ran first. A copy is born after everything else and dies
+                // with the scene.
+                _own = Instantiate(_actions);
+                _sleeper.gameObject.AddComponent<SleeperInputSource>().Bind(_own);
 
-                _back = _actions.FindActionMap(BackMap, throwIfNotFound: false)
+                _back = _own.FindActionMap(BackMap, throwIfNotFound: false)
                     ?.FindAction(BackAction, throwIfNotFound: false);
                 if (_back != null)
                 {
@@ -52,7 +71,12 @@ namespace Lucid.Runtime
 
         void OnDestroy()
         {
-            if (_back != null) _back.performed -= OnBack;
+            if (_back != null)
+            {
+                _back.performed -= OnBack;
+                _back.Disable();
+            }
+            if (_own != null) Destroy(_own);
         }
 
         void OnBack(InputAction.CallbackContext _) => Leave();

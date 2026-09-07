@@ -88,6 +88,26 @@ namespace Lucid.Tests.PlayMode.UI
         }
 
         [UnityTest]
+        public IEnumerator QuitAsksToEndTheSession()
+        {
+            // The real handler ends play mode, which no test survives, so the
+            // hook is replaced and the wiring is what is asserted.
+            yield return OpenTheTitle();
+            TitleController title = Title();
+            bool asked = false;
+            title.QuitHandler = () => asked = true;
+
+            using (var submit = NavigationSubmitEvent.GetPooled())
+            {
+                submit.target = title.Root.Q<Button>(TitleController.QuitButton);
+                title.Root.Q<Button>(TitleController.QuitButton).SendEvent(submit);
+            }
+            yield return null;
+
+            Assert.That(asked, Is.True, "Quit is not wired");
+        }
+
+        [UnityTest]
         public IEnumerator SandboxTakesThePlayerIntoTheDream()
         {
             yield return OpenTheTitle();

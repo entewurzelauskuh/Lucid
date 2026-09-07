@@ -30,6 +30,17 @@ namespace Lucid.Editor.Scenes
         public const string TitleUxmlPath = "Assets/_Lucid/Runtime/UI/Screens/Title.uxml";
         public const string StartTypeId = "core.start";
 
+        /// <summary>
+        /// Boot first — a player build starts on scene 0, and without Boot there
+        /// are no Services — then the flow's scenes, then the two dev scenes,
+        /// so that they can be loaded by name as well as opened by hand.
+        /// </summary>
+        public static readonly string[] BuildList =
+        {
+            BootPath, TitlePath, DreamPath,
+            GauntletSceneBuilder.ScenePath, FogDoorSceneBuilder.ScenePath,
+        };
+
         [MenuItem("Lucid/Build Flow Scenes")]
         public static void BuildAll()
         {
@@ -124,7 +135,7 @@ namespace Lucid.Editor.Scenes
         /// </summary>
         static void WriteBuildSettings()
         {
-            string[] wanted = { BootPath, TitlePath, DreamPath };
+            string[] wanted = BuildList;
             string[] have = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
 
             if (have.SequenceEqual(wanted))

@@ -38,14 +38,14 @@ namespace Lucid.Tests.PlayMode.Flow
             Assert.That(Services.Current, Is.Null, "Boot's teardown did not uninstall Services");
         }
 
-        static IEnumerator BootToTitle()
+        internal static IEnumerator BootToTitle()
         {
             yield return SceneManager.LoadSceneAsync(Boot, LoadSceneMode.Additive);
             yield return Settled(FlowState.Title);
         }
 
         /// <summary>Waits for the flow to arrive somewhere, or fails loudly rather than hanging.</summary>
-        static IEnumerator Settled(FlowState state, float seconds = 10f)
+        internal static IEnumerator Settled(FlowState state, float seconds = 10f)
         {
             float deadline = Time.realtimeSinceStartup + seconds;
             while (Services.Current == null
@@ -60,7 +60,7 @@ namespace Lucid.Tests.PlayMode.Flow
             }
         }
 
-        static bool Loaded(string name)
+        internal static bool Loaded(string name)
         {
             Scene s = SceneManager.GetSceneByName(name);
             return s.IsValid() && s.isLoaded;
@@ -106,8 +106,46 @@ namespace Lucid.Tests.PlayMode.Flow
             Assert.That(dreams[0].gameObject.scene.name, Is.EqualTo(Title));
             Assert.That(dreams[0].Cubes.Count, Is.EqualTo(1), "the Title's bedroom is not standing");
 
+            // The Sleeper is the one thing the Sandbox creates at run time rather
+            // than in its scene file, so it is the one thing that could be born
+            // in the wrong scene and outlive the right one. Its camera with it.
+            Assert.That(UnityEngine.Object.FindObjectsByType<SleeperMotor>(FindObjectsSortMode.None), Is.Empty,
+                "the Sandbox's Sleeper survived the return to the Title");
+            Camera[] cameras = UnityEngine.Object.FindObjectsByType<Camera>(FindObjectsSortMode.None);
+            Assert.That(cameras, Has.Length.EqualTo(1), "a camera other than the Title's is alive");
+            Assert.That(cameras[0].gameObject.scene.name, Is.EqualTo(Title));
+
             Assert.That(ReferenceEquals(Services.Current, before), Is.True,
                 "Services were replaced across the round trip");
+        }
+
+        [UnityTest]
+        public IEnumerator AFailedLoadDoesNotWedgeTheFlow()
+        {
+            // The first draft threw inside the coroutine, which Unity logs and
+            // swallows, and IsTransitioning stayed true for ever — every later
+            // Go refused with "still on the way", which was not even the true
+            // reason. A scene that is not in the build list is the one failure
+            // a player build can actually produce.
+            yield return BootToTitle();
+            GameFlow flow = Services.Current.Flow;
+            flow.SceneOf = state => state == FlowState.Sandbox ? "NoSuchScene" : FlowTable.SceneOf(state);
+
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("NoSuchScene"));
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("did not load"));
+            flow.Go(FlowState.Sandbox);
+
+            float deadline = Time.realtimeSinceStartup + 10f;
+            while (flow.IsTransitioning)
+            {
+                if (Time.realtimeSinceStartup > deadline) Assert.Fail("IsTransitioning never cleared");
+                yield return null;
+            }
+
+            Assert.That(flow.State, Is.EqualTo(FlowState.Title), "the state moved without a scene to move to");
+            flow.SceneOf = FlowTable.SceneOf;
+            Assert.That(() => flow.Go(FlowState.Sandbox), Throws.Nothing, "the flow is wedged");
+            yield return Settled(FlowState.Sandbox);
         }
 
         [UnityTest]
@@ -158,6 +196,7 @@ namespace Lucid.Tests.PlayMode.Flow
 
             flow.Go(FlowState.Sandbox);
             Assert.That(flow.IsTransitioning, Is.True);
+            Assert.That(flow.State, Is.EqualTo(FlowState.Title), "State reported the destination before arriving");
             Assert.That(() => flow.Go(FlowState.Sandbox), Throws.InvalidOperationException);
 
             yield return Settled(FlowState.Sandbox);

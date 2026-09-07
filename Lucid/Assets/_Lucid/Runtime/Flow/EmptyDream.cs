@@ -17,10 +17,20 @@ namespace Lucid.Runtime
     {
         public DreamInstance Dream { get; private set; }
 
-        void Awake()
+        void Awake() => Ensure();
+
+        /// <summary>
+        /// Builds once, whoever asks first. Awake normally does; a sibling's
+        /// Start may ask before it if the components are ever reordered, and
+        /// correctness should not rest on the order a builder happened to add
+        /// them in.
+        /// </summary>
+        public DreamInstance Ensure()
         {
+            if (Dream != null) return Dream;
             Dream = GetComponent<DreamInstance>();
             Dream.Build(new EventLog());
+            return Dream;
         }
     }
 }

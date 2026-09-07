@@ -77,6 +77,9 @@ namespace Lucid.Runtime.UI
         public static string RoundInProgress(TimeSpan left) => $"Round in progress, {Clock(left)} left";
         public const  string SteamOffline = "Steam is offline";
 
+        // --- Readouts ------------------------------------------------------------
+        public static string Build(string version, string engine) => $"{version} · Unity {engine}";
+
         // --- The one clock format -------------------------------------------------
         // Always m:ss. Tabular numerals in USS, so a ticking value never shifts.
         public static string Clock(TimeSpan t)

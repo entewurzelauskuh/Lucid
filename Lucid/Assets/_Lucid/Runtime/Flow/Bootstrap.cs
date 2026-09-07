@@ -20,6 +20,9 @@ namespace Lucid.Runtime
 
         void Start()
         {
+            // Awake threw on a second Boot and left this null; whether Unity
+            // then runs Start is not something to depend on either way.
+            if (_installed == null) return;
             if (_goToTitle) _installed.Flow.Go(FlowState.Title);
         }
 

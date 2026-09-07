@@ -333,6 +333,6 @@
 
 /* ---------------------------------------------------------- screens: layout classes, so no UXML carries a style attribute */
 .screen { flex-grow: 1; align-items: center; justify-content: center; }
-.title__menu { width: 340px; margin-top: var(--sp-8); }
+.title__menu { width: var(--w-menu); margin-top: var(--sp-8); }
 .title__menu > .btn { margin-bottom: var(--sp-3); }
 .screen__corner { position: absolute; left: var(--hud-margin); bottom: var(--sp-6); }

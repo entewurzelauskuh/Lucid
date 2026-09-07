@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Title (docs/UI.md §3, §16). Structure only: every style is a class in
-     Styles/, every string is docs/UI.md §14 or §3. M0 shows the two entries that
+     Styles/, every string is docs/UI.md §14. M0 shows the two entries that
      work offline; Host a dream, Join and Options arrive with M1 and slot in
      between (guide §8). -->
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:lucid="Lucid.Runtime.UI">

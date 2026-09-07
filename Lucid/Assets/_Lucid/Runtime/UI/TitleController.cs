@@ -8,10 +8,10 @@ namespace Lucid.Runtime.UI
     /// The Title screen (docs/UI.md §3): wires its two M0 entries to the flow.
     /// </summary>
     /// <remarks>
-    /// Every visible string is in the UXML or §14; this file composes only the
-    /// build string, which is data rather than copy — §3 asks for "build
-    /// version and branch", and the branch is not known at run time, so it is
-    /// the version and the engine.
+    /// Every visible string is in the UXML or comes from <see cref="LucidStrings"/>,
+    /// the build string included: §3 asks for "build version and branch", the
+    /// branch is not known at run time, and the glossary's readout is the
+    /// version and the engine.
     /// </remarks>
     [RequireComponent(typeof(UIDocument))]
     public sealed class TitleController : MonoBehaviour
@@ -27,9 +27,9 @@ namespace Lucid.Runtime.UI
         /// <summary>The document's root, for tests that read the screen.</summary>
         public VisualElement Root => _document != null ? _document.rootVisualElement : null;
 
-        // The UIDocument builds its tree in its own OnEnable, and Unity runs
-        // OnEnable in component order, so the root is there by the time this
-        // runs on the same object. A null root is therefore a broken scene —
+        // The UIDocument builds its tree in its own OnEnable and declares a
+        // DefaultExecutionOrder ahead of everything else, so the root is there
+        // by the time this runs. A null root is therefore a broken scene —
         // no PanelSettings, no source asset — and is said so, not skipped: the
         // first draft returned silently on null, and a Title whose buttons did
         // nothing would have passed every test that merely read the tree.
@@ -55,7 +55,7 @@ namespace Lucid.Runtime.UI
             _quit.clicked += OnQuit;
 
             var build = root.Q<Label>(BuildLabel);
-            if (build != null) build.text = $"{Application.version} · Unity {Application.unityVersion}";
+            if (build != null) build.text = LucidStrings.Build(Application.version, Application.unityVersion);
         }
 
         void OnDisable()
@@ -73,7 +73,15 @@ namespace Lucid.Runtime.UI
             services.Flow.Go(FlowState.Sandbox);
         }
 
-        static void OnQuit()
+        /// <summary>
+        /// What Quit does. The real thing ends the session, which a test
+        /// cannot survive, so a test replaces it and asserts it was asked.
+        /// </summary>
+        internal Action QuitHandler = QuitTheGame;
+
+        void OnQuit() => QuitHandler?.Invoke();
+
+        static void QuitTheGame()
         {
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
