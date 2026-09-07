@@ -4,9 +4,11 @@ Everything the UI needs, what format it is, who makes it with what, and how long
 The constraint is one person with vector tools over a weekend; anything that
 breaks that is flagged **⚠ OVER BUDGET** with a way to cut it.
 
-Licences: OFL, CC0 or CC-BY only, one ledger line per file per CLAUDE.md rule 5.
+Licences: CC0 or CC-BY, and OFL for fonts only (CLAUDE.md rule 5); one row per file in
+`THIRD_PARTY_NOTICES.md`. Anything made in-house for the UI is project work under
+CC-BY-4.0 (docs/SPEC.md §18), not CC0.
 
-## Fonts — 2 files, ~30 min
+## Fonts — 7 files, ~30 min
 
 | File | Format | Source | Licence | Effort |
 |---|---|---|---|---|

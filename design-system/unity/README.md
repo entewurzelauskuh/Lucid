@@ -16,7 +16,7 @@ rules. The rule it called `[S]` and unhonourable was `[D]`.
 | `DOCS-CHANGE-REQUEST.md` | Edits the repo's `docs/` need. Read second. |
 | `lucid-tokens.uss` | Every token as a USS custom property |
 | `lucid-components.uss` | A class block per component, with states |
-| `uxml/*.uxml` | A structure-only skeleton per screen — **a shape, not a source**: they carry inline `style=` attributes and twenty-two strings that are not in `docs/UI.md`, both of which the guide's §0 forbids in the real screens. Take the hierarchy; take styling from the two stylesheets and every string from `LucidStrings` |
+| `uxml/*.uxml` | A structure-only skeleton per screen — **a shape, not a source**: they carry inline `style=` attributes, twenty-two strings that are not in `docs/UI.md`, and five element types that do not exist (`TimerArc`, `HealthRing`, `Crosshair`, `CooldownRing`, `PowerButton` — each is a `LucidRing` with a class, or a `Button`); the guide's §0 forbids the first two in the real screens and §4 explains the third. Take the hierarchy; take styling from the two stylesheets and every string from `LucidStrings` |
 | `Runtime/LucidRing.cs` | Every ring and arc — the one thing USS cannot draw |
 | `Runtime/LucidConnectorNet.cs` | The six-face cube net, generated from the mask |
 | `Runtime/LucidStrings.cs` | `docs/UI.md` §14 transcribed; the only source of copy |
@@ -27,7 +27,7 @@ assemblies cannot reference a folder outside them. The C# needs no packages beyo
 
 ## Resolved UI Toolkit limitations
 
-Three things UI Toolkit cannot do. Each has a decision, not a workaround; the
+Four things UI Toolkit cannot do. Each has a decision, not a workaround; the
 reasoning is in §2, §3 and §4 of the guide.
 
 - **No `backdrop-filter`, and it cannot be added** (the Screen Space Overlay

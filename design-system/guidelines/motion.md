@@ -1,7 +1,7 @@
 # Motion
 
 Five durations, two easings, and a short list of things that must hold still.
-Everything here is expressible in USS: `transition-property`, `transition-duration`,
+Everything here but the pulses is expressible in USS (they are C# tweens, since USS has no `@keyframes`): `transition-property`, `transition-duration`,
 `transition-timing-function` with Unity's predefined easings. No arbitrary curves,
 no spring physics, no shader-driven UI motion.
 

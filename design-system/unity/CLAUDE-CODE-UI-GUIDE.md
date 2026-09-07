@@ -60,6 +60,7 @@ Assets/_Lucid/Runtime/UI/          (inside Lucid.Runtime; see below)
   Fonts/
     CormorantGaramond-Light.ttf  CormorantGaramond-SemiBold.ttf
     Inter-Regular.ttf  Inter-Medium.ttf  Inter-SemiBold.ttf
+    LucidCormorant-Lining.ttf  LucidInter-Tabular.ttf   the two frozen derivatives, §3
     *.asset                   the FontAsset per weight
   Icons/
     lucid-icons.png           sprite atlas, or the individual SVGs
@@ -176,7 +177,7 @@ is ambiguous, the reference implementation is the tie-breaker.
 
 | Component | USS class | Notes |
 |---|---|---|
-| Mist panel | `.mist-panel` | `--sunken` opaque for full screens, `--docked` drops the radius |
+| Mist panel | `.mist-panel` | `--chrome` opaque for permanent docks and bars, `--sunken` opaque for full screens, `--docked` drops the radius; only bare `.mist-panel` is 72 % |
 | Button | `.btn` + `--primary` / `--secondary` / `--lg` | one primary per screen |
 | Toggle | `.toggle` + `--on` | knob glows white-gold on |
 | Slider | `.slider` | value always shown as a number |
@@ -192,7 +193,11 @@ is ambiguous, the reference implementation is the tie-breaker.
 
 ### Rings
 
-`LucidRing` is the only custom-painted element. It reads `--ring-track`,
+`LucidRing` is the only custom-painted element. The UXML skeletons in `uxml/`
+still name `<lucid:TimerArc>`, `<lucid:HealthRing>`, `<lucid:Crosshair>`,
+`<lucid:CooldownRing>` and `<lucid:PowerButton>`; none of those exists. Each is
+a `LucidRing` with the class named in the table above, and `PowerButton` is a
+`Button` with a ring inside it. It reads `--ring-track`,
 `--ring-fill` and `--ring-width` from USS, so the classes above configure it:
 
 ```xml
@@ -315,14 +320,16 @@ exit keeps its radiance (it is a game rule).
 
 ## 7. Accessibility
 
-- **High-contrast doors** (on by default in spirit, a toggle in Options): a faint
+- **High-contrast doors** (off by default, `docs/UI.md` §11): a faint
   hatch on fog, rays on exits. Use `hatch-45.png` for the hatch.
 - **Colour-blind marker shapes** — an option, **off by default**, because the four
   Sleeper colours are already colour-blind-safe and always carry a number and a
   name. When on, add `.shapes-on` to the panel root; the USS varies each index's
   corner radius.
-- **Larger HUD text** moves everything one step up the scale.
-- **Reduce motion** as above. **Screen shake** is a 0–100 % slider.
+- **Text size** (§11's name for it) moves everything one step up the scale.
+- **Reduce motion** as above; it is distinct from §11's *reduced flashes*, which
+  softens the Dark and Fog transitions. **Screen shake** is a 0–100 % slider,
+  0 being §11's "off".
 - Minimum interactive height is `--hit-min` (44 px). No exceptions in menus.
 
 ---
@@ -394,7 +401,7 @@ built from exactly two controls: `.toggle` and `.slider`.
 - [ ] All interactive elements ≥ 44 px tall
 - [ ] Numerals use `.tabular` / `.lining` wherever a value ticks, aligns, or is set in the display face
 - [ ] No large permanent panel is translucent; no `.scrim--frozen` over live play
-- [ ] Every new asset has a ledger line per `CLAUDE.md` rule 5 (OFL / CC0 / CC-BY only)
+- [ ] Every new asset has a ledger line per `CLAUDE.md` rule 5 (CC0 / CC-BY; OFL for fonts only)
 
 ## 10. Reference
 

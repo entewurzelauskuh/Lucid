@@ -13,11 +13,7 @@
       <lucid:HealthRing name="health" class="health-ring" />
       <ui:VisualElement>
         <ui:VisualElement name="moons" style="flex-direction:row;" />
-        <ui:VisualElement name="depth" style="flex-direction:row; align-items:center;">
-          <ui:VisualElement class="icon icon--depth" />
-          <ui:Label name="depth-value" class="depth__value" />
-          <ui:Label name="depth-best" class="depth__best" />
-        </ui:VisualElement>
+        <!-- No depth readout here: docs/UI.md §6 keeps depth on the Nightmare's Sleeper row (§8). -->
       </ui:VisualElement>
     </ui:VisualElement>
     <ui:VisualElement name="keys" style="position:absolute; right:48px; bottom:48px; flex-direction:row;" />

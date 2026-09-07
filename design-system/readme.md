@@ -22,8 +22,9 @@ had not started), so nothing here is a recreation — it is the first pass.
 - See `github.md` for the sync record.
 
 Markers in those docs matter: **[S]** is settled and was not reinterpreted here;
-**[D]** is open, and every deviation is recorded in `guidelines/decisions-draft.md`
-ready to paste into `docs/DECISIONS.md`.
+**[D]** is open, and every deviation was recorded in `guidelines/decisions-draft.md`;
+they are now in `docs/DECISIONS.md` (2026-09-07) and the draft is the record of
+what was proposed.
 
 ## What is settled
 
@@ -117,7 +118,8 @@ lives, not by what kind of surface it is. Permanent chrome — the Nightmare's
 `--ink-800`, because USS has no `backdrop-filter` and the Screen Space Overlay
 cannot sample behind itself, so a 72 % fill over a bright dream drops `--fg-3`
 below AA. Only small, short-lived surfaces keep the 72 % mist: toasts, the trap
-hover-peek, the reveal card, hint cards. Modal scrims are 72 % `--ink-900`, and
+hover-peek, the reveal card, hint cards. Modal scrims are 72 % `--ink-900` — the
+live one 82 %, since it cannot blur and has to carry the separation alone — and
 split in two — blurred with one captured frame where the player has stepped away
 from the round (Pause, Options, Round start), never blurred where the round is
 still running behind them (Tab overlay, target selector). Nothing else is
@@ -229,13 +231,13 @@ needed outside a palette tile.
 | `components/` | the 18 components above, by group |
 | `ui_kits/lucid-game/` | all ten screens at 1920×1080 + the 1280×720 Results check ([README](ui_kits/lucid-game/README.md)) |
 | `ui_kits/lucid-game/mockups.html` | six annotated in-game situations, three per role |
-| `unity/DOCS-CHANGE-REQUEST.md` | fourteen edits the Lucid repo's own docs need, for Claude Code |
+| `unity/DOCS-CHANGE-REQUEST.md` | fourteen edits the Lucid repo's docs needed; applied in #85, with a resolution table |
 | `unity/CLAUDE-CODE-UI-GUIDE.md` | **the implementation guide for Claude Code** — read this first in Unity |
 | `assets/icons/` | 29 SVGs, 24 px grid, plus the six connector nets |
 | `guidelines/concept-art-prompts.md` | ten paste-ready image prompts for generating concept art |
 | `guidelines/motion.md` | durations, what pulses, what must never animate |
 | `guidelines/asset-checklist.md` | every file the UI needs, who makes it, how long, what is over budget |
-| `guidelines/decisions-draft.md` | paste-ready entries for `docs/DECISIONS.md` |
+| `guidelines/decisions-draft.md` | the defaults this system chose, now recorded in `docs/DECISIONS.md` |
 | `guidelines/*.card.html` | the foundation specimen cards |
 | `unity/lucid-tokens.uss` | the tokens as USS custom properties, ready to paste |
 | `unity/lucid-components.uss` | USS classes for every component |

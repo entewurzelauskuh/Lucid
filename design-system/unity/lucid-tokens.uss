@@ -5,9 +5,10 @@
    USS notes baked into this file:
    · No calc(), no color-mix(), no rgba() on custom properties in older versions —
      every alpha value is written as an explicit rgba() literal.
-   · No blur: --blur-* below are documentation, not effects. The mist panel's
-     blur comes from a pre-blurred RenderTexture behind the overlay, or is
-     skipped entirely (the panel still reads at 72 % over a dark view).
+   · No blur: --blur-* below are documentation, not effects. Translucency is
+     allocated by lifetime (docs/UI.md §15): permanent chrome is opaque, small
+     transient surfaces keep the 72 % fill, and only a frozen modal scrim is
+     ever blurred, from one captured frame.
    · Durations are seconds in USS transitions, not ms. */
 
 :root {
@@ -73,6 +74,10 @@
   --fs-heading: 22px;
   --fs-body: 16px;
   --fs-micro: 13px;
+  /* three display set pieces above the scale (docs/UI.md §15): the wordmark, the 3-2-1 count, the Results figure */
+  --fs-wordmark: 128px;
+  --fs-count: 220px;
+  --fs-outcome-figure: 46px;
   --ls-caps: 2px;   /* USS letter-spacing is px, not em: 0.16em of 13px */
 
   /* spacing */

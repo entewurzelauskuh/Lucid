@@ -20,9 +20,9 @@ moved — the quote had misread its marker:
 | 2, 3, 5, 6, 9 | Applied. §1, §9 and §14 are unmarked and §15 is `[D]`, so none of these touched settled text. |
 | 4, 4a | **Held**, per the owner. Dark's two levels land in `docs/DECISIONS.md` as *proposed*. |
 | 7 | **Reconciled.** §11 already listed both toggles, with the hatch on *fog*, not `solid` (the guide's own §7 agrees). Added: both default off, and the two-control rule. |
-| 8 | Applied. The three "gaps" were mostly already in §14 — the lobby blockers and the placement reasons are there verbatim. §14 gained the nine strings `LucidStrings.cs` had harvested from §2, §4, §7–§10 and §13, and five section captions. The UXML skeletons' twenty-two invented strings were **not** added; they are the skeletons' bug. |
+| 8 | Applied. The three "gaps" were mostly already in §14 — the lobby blockers and the placement reasons are there verbatim. §14 gained the thirteen strings `LucidStrings.cs` had harvested from §2, §4, §7–§10 and §13, six section captions, and two readouts UI.md shows elsewhere. The UXML skeletons' twenty-two invented strings were **not** added; they are the skeletons' bug. |
 | 10, 11 | Applied. 11 is the one genuine `[S]` edit and has a DECISIONS entry. |
-| 12 | Rule 5 amended for OFL fonts; the ledger rows go in `THIRD_PARTY_NOTICES.md` when the files land, since rule 5's ledger is per cube. |
+| 12 | Rule 5 amended for OFL fonts; the ledger rows go in `THIRD_PARTY_NOTICES.md` when the files land, since rule 5's ledger is per cube. The three in-house PNGs are project work under CC-BY-4.0 (§18), not CC0 as the table says. |
 | 13 | The nineteen entries land as one entry in that file's format; Dark marked proposed. |
 | 14 | Written: `docs/UI-TOOLKIT-LIMITS.md`. |
 

@@ -73,7 +73,8 @@ Unity is invoked in batch mode by these scripts: `Unity -batchmode -nographics -
 | Path | What lives there |
 |---|---|
 | `Lucid/Assets/_Lucid/Core/` | `Lucid.Core` — lattice, cube types, event log, rules, `Validate`, `Derive` |
-| `Lucid/Assets/_Lucid/Runtime/` | `Lucid.Runtime` — dream instance, Sleeper controller, Nightmare view, fog doors, traps, mobs, UI; `Input/` holds the action maps and `Dev/` the gauntlet, which is in Runtime so the editor script and the PlayMode tests build one course rather than two |
+| `Lucid/Assets/_Lucid/Runtime/` | `Lucid.Runtime` — dream instance, Sleeper controller, Nightmare view, fog doors, traps, mobs, UI; `Input/` holds the action maps, `Dev/` the gauntlet, which is in Runtime so the editor script and the PlayMode tests build one course rather than two, and `UI/` (from M0.6b) the stylesheets, screens, fonts and the three UI Toolkit elements, namespace `Lucid.Runtime.UI` |
+| `design-system/` | The interface's design system: tokens, components, icons, every screen mocked, and `unity/` with the paste-ready USS, UXML skeletons and the implementation guide. `docs/UI.md` wins where they disagree |
 | `Lucid/Assets/_Lucid/Netcode/` | `Lucid.Netcode` — `Approval`, `SessionState`, `RoundSync`, `LatticeMirror`, `DreamRelay`, transports (UTP dev, Facepunch Steam); message IDs from `docs/NETCODE.md` §12 |
 | `Lucid/Assets/_Lucid/Editor/` | `Lucid.Editor` — `CubeBuilder`, `CubeValidator`, `AssetNormalizer`, scene setup scripts |
 | `Lucid/Assets/_Lucid/Scenes/` | generated scenes from `tools/build-scenes.sh`: `Gauntlet.unity`, `FogDoors.unity` |

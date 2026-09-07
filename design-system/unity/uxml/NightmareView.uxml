@@ -8,7 +8,7 @@
          WorldToScreenPoint; it never intercepts clicks meant for the view -->
     <ui:VisualElement name="world-markers" picking-mode="Ignore" style="position:absolute; left:0; right:0; top:0; bottom:0;" />
 
-    <ui:VisualElement name="palette-dock" class="mist-panel mist-panel--docked" style="position:absolute; left:0; top:0; bottom:0; width:340px;">
+    <ui:VisualElement name="palette-dock" class="mist-panel mist-panel--chrome mist-panel--docked" style="position:absolute; left:0; top:0; bottom:0; width:340px;">
       <ui:Label text="PALETTE" class="micro-label" />
       <ui:VisualElement name="pack-tabs" style="flex-direction:row;" />
       <ui:VisualElement name="category-chips" style="flex-direction:row; flex-wrap:wrap;" />
@@ -23,7 +23,7 @@
       </ui:VisualElement>
     </ui:VisualElement>
 
-    <ui:VisualElement name="sleeper-dock" class="mist-panel mist-panel--docked" style="position:absolute; right:0; top:0; bottom:0; width:320px;">
+    <ui:VisualElement name="sleeper-dock" class="mist-panel mist-panel--chrome mist-panel--docked" style="position:absolute; right:0; top:0; bottom:0; width:320px;">
       <ui:Label text="SLEEPERS" class="micro-label" />
       <ui:VisualElement name="sleeper-rows" />
       <ui:VisualElement style="flex-grow:1;" />
@@ -35,7 +35,7 @@
     <ui:VisualElement name="toasts" style="position:absolute; top:24px; right:364px; align-items:flex-end;" />
     <ui:VisualElement name="layer-cutaway" style="position:absolute; left:24px; top:50%; translate:0 -50%;" />
 
-    <ui:VisualElement name="powers-bar" class="mist-panel mist-panel--docked" style="position:absolute; bottom:0; left:50%; translate:-50% 0; flex-direction:row; align-items:center;">
+    <ui:VisualElement name="powers-bar" class="mist-panel mist-panel--chrome mist-panel--docked" style="position:absolute; bottom:0; left:50%; translate:-50% 0; flex-direction:row; align-items:center;">
       <lucid:PowerButton name="power-dark" />
       <lucid:PowerButton name="power-fog" />
       <lucid:PowerButton name="power-molasses" />

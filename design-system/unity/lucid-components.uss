@@ -210,10 +210,10 @@
    oldstyle figures render "0:12" as "O:I2". */
 .tabular { -unity-font-definition: var(--font-body-tabular); }
 .lining  { -unity-font-definition: var(--font-display-lining); }
-.wordmark { -unity-font-definition: var(--font-display); font-size: 128px; letter-spacing: 26px; color: var(--fg-1); }
+.wordmark { -unity-font-definition: var(--font-display); font-size: var(--fs-wordmark); letter-spacing: 26px; color: var(--fg-1); }
 .wordmark--small { font-size: var(--fs-title); letter-spacing: 6px; }
 .screen__title { -unity-font-definition: var(--font-display); font-size: var(--fs-title); color: var(--fg-1); letter-spacing: 3px; }
-.count { -unity-font-definition: var(--font-display); font-size: 220px; color: var(--fg-1); -unity-text-align: middle-center; }
+.count { -unity-font-definition: var(--font-display); font-size: var(--fs-count); color: var(--fg-1); -unity-text-align: middle-center; }
 .scrim { background-color: var(--scrim); }
 
 /* ---------------------------------------------------------- avatars and icons */
@@ -257,7 +257,7 @@
 .results__outcome { -unity-font-definition: var(--font-display); font-size: var(--fs-display); }
 .results__outcome--woke { color: var(--exit-300); }
 .results__outcome--consumed { color: var(--danger-300); }
-.results__nightmare { -unity-font-definition: var(--font-display); font-size: 46px; color: var(--fg-1); }
+.results__nightmare { -unity-font-definition: var(--font-display); font-size: var(--fs-outcome-figure); color: var(--fg-1); }
 .results__countdown { font-size: var(--fs-heading); color: var(--fg-3); }
 .player-card {
   padding: 16px; border-radius: var(--r-3);
@@ -270,6 +270,7 @@
 .pause__title { -unity-font-definition: var(--font-display); font-size: var(--fs-title); color: var(--fg-1); letter-spacing: 4px; -unity-text-align: middle-center; }
 .pause__note { font-size: var(--fs-body); color: var(--fg-3); -unity-text-align: middle-center; white-space: normal; }
 
+/* The depth readout belongs to the Nightmare's Sleeper row (docs/UI.md §8), never the Sleeper HUD (§6). */
 /* ---------------------------------------------------------- hud readouts */
 .depth__value { font-size: var(--fs-heading); color: var(--fg-1); }
 .depth__value--at-exit { color: var(--exit-500); }
