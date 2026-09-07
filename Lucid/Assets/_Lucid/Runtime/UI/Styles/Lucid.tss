@@ -1,0 +1,5 @@
+/* The theme every panel uses (docs/UI.md §15). Attached once, on the PanelSettings,
+   so a restyle is one file — the two below — rather than one per screen. */
+@import url("unity-theme://default");
+@import url("lucid-tokens.uss");
+@import url("lucid-components.uss");

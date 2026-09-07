@@ -1,0 +1,338 @@
+/* Lucid — component classes. Depends on lucid-tokens.uss.
+   Every class here is the USS equivalent of a component in components/. */
+
+/* ---------------------------------------------------------- mist panel */
+.mist-panel {
+  background-color: var(--panel-fill);
+  border-width: var(--bw-hair);
+  border-color: var(--line-strong);
+  border-radius: var(--r-2);
+  padding: var(--pad-panel);
+  color: var(--fg-2);
+  -unity-font-definition: var(--font-body);
+  font-size: var(--fs-body);
+}
+/* Only .mist-panel itself is translucent, and only transient surfaces may use
+   it bare: toasts, the trap peek, the reveal card, hint cards. */
+.mist-panel--chrome { background-color: var(--ink-800); }          /* permanent docks and bars */
+.mist-panel--sunken { background-color: var(--ink-800); }          /* full screens */
+.mist-panel--docked { border-radius: 0; }
+.mist-panel__title {
+  -unity-font-definition: var(--font-display-semibold);
+  font-size: var(--fs-heading);
+  color: var(--fg-1);
+  margin-bottom: var(--sp-5);
+}
+.micro-label {
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-caps);
+  color: var(--fg-3);
+  -unity-font-definition: var(--font-body-medium);
+}
+.divider { height: 1px; background-color: var(--line-faint); margin-top: var(--sp-5); margin-bottom: var(--sp-5); }
+
+/* ---------------------------------------------------------- buttons */
+.btn {
+  min-height: var(--hit-min);
+  padding-left: var(--sp-6); padding-right: var(--sp-6);
+  border-width: var(--bw-hair);
+  border-radius: var(--r-2);
+  font-size: var(--fs-body);
+  -unity-font-definition: var(--font-body);
+  transition-property: background-color, border-color, color;
+  transition-duration: var(--dur-fast);
+  transition-timing-function: var(--ease-out);
+}
+.btn--primary { background-color: rgba(255, 227, 163, 0.12); border-color: var(--exit-500); color: var(--exit-300); }
+.btn--primary:hover { background-color: rgba(255, 227, 163, 0.22); }
+.btn--primary:active { background-color: rgba(255, 227, 163, 0.3); }
+.btn--secondary { background-color: rgba(0, 0, 0, 0); border-color: var(--line-strong); color: var(--fg-2); }
+.btn--secondary:hover { background-color: rgba(46, 65, 96, 0.6); color: var(--fg-1); }
+.btn--lg { min-height: 56px; font-size: var(--fs-heading); }
+.btn:disabled { background-color: rgba(0, 0, 0, 0); border-color: var(--line-faint); color: var(--fg-4); }
+.btn:focus { border-color: var(--exit-500); border-width: var(--bw-focus); }
+.btn__hotkey { font-size: var(--fs-micro); color: var(--fg-3); border-width: 1px; border-color: var(--line); border-radius: var(--r-1); padding: 3px 6px; margin-left: var(--sp-2); }
+
+/* ---------------------------------------------------------- toggle */
+.toggle { flex-direction: row; align-items: center; justify-content: space-between; min-height: var(--hit-min); }
+.toggle__label { color: var(--fg-1); font-size: var(--fs-body); }
+.toggle__hint { color: var(--fg-3); font-size: var(--fs-micro); }
+.toggle__track {
+  width: 46px; height: 24px; border-radius: var(--r-full);
+  background-color: rgba(59, 82, 122, 0.55); border-width: 1px; border-color: var(--line);
+  transition-property: background-color, border-color; transition-duration: var(--dur-fast);
+}
+.toggle__knob {
+  width: 16px; height: 16px; border-radius: var(--r-full); background-color: var(--fg-3);
+  translate: 3px 0; transition-property: translate, background-color; transition-duration: var(--dur-fast);
+}
+.toggle--on .toggle__track { background-color: rgba(255, 227, 163, 0.22); border-color: var(--exit-500); }
+.toggle--on .toggle__knob { background-color: var(--exit-300); translate: 25px 0; }
+
+/* ---------------------------------------------------------- slider */
+.slider__row { flex-direction: row; justify-content: space-between; align-items: flex-end; }
+.slider__value { color: var(--exit-500); font-size: var(--fs-body); -unity-font-definition: var(--font-body-medium); }
+.slider #unity-tracker { height: 3px; background-color: rgba(59, 82, 122, 0.7); border-radius: var(--r-full); border-width: 0; }
+.slider #unity-dragger { width: 14px; height: 14px; border-radius: var(--r-full); background-color: var(--exit-300); border-width: 0; margin-top: -6px; }
+
+/* ---------------------------------------------------------- list row (lobby) */
+.player-row { flex-direction: row; align-items: center; padding: var(--pad-row); border-radius: var(--r-2); }
+.player-row--self { background-color: rgba(46, 65, 96, 0.45); border-width: 1px; border-color: var(--line); }
+.player-row__name { font-size: var(--fs-heading); color: var(--fg-1); }
+.role-card { flex-direction: row; align-items: center; padding: 10px var(--sp-4); border-width: 1px; border-color: var(--line); border-radius: var(--r-2); color: var(--fg-3); }
+.role-card--on { border-color: var(--exit-500); background-color: rgba(255, 227, 163, 0.14); color: var(--exit-300); }
+.ready-chip { flex-direction: row; align-items: center; width: 116px; min-height: var(--hit-min); border-width: 1px; border-color: var(--line-faint); border-radius: var(--r-2); color: var(--fg-3); }
+.ready-chip--on { border-color: var(--sleeper-3); background-color: rgba(0, 158, 115, 0.16); color: #7ee0bd; }
+
+/* ---------------------------------------------------------- toast */
+.toast {
+  flex-direction: row; align-items: center;
+  padding: 10px var(--sp-4); border-radius: var(--r-2);
+  background-color: var(--panel-fill);
+  border-width: var(--bw-hair); border-color: var(--line-strong);
+  border-left-width: 2px;
+  color: var(--fg-1); font-size: var(--fs-body);
+  transition-property: opacity; transition-duration: var(--dur-base);
+}
+.toast--exit { border-left-color: var(--exit-300); }
+.toast--danger { border-left-color: var(--danger-300); }
+.toast--effect { border-left-color: var(--fog-300); }
+.toast--second { opacity: 0.78; }
+.toast--third { opacity: 0.56; }
+
+/* ---------------------------------------------------------- cost badge */
+.cost-badge { flex-direction: row; align-items: center; padding: 3px 7px; border-radius: var(--r-1); border-width: 1px; border-color: var(--line); background-color: rgba(7, 11, 18, 0.45); color: var(--exit-500); font-size: var(--fs-micro); }
+.cost-badge--over { border-color: var(--danger-500); background-color: rgba(142, 36, 29, 0.35); color: var(--danger-300); }
+
+/* ---------------------------------------------------------- rings and arcs
+   USS cannot stroke an arc. Each of these is a VisualElement with a
+   generateVisualContent callback (Painter2D.Arc) that reads these properties. */
+.ring { width: 56px; height: 56px; --ring-track: var(--line-faint); --ring-fill: var(--exit-500); --ring-width: var(--bw-ring-thin); }
+.ring--cooling { --ring-fill: var(--exit-700); color: var(--fg-4); }
+.timer-arc { width: 190px; height: 130px; --ring-fill: var(--exit-500); --ring-width: var(--bw-ring); }
+.timer-arc--urgent { --ring-fill: var(--danger-300); }
+.timer-arc__value { font-size: var(--fs-title); color: var(--fg-1); -unity-text-align: middle-center; }
+.timer-arc--urgent .timer-arc__value { color: var(--danger-300); }
+.health-ring { width: 84px; height: 84px; --ring-fill: var(--fog-300); --ring-width: var(--bw-ring); }
+.health-ring--low { --ring-fill: var(--danger-300); }
+.crosshair { width: 56px; height: 56px; --ring-fill: var(--exit-300); --ring-width: var(--bw-ring-thin); }
+
+/* ---------------------------------------------------------- moons */
+.moon { width: 22px; height: 22px; -unity-background-image-tint-color: var(--fg-1); }
+.moon--spent { -unity-background-image-tint-color: var(--fg-4); opacity: 0.4; }
+
+/* ---------------------------------------------------------- palette tile */
+.palette-tile { padding: var(--sp-3); border-width: 1px; border-color: var(--line); border-radius: var(--r-3); background-color: rgba(7, 11, 18, 0.32); }
+.palette-tile:hover { background-color: rgba(46, 65, 96, 0.5); }
+.palette-tile--selected { border-color: var(--exit-500); background-color: rgba(255, 227, 163, 0.14); }
+.palette-tile--unaffordable { opacity: 0.45; }
+.palette-tile__name { font-size: var(--fs-body); color: var(--fg-1); }
+
+/* ---------------------------------------------------------- sleeper marker */
+/* The number inside the chip is rule-carrying (§1.5: colour never travels
+   alone), so it may never fall under AA. Fill with the RAW Sleeper colour —
+   do NOT darken it toward the near-black numeral: an 88 % black mix put
+   --sleeper-3 at 4.46:1. Raw, all four clear: 8.52 / 8.32 / 5.61 / 6.27. */
+.sleeper-chip { width: 24px; height: 24px; border-radius: var(--r-full); border-width: 2px; -unity-text-align: middle-center; font-size: var(--fs-micro); color: #07110b; }
+/* Results and any scoreboard read over a screen share: the number is a value,
+   so it goes to --fs-heading and the chip grows to fit it. */
+.sleeper-chip--lg { width: 32px; height: 32px; font-size: var(--fs-heading); }
+.sleeper-chip--1 { border-color: var(--sleeper-1); background-color: var(--sleeper-1); }
+.sleeper-chip--2 { border-color: var(--sleeper-2); background-color: var(--sleeper-2); }
+.sleeper-chip--3 { border-color: var(--sleeper-3); background-color: var(--sleeper-3); }
+.sleeper-chip--4 { border-color: var(--sleeper-4); background-color: var(--sleeper-4); }
+.sleeper-chip--selected { border-color: var(--exit-300); }
+.sleeper-marker--out { opacity: 0.5; }
+/* accessibility option: shape as well as colour */
+.shapes-on .sleeper-chip--1 { border-radius: 0; }
+.shapes-on .sleeper-chip--2 { border-radius: 4px; }
+.shapes-on .sleeper-chip--3 { border-radius: 12px; }
+.shapes-on .sleeper-chip--4 { border-radius: var(--r-full); }
+
+/* ---------------------------------------------------------- rejection label */
+.rejection {
+  flex-direction: row; align-items: center;
+  padding: 6px var(--sp-4); border-radius: var(--r-1);
+  background-color: rgba(7, 11, 18, 0.82);
+  border-width: 1px; border-color: var(--danger-500);
+  color: var(--danger-300); font-size: var(--fs-body);
+}
+
+/* ---------------------------------------------------------- scoreboard */
+/* Every cell is min-width, NEVER width. Two reasons, both found the hard way:
+   a letterspaced caps header ("AS NIGHTMARE") wraps to two lines inside a fixed
+   column, and the right-aligned score cell lets a long value escape LEFTWARD
+   over its neighbour while the box itself stays put — which no width check
+   catches. Let the label or the value size the column; .score-row__name is the
+   flexible one and absorbs the difference. Scores sum across rounds (SPEC §12),
+   so five digits plus a four-character delta is the case to fit. */
+.score-row { flex-direction: row; align-items: center; padding: var(--sp-3) var(--sp-4); border-top-width: 1px; border-top-color: var(--line-faint); }
+.score-row--header { border-top-width: 0; }
+.score-row__cell { font-size: var(--fs-heading); color: var(--fg-2); -unity-text-align: middle-right; white-space: nowrap; }
+/* --fg-3, not --fg-4: at 22px the rank is body text, and the highlight wash
+   pushes --fg-4 to 3.67:1. WCAG's 3:1 allowance only starts at 24px. */
+.score-row__rank { min-width: 26px; color: var(--fg-3); -unity-text-align: middle-left; }
+.score-row__name { color: var(--fg-1); -unity-text-align: middle-left; flex-grow: 1; flex-shrink: 1; }
+.score-row__rounds { min-width: 124px; }
+.score-row__woke { min-width: 64px; }
+.score-row__consumed { min-width: 92px; }
+.score-row__score { min-width: 150px; flex-direction: row; justify-content: flex-end; }
+.score-row__delta { color: var(--exit-500); }
+.score-row--highlight { background-color: rgba(46, 65, 96, 0.5); }
+/* The Nightmare has no Sleeper number (§1.5 numbers Sleepers only). Emit the
+   chip's footprint anyway, unpainted — omitting the element outdents that one
+   name by chip + gap, and one player is the Nightmare every single round. */
+.score-row__chip-slot { width: 32px; height: 32px; flex-shrink: 0; }
+
+/* ---------------------------------------------------------- HUD chrome
+   The "light chrome" answer: no panel behind a HUD cluster, just a faint
+   radial wash so text stays legible over the maze. One tinted texture. */
+.cluster-scrim {
+  background-image: url("project:///Assets/_Lucid/Runtime/UI/Icons/radial-soft.png");
+  -unity-background-image-tint-color: rgba(7, 11, 18, 0.62);
+  -unity-background-scale-mode: stretch-to-fill;
+  padding: 16px;
+}
+.damage-arc {
+  position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+  background-image: url("project:///Assets/_Lucid/Runtime/UI/Icons/radial-soft.png");
+  -unity-background-image-tint-color: rgba(217, 69, 58, 0.38);
+  opacity: 0;
+  transition-property: opacity; transition-duration: var(--dur-base);
+}
+.watch-frame { border-width: 3px; border-color: rgba(86, 180, 233, 0.55); }
+
+/* ---------------------------------------------------------- text roles */
+/* Numerals. Unity exposes no OpenType feature switches, so tabular and lining
+   figures come from separate frozen font files rather than a style property.
+   Put .tabular on any label whose value ticks or must align in a column;
+   put .lining on any DISPLAY-font label containing digits, or Cormorant's
+   oldstyle figures render "0:12" as "O:I2". */
+.tabular { -unity-font-definition: var(--font-body-tabular); }
+.lining  { -unity-font-definition: var(--font-display-lining); }
+.wordmark { -unity-font-definition: var(--font-display); font-size: var(--fs-wordmark); letter-spacing: 26px; color: var(--fg-1); }
+.wordmark--small { font-size: var(--fs-title); letter-spacing: 6px; }
+.screen__title { -unity-font-definition: var(--font-display); font-size: var(--fs-title); color: var(--fg-1); letter-spacing: 3px; }
+.count { -unity-font-definition: var(--font-display); font-size: var(--fs-count); color: var(--fg-1); -unity-text-align: middle-center; }
+.scrim { background-color: var(--scrim); }
+
+/* ---------------------------------------------------------- avatars and icons */
+.avatar {
+  width: 44px; height: 44px; border-radius: var(--r-1);
+  background-color: var(--ink-800); border-width: 1px; border-color: var(--line);
+  -unity-font-definition: var(--font-display); font-size: var(--fs-heading);
+  color: var(--fg-3); -unity-text-align: middle-center;
+}
+/* One atlas, tinted. Sub-rects are set from C# via style.backgroundPositionX/Y
+   or a per-icon class generated alongside the atlas. */
+.icon { width: 24px; height: 24px; -unity-background-image-tint-color: var(--fg-2); -unity-background-scale-mode: scale-to-fit; }
+.icon--60 { width: 60px; height: 60px; }
+.icon--72 { width: 72px; height: 72px; }
+.icon--crown { -unity-background-image-tint-color: var(--exit-500); }
+.icon--reject { -unity-background-image-tint-color: var(--danger-300); }
+
+/* ---------------------------------------------------------- connector net */
+.connector-net { width: 42px; height: 56px; --net-ink: var(--fg-2); }
+.palette-tile--selected .connector-net { --net-ink: var(--exit-500); }
+
+/* ---------------------------------------------------------- lobby bits */
+.invite-code {
+  font-size: var(--fs-heading); letter-spacing: 4px; color: var(--exit-500);
+  padding: 8px 16px; border-width: 1px; border-color: var(--line-strong); border-radius: var(--r-2);
+}
+.options-tab {
+  -unity-text-align: middle-left; min-height: var(--hit-min);
+  padding-left: 16px; padding-right: 16px; border-radius: var(--r-2);
+  background-color: rgba(0, 0, 0, 0); border-width: 1px; border-color: rgba(0, 0, 0, 0);
+  color: var(--fg-3); font-size: var(--fs-body);
+}
+.options-tab--on { background-color: rgba(46, 65, 96, 0.65); border-color: var(--line-strong); color: var(--fg-1); }
+
+/* ---------------------------------------------------------- round start */
+.reveal__lead { -unity-font-definition: var(--font-display); font-size: var(--fs-title); color: var(--fg-2); }
+.reveal__name { -unity-font-definition: var(--font-display); font-size: var(--fs-display); color: var(--exit-300); }
+.reveal__role { font-size: var(--fs-body); color: var(--fg-3); }
+
+/* ---------------------------------------------------------- results */
+.results__outcome { -unity-font-definition: var(--font-display); font-size: var(--fs-display); }
+.results__outcome--woke { color: var(--exit-300); }
+.results__outcome--consumed { color: var(--danger-300); }
+.results__nightmare { -unity-font-definition: var(--font-display); font-size: var(--fs-outcome-figure); color: var(--fg-1); }
+.results__countdown { font-size: var(--fs-heading); color: var(--fg-3); }
+.player-card {
+  padding: 16px; border-radius: var(--r-3);
+  background-color: rgba(7, 11, 18, 0.4);
+  border-width: 1px; border-color: var(--line);
+}
+.player-card--woke { border-color: rgba(255, 227, 163, 0.55); }
+
+/* ---------------------------------------------------------- pause */
+.pause__title { -unity-font-definition: var(--font-display); font-size: var(--fs-title); color: var(--fg-1); letter-spacing: 4px; -unity-text-align: middle-center; }
+.pause__note { font-size: var(--fs-body); color: var(--fg-3); -unity-text-align: middle-center; white-space: normal; }
+
+/* The depth readout belongs to the Nightmare's Sleeper row (docs/UI.md §8), never the Sleeper HUD (§6). */
+/* ---------------------------------------------------------- hud readouts */
+.depth__value { font-size: var(--fs-heading); color: var(--fg-1); }
+.depth__value--at-exit { color: var(--exit-500); }
+.depth__best { font-size: var(--fs-body); color: var(--fg-3); }
+.budget__value { font-size: var(--fs-title); color: var(--fg-1); }
+.budget__rate { font-size: var(--fs-micro); color: var(--fg-3); }
+.effect-chip {
+  flex-direction: row; align-items: center;
+  padding: 8px 16px; border-radius: var(--r-full);
+  background-color: rgba(7, 11, 18, 0.72);
+  border-width: 1px; border-color: var(--fog-500);
+  color: var(--fog-300); font-size: var(--fs-heading);
+}
+.powers-bar__divider { width: 1px; background-color: var(--line-faint); margin-left: 24px; margin-right: 24px; }
+.spectator__fate { font-size: var(--fs-heading); color: var(--fg-1); }
+.spectator__lead { font-size: var(--fs-body); color: var(--fg-3); }
+.hint-card { width: 250px; align-items: center; padding: 16px; }
+
+/* ---------------------------------------------------------- Dark dims the HUD,
+   except the dawn timer (UI.md §6). Add .dark-active to the HUD root. */
+/* Dark (UI.md §6) dims the HUD, but §1.3 forbids hiding anything a rule depends
+   on reading. So TWO levels, not one: non-rule chrome drops to 32 %, the two
+   rule-carrying readouts (health ring, crescent lives) hold at 60 %, and the
+   dawn timer is untouched. At a flat 32 % the health ring measured ~1.7:1 —
+   not dimmed, erased. See DOCS-CHANGE-REQUEST.md item 4: §6 says only "dims". */
+.dark-active .cluster-scrim,
+.dark-active #toasts,
+.dark-active #keys { opacity: 0.32; transition-property: opacity; transition-duration: var(--dur-base); }
+.dark-active #vitals { opacity: 0.6; transition-property: opacity; transition-duration: var(--dur-base); }
+.dark-active .timer-arc { opacity: 1; }
+
+/* ---------------------------------------------------------- dashed boxes
+   USS supports no border-style and Painter2D has no dash array, so every
+   dashed rectangle is one 9-sliced tiling sprite. The connector net keeps its
+   own fallback instead: a wall is a fainter stroke with no dot, a doorway is a
+   full stroke with a filled dot. */
+.dashed-box {
+  background-image: url("project:///Assets/_Lucid/Runtime/UI/Icons/dash-border.png");
+  -unity-slice-left: 8; -unity-slice-right: 8; -unity-slice-top: 8; -unity-slice-bottom: 8;
+  -unity-slice-scale: 1;
+  -unity-background-image-tint-color: var(--line-faint);
+  border-width: 0;
+}
+.dashed-box--fog { -unity-background-image-tint-color: var(--fog-500); }
+
+/* ---------------------------------------------------------- modal scrims
+   Two kinds, and using the wrong one is a correctness bug.
+
+   .scrim--frozen  the round is NOT what the player is looking at any more
+                   (Pause, Options, Round start). One captured frame, blurred
+                   once on open, set as this element's background image. No
+                   render feature and no per-frame cost.
+
+   .scrim--live    the round is still running behind it (Tab overlay, the
+                   target selector). NEVER blurred: a frozen frame behind live
+                   play misreports the game. Flat scrim, raised a little so
+                   text still holds. */
+.scrim--frozen { background-color: var(--scrim); }
+.scrim--live   { background-color: rgba(7, 11, 18, 0.82); }
+
+/* ---------------------------------------------------------- screens: layout classes, so no UXML carries a style attribute */
+.screen { flex-grow: 1; align-items: center; justify-content: center; }
+.title__menu { width: 340px; margin-top: var(--sp-8); }
+.title__menu > .btn { margin-bottom: var(--sp-3); }
+.screen__corner { position: absolute; left: var(--hud-margin); bottom: var(--sp-6); }

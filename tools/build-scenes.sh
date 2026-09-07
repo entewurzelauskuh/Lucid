@@ -84,7 +84,7 @@ if grep -qE "error CS[0-9]+" "$LOG"; then
   exit 1
 fi
 
-grep -E "^(gauntlet|fogdoors|scenes): " "$LOG" || true
+grep -E "^(gauntlet|fogdoors|scenes|ui|boot|title|dream|buildsettings): " "$LOG" || true
 
 if [[ $code -ne 0 ]]; then
   echo "FAILED (exit $code); full log at $LOG" >&2

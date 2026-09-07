@@ -17,6 +17,9 @@ namespace Lucid.Editor.Scenes
     {
         public static void BuildAll()
         {
+            // The panel settings first: the Title scene references them.
+            UiAssets.Build();
+            FlowSceneBuilders.BuildAll();
             GauntletSceneBuilder.Build();
             FogDoorSceneBuilder.Build();
         }
