@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Title — structure only. Styling lives in lucid-tokens.uss + lucid-components.uss. -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:lucid="Lucid.Runtime.UI">
+  <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-tokens.uss" />
+  <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-components.uss" />
+  <ui:VisualElement name="title-root" style="flex-grow:1; align-items:center; justify-content:center;">
+    <ui:Label name="wordmark" text="LUCID" class="wordmark" />
+    <ui:Label name="tagline" text="One builds the dream. The rest have to wake up." class="micro-label" />
+    <ui:VisualElement name="menu" style="width:340px; margin-top:64px;">
+      <ui:Button name="host" text="Host a dream" class="btn btn--primary btn--lg" />
+      <ui:Button name="join" text="Join a dream" class="btn btn--secondary btn--lg" />
+      <ui:Button name="options" text="Options" class="btn btn--secondary btn--lg" />
+      <ui:Button name="quit" text="Quit" class="btn btn--secondary btn--lg" />
+    </ui:VisualElement>
+    <ui:Label name="build" class="micro-label" style="position:absolute; left:48px; bottom:24px;" />
+  </ui:VisualElement>
+</ui:UXML>

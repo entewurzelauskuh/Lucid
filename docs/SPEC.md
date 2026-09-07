@@ -112,6 +112,8 @@ Every connector that has no cube attached is a **fog door**: a wall of drifting 
 
 Transitions: Fog ↔ Exit whenever the depth ranking changes; Fog or Exit → Attached when the Nightmare builds on it; Fog → Solid when a Sleeper explores the cube. Exit doors never become Solid.
 
+The rule behind the Look column is that **state is legible in greyscale**: desaturate a screenshot and all four are still told apart. Each state's non-hue channel, so four implementers do not invent four encodings — Fog is a drifting mist *sheet* filling the opening; Exit is the same sheet *blazing*, the only warm light in the frame; Solid is the opening *condensed to blank wall*; Attached is an *open* passage with nothing in it.
+
 ### The exit rule **[S]**
 
 - **Depth** of a cube = number of cubes walked from the start cube along attached connectors, shortest path, ignoring direction. Recomputed on every lattice change.
@@ -311,7 +313,9 @@ Trusted lobby, no anti-cheat. The host validates the §7 rules, so even a modifi
 - Soft bloom, gentle depth of field (focus follows the look direction; softness grows toward the screen edges), light film grain, a touch of lens distortion, vignette.
 - A painterly pass as a custom render feature (Kuwahara / oil-paint at low strength), exposed as a quality setting. It is the difference between "photo" and "painting" and it costs GPU time.
 - Per-skin colour grading LUT, fog colour and light temperature: these make the Backrooms skin sickly yellow and the castle skin candle-warm.
-- The Nightmare's god view gets a lighter filter so the lattice stays readable; the Sleeper's first person gets the full treatment.
+- The Nightmare's god view gets a lighter filter so the lattice stays readable; the Sleeper's first person gets the full treatment. The two are different renderers and are described that way: the god view is 2.5D, near-top-down; the Sleeper's is full 3D first person. They share the colour grade and the painterly pass, not a camera rig.
+- **World-only.** The painterly pass, bloom, grain and depth of field never reach the UI: it is a Screen Space Overlay composited afterwards (`docs/UI.md` §1). No custom URP render feature is required for the UI, and if one is introduced for the world the UI must not come to depend on it.
+- Development target is a Ryzen 7 7800X3D / RX 9060 XT class machine. Nothing in the UI is close to a budget concern at that spec; the constraints on it are API surface, not performance (`docs/UI-TOOLKIT-LIMITS.md`).
 
 **Lighting.** Realtime lights, 2–4 per cube, colour and intensity set by the skin; per-cube reflection probe; SSAO. If this proves too expensive on target hardware, prefab-level lightmap baking is the escape hatch. **[O]**
 
@@ -368,7 +372,7 @@ Assets/_Lucid/Packs/<Pack>/Cubes/<CubeName>/
 ## 18. Open source and contributions **[S]**
 
 - **Public repository on GitHub** from day one. Claude Code creates and maintains it: repository, issues, milestones, branches, pull requests (see the work plan).
-- **Licensing.** Code under **MIT**; original text, briefs, specs, concept art and generated shell textures under **CC-BY-4.0**; third-party assets under their own licenses, listed in `THIRD_PARTY_NOTICES.md`. Concept art is the project's own work however it was made, and `docs/concept/README.md` records how each image was produced.
+- **Licensing.** Code under **MIT**; original text, briefs, specs, concept art, the UI design system and generated shell textures under **CC-BY-4.0**; third-party assets under their own licenses, listed in `THIRD_PARTY_NOTICES.md`. Concept art is the project's own work however it was made, and `docs/concept/README.md` records how each image was produced.
 - **Review flow.** Every change is one pull request for one issue, opened by Claude Code and reviewed by the owner. Nothing reaches `main` that the owner has not looked at. The owner decides; the merge itself is performed on their word, for the pull request they name (`docs/DECISIONS.md`, 2026-09-03). Claude Code never merges unasked and never pushes to `main`.
 - **Tests run locally.** `tools/run-tests.sh` before every pull request; no CI at hobby pace. Adding GitHub Actions later is a one-file change once contributors appear and a Unity license secret is worth setting up.
 - **The asset rule.** Free does not mean redistributable. Unity Asset Store assets, including free ones, are typically licensed for use in builds, not for redistribution in source form, so they cannot live in a public repository. CC0 and CC-BY assets can — **plain CC0 or plain CC-BY only. NonCommercial, NoDerivatives and ShareAlike are all refused.** NC would make the whole artefact non-commercial, which an MIT repository is not; ND forbids the rescaling, re-pivoting and material upgrades §17's pipeline performs on everything it ingests; and SA, though it survives the redistribution test this bullet opens with, propagates its own terms through that same pipeline: what §17 adapts is Adapted Material, which would have to ship SA instead of the CC-BY-4.0 this section grants for generated shell textures. The family is refused whole rather than adjudicated asset by asset (`docs/DECISIONS.md`, 2026-09-03). The gate reads the licence column of the ledger row and nothing else, so a row is `| file | source | licence |`. Hence the split in §17: redistributable assets are committed with a license entry; everything else is referenced by `assets.manifest.json` and fetched locally by `tools/fetch-assets`. A pre-commit hook enforces it.
@@ -408,6 +412,8 @@ Assets/_Lucid/Packs/<Pack>/Cubes/<CubeName>/
 | Work plan | `docs/WORKPLAN.md` | Milestones, tasks, acceptance criteria, GitHub conventions, the first session for Claude Code |
 | Operating instructions | `CLAUDE.md` | What Claude Code reads first and the rules that do not bend |
 | History and decisions | `docs/HISTORY.md`, `docs/DECISIONS.md` | How the design evolved; deviations taken during implementation |
+| UI design system | `design-system/`, entry `design-system/unity/CLAUDE-CODE-UI-GUIDE.md` | Tokens, components, icons, every screen mocked at 1920×1080; the Unity guide with the rules that do not bend. `docs/UI.md` wins where they disagree |
+| UI Toolkit limits | `docs/UI-TOOLKIT-LIMITS.md` | The platform limits that shaped the UI decisions, so nobody rediscovers them by trying the obvious thing |
 
 ## 22. Milestones
 

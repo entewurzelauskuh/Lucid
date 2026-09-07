@@ -1,0 +1,103 @@
+/* Lucid — design tokens as USS custom properties.
+   Paste into Assets/_Lucid/Runtime/UI/Styles/lucid-tokens.uss and add it to every UXML
+   via <Style src="..."/>, or once on the root PanelSettings theme.
+
+   USS notes baked into this file:
+   · No calc(), no color-mix(), no rgba() on custom properties in older versions —
+     every alpha value is written as an explicit rgba() literal.
+   · No blur: --blur-* below are documentation, not effects. Translucency is
+     allocated by lifetime (docs/UI.md §15): permanent chrome is opaque, small
+     transient surfaces keep the 72 % fill, and only a frozen modal scrim is
+     ever blurred, from one captured frame.
+   · Durations are seconds in USS transitions, not ms. */
+
+:root {
+  /* mist */
+  --ink-900: #070b12;
+  --ink-800: #0d1420;
+  --ink-700: #131c2e;
+  --mist-600: #22314a;
+  --mist-500: #2e4160;
+  --mist-400: #3b527a;
+  --panel-fill: rgba(34, 49, 74, 0.72);
+  --panel-fill-hover: rgba(46, 65, 96, 0.78);
+  --scrim: rgba(7, 11, 18, 0.72);
+
+  /* hairlines */
+  --line-strong: rgba(195, 212, 234, 0.55);
+  --line: rgba(195, 212, 234, 0.28);
+  --line-faint: rgba(195, 212, 234, 0.12);
+
+  /* text */
+  --fg-1: #f2f6fc;
+  --fg-2: #c3d4ea;
+  --fg-3: #93a7c4;
+  --fg-4: #6f82a0;
+
+  /* accents */
+  --exit-300: #fff6de;
+  --exit-500: #ffe3a3;
+  --exit-700: #c9a557;
+  --fog-300: #c3d4ea;
+  --fog-500: #8fa6c8;
+  --fog-700: #5c7295;
+  --danger-300: #ff9c90;
+  --danger-500: #d9453a;
+  --danger-700: #8e241d;
+
+  /* Sleepers — colour-blind-safe four */
+  --sleeper-1: #e69f00;
+  --sleeper-2: #56b4e9;
+  --sleeper-3: #009e73;
+  --sleeper-4: #cc79a7;
+
+  /* doors */
+  --door-fog: #5c7295;
+  --door-exit: #fff6de;
+  --door-solid: #4a5568;
+
+  /* type */
+  /* Prose faces: proportional figures, which is correct for running text. */
+  --font-display: url("project:///Assets/_Lucid/Runtime/UI/Fonts/CormorantGaramond-Light.ttf");
+  --font-display-semibold: url("project:///Assets/_Lucid/Runtime/UI/Fonts/CormorantGaramond-SemiBold.ttf");
+  --font-body: url("project:///Assets/_Lucid/Runtime/UI/Fonts/Inter-Regular.ttf");
+  --font-body-medium: url("project:///Assets/_Lucid/Runtime/UI/Fonts/Inter-Medium.ttf");
+
+  /* Numeral faces: the SAME families with tnum (and lnum on the serif) frozen
+     in as the default glyphs, because Unity exposes no OpenType switches.
+     Built offline with pyftfeatfreeze — see guidelines/asset-checklist.md.
+     Use via the .tabular / .lining classes, never as the default face. */
+  --font-body-tabular: url("project:///Assets/_Lucid/Runtime/UI/Fonts/LucidInter-Tabular.ttf");
+  --font-display-lining: url("project:///Assets/_Lucid/Runtime/UI/Fonts/LucidCormorant-Lining.ttf");
+  --fs-display: 64px;
+  --fs-title: 34px;
+  --fs-heading: 22px;
+  --fs-body: 16px;
+  --fs-micro: 13px;
+  /* three display set pieces above the scale (docs/UI.md §15): the wordmark, the 3-2-1 count, the Results figure */
+  --fs-wordmark: 128px;
+  --fs-count: 220px;
+  --fs-outcome-figure: 46px;
+  --ls-caps: 2px;   /* USS letter-spacing is px, not em: 0.16em of 13px */
+
+  /* spacing */
+  --sp-1: 2px;  --sp-2: 4px;  --sp-3: 8px;  --sp-4: 12px; --sp-5: 16px;
+  --sp-6: 24px; --sp-7: 32px; --sp-8: 48px; --sp-9: 64px;
+  --pad-panel: 24px;
+  --pad-row: 12px;
+  --hud-margin: 48px;
+  --hit-min: 44px;
+
+  /* shape */
+  --r-1: 2px; --r-2: 3px; --r-3: 6px; --r-full: 999px;
+  --bw-hair: 1px; --bw-focus: 2px; --bw-ring: 3px; --bw-ring-thin: 2px;
+
+  /* motion — seconds, and USS's five easings only */
+  --dur-instant: 0.09s;
+  --dur-fast: 0.14s;
+  --dur-base: 0.22s;
+  --dur-slow: 0.4s;
+  --dur-veil: 0.9s;
+  --ease-out: ease-out;
+  --ease-in-out: ease-in-out;
+}

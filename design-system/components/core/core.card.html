@@ -1,0 +1,33 @@
+<!-- @dsCard group="Components" viewport="700x430" name="Core — panel, buttons, toggle, slider, cost" subtitle="The mist panel and the four controls that live in it" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Core — panel, buttons, toggle, slider, cost</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>html,body{margin:0;height:100%}body{background:radial-gradient(120% 120% at 22% 12%,#233149 0%,#0d1420 55%,#070b12 100%);font-family:var(--font-body);color:var(--text-body);padding:24px;box-sizing:border-box}*{box-sizing:border-box}.lbl{font:500 var(--fs-micro)/1 var(--font-body);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--fg-3);margin:0 0 10px}a{color:var(--exit-500)}a:hover{color:var(--exit-300)}</style></head>
+<body><div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">const { MistPanel, Button, Toggle, Slider, CostBadge, Icon } = window.DesignSystem_427bea;
+function Demo(){
+  const [on,setOn]=React.useState(true); const [v,setV]=React.useState(30);
+  return <div style={{display:'flex',gap:20,alignItems:'flex-start'}}>
+    <MistPanel title="Round" aside="host" style={{width:320}}>
+      <Slider label="Head start" value={v} min={5} max={120} unit="s" onChange={setV}/>
+      <div style={{height:1,background:'var(--line-faint)',margin:'12px 0'}}/>
+      <Toggle label="Hint cards" hint="First three rounds only" checked={on} onChange={setOn}/>
+      <Toggle label="Screen shake" checked={false}/>
+    </MistPanel>
+    <div style={{display:'flex',flexDirection:'column',gap:12,width:300}}>
+      <Button variant="primary" size="lg" full>Host a dream</Button>
+      <Button variant="secondary" full hotkey="Esc">Back to lobby</Button>
+      <Button variant="primary" full reason="Waiting for Ben to ready up"/>
+      <Button variant="secondary" full icon="power-possess">Spectate Anna</Button>
+      <div style={{display:'flex',gap:10,alignItems:'center',marginTop:4}}>
+        <CostBadge cost={1}/><CostBadge cost={2}/><CostBadge cost={4}/><CostBadge cost={4} budget={3}/>
+        <span style={{font:'400 var(--fs-micro)/1 var(--font-body)',color:'var(--fg-3)'}}>affordable · over budget</span>
+      </div>
+    </div>
+  </div>;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);</script>
+</body></html>

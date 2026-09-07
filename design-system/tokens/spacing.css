@@ -1,0 +1,10 @@
+:root{
+--sp-1:2px;--sp-2:4px;--sp-3:8px;--sp-4:12px;--sp-5:16px;
+--sp-6:24px;--sp-7:32px;--sp-8:48px;--sp-9:64px;
+--pad-panel:var(--sp-6);        /* 24 inside a mist panel */
+--pad-row:var(--sp-4);          /* 12 inside a list row */
+--gap-stack:var(--sp-4);
+--gap-cluster:var(--sp-3);
+--hud-margin:var(--sp-8);       /* 48 from the screen edge, all HUD clusters */
+--hit-min:44px; /* @kind spacing */                 /* minimum interactive height */
+}

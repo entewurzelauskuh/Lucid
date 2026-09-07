@@ -1,0 +1,86 @@
+<!-- @dsCard group="Lucid" viewport="1920x1080" name="Lucid — the game" subtitle="Every screen at 1920×1080, click-through" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Lucid — UI kit</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>html,body{margin:0;background:#070b12;font-family:var(--font-body);color:var(--text-body);overflow:hidden}*{box-sizing:border-box}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden;background:var(--ink-900)}
+a{color:var(--exit-500)}a:hover{color:var(--exit-300)}
+kbd{font:inherit}
+#nav{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:50;display:flex;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 32px);gap:6px;padding:8px;border-radius:var(--r-2);background:rgba(7,11,18,.9);border:1px solid var(--line);backdrop-filter:blur(10px)}
+#nav button{padding:7px 11px;border-radius:var(--r-1);background:transparent;border:1px solid var(--line-faint);color:var(--fg-3);font:400 12px/1 var(--font-body);cursor:pointer}
+#nav button[data-on]{background:color-mix(in srgb,var(--exit-500) 14%,transparent);border-color:var(--exit-500);color:var(--exit-300)}</style></head>
+<body><div id="stage"><div id="root"></div></div><div id="nav"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" src="Shared.jsx"></script>
+<script type="text/babel" src="TitleScreen.jsx"></script>
+<script type="text/babel" src="LobbyScreen.jsx"></script>
+<script type="text/babel" src="RoundStartScreen.jsx"></script>
+<script type="text/babel" src="SleeperHud.jsx"></script>
+<script type="text/babel" src="SpectatorScreen.jsx"></script>
+<script type="text/babel" src="NightmareView.jsx"></script>
+<script type="text/babel" src="ResultsScreen.jsx"></script>
+<script type="text/babel" src="PauseScreen.jsx"></script>
+<script type="text/babel" src="OptionsScreen.jsx"></script>
+<script type="text/babel" src="NightmareMockups.jsx"></script>
+<script type="text/babel" src="SleeperMockups.jsx"></script>
+<script type="text/babel" data-presets="react">
+const SCREENS = [
+  ['Title', () => <TitleScreen onHost={() => go('Lobby')} onOptions={() => go('Options')} />],
+  ['Lobby', () => <LobbyScreen onStart={() => go('Round start')} onBack={() => go('Title')} />],
+  ['Round start', () => <RoundStartScreen />],
+  ['HUD run', () => <SleeperHud state="running" />],
+  ['HUD dark', () => <SleeperHud state="dark" />],
+  ['HUD 0:30', () => <SleeperHud state="last30" />],
+  ['HUD tab', () => <SleeperHud state="running" showTab />],
+  ['Spectator', () => <SpectatorScreen />],
+  ['Nightmare', () => <NightmareView mode="idle" onMode={m => go(m === 'possession' ? 'Possession' : 'Nightmare')} />],
+  ['Placing', () => <NightmareView mode="placing" onMode={() => {}} />],
+  ['Possession', () => <NightmareView mode="possession" onMode={() => go('Nightmare')} />],
+  ['Results', () => <ResultsScreen onLobby={() => go('Lobby')} />],
+  ['Pause', () => <PauseScreen onResume={() => go('HUD run')} onOptions={() => go('Options')} onLobby={() => go('Lobby')} />],
+  ['Options', () => <OptionsScreen onBack={() => go('Title')} />],
+  ['N1 start', () => <NightmareHeadStart />],
+  ['N2 budget', () => <NightmareRejected />],
+  ['N3 dawn', () => <NightmareDawn />],
+  ['S1 bed', () => <SleeperBedroom />],
+  ['S2 molasses', () => <SleeperJamming />],
+  ['S3 dark', () => <SleeperDark />]
+];
+let current = 'Title';
+const root = ReactDOM.createRoot(document.getElementById('root'));
+const nav = document.getElementById('nav');
+function go(name) {
+  current = name;
+  const S = (SCREENS.find(s => s[0] === name) || SCREENS[0])[1];
+  root.render(<S />);
+  [...nav.children].forEach(b => b.toggleAttribute('data-on', b.textContent === name));
+  try { localStorage.setItem('lucid-kit-screen', name); } catch (e) {}
+}
+SCREENS.forEach(([name]) => { const b = document.createElement('button'); b.textContent = name; b.onclick = () => go(name); nav.appendChild(b); });
+let start = 'Title';
+try { const saved = localStorage.getItem('lucid-kit-screen'); if (saved && SCREENS.some(s => s[0] === saved)) start = saved; } catch (e) {}
+go(start);
+</script><script>
+(function(){
+var s=document.getElementById('stage'),W=s.offsetWidth,H=s.offsetHeight,box=document.createElement('div');
+s.parentNode.insertBefore(box,s);box.appendChild(s);
+box.style.cssText='position:fixed;inset:0;display:flex;align-items:flex-start;justify-content:center;overflow:hidden;padding-top:8px';
+var nav=document.getElementById('nav');
+function fit(){
+  if(!H) return;
+  /* Reserve the nav's MEASURED height: it is built by the Babel script, so it is
+     empty on first paint, and it wraps to more rows as the viewport narrows. */
+  var reserve=(nav.offsetHeight||0)+34;
+  var k=Math.min(innerWidth/W,(innerHeight-reserve)/H);
+  if(!(k>0)) return;
+  s.style.transformOrigin='top center'; s.style.flex='0 0 auto';
+  s.style.transform='scale('+k+')';
+  s.style.marginBottom=(-(1-k)*H)+'px';
+}
+addEventListener('resize',fit);
+if(window.ResizeObserver){var ro=new ResizeObserver(fit);ro.observe(nav);ro.observe(s);}
+fit();})();
+</script>
+</body></html>

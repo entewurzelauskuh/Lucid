@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SleeperHud — structure only. Styling lives in lucid-tokens.uss + lucid-components.uss. -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:lucid="Lucid.Runtime.UI">
+  <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-tokens.uss" />
+  <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-components.uss" />
+  <ui:VisualElement name="hud-root" picking-mode="Ignore" style="flex-grow:1;">
+    <ui:VisualElement name="damage-arc" picking-mode="Ignore" class="damage-arc" />
+    <lucid:TimerArc name="dawn" class="timer-arc" style="position:absolute; top:24px; left:50%; translate:-50% 0;" />
+    <ui:VisualElement name="effect-chips" style="position:absolute; top:48px; left:48px; flex-direction:row;" />
+    <ui:VisualElement name="toasts" style="position:absolute; top:48px; right:48px; align-items:flex-end;" />
+    <lucid:Crosshair name="crosshair" class="crosshair" style="position:absolute; top:50%; left:50%; translate:-50% -50%;" />
+    <ui:VisualElement name="vitals" class="cluster-scrim" style="position:absolute; left:48px; bottom:48px; flex-direction:row; align-items:center;">
+      <lucid:HealthRing name="health" class="health-ring" />
+      <ui:VisualElement>
+        <ui:VisualElement name="moons" style="flex-direction:row;" />
+        <!-- No depth readout here: docs/UI.md §6 keeps depth on the Nightmare's Sleeper row (§8). -->
+      </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="keys" style="position:absolute; right:48px; bottom:48px; flex-direction:row;" />
+    <ui:VisualElement name="tab-overlay" class="scrim" style="display:none;">
+      <ui:VisualElement class="mist-panel" style="width:720px;">
+        <ui:Label text="Who is left" class="mist-panel__title" />
+        <ui:VisualElement name="tab-rows" />
+      </ui:VisualElement>
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>
