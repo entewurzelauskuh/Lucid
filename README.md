@@ -66,8 +66,8 @@ The shooter, the mobs and the haunting are M2 and M3. Lucid is a maze runner bef
 
 ## Documents
 
-Start with `docs/SPEC.md`; it lists the rest in its §21. Contributors and Claude Code read `CLAUDE.md` first.
+Start with `docs/SPEC.md`; it lists the rest in its §21. Contributors and Claude Code read `CLAUDE.md` first. The interface's design system is in `design-system/`.
 
 ## Licence
 
-Code under **MIT**. Original text, briefs, specs, concept art and generated shell textures under **CC-BY-4.0**. Third-party assets keep their own licences and are listed in `THIRD_PARTY_NOTICES.md` — only CC0 and plain CC-BY material is ever committed (`docs/SPEC.md` §18).
+Code under **MIT**. Original text, briefs, specs, concept art, the UI design system and generated shell textures under **CC-BY-4.0**. Third-party assets keep their own licences and are listed in `THIRD_PARTY_NOTICES.md` — only CC0 and plain CC-BY material is ever committed (`docs/SPEC.md` §18).
