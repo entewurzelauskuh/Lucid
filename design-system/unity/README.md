@@ -6,9 +6,8 @@ authority for the Unity implementation and tells you what may not be changed.
 
 Then read **[DOCS-CHANGE-REQUEST.md](DOCS-CHANGE-REQUEST.md)** *before touching
 `docs/`*: fourteen edits the repo's own documentation needed for the
-implementation to be consistent with itself. Applied in #85; two items (Dark's dim
-levels and the general readability clause) are held as *proposed* until the owner
-rules. The rule it called `[S]` and unhonourable was `[D]`.
+implementation to be consistent with itself. Applied in #85, Dark's dim levels and the
+general readability clause included. The rule it called `[S]` and unhonourable was `[D]`.
 
 | File | What |
 |---|---|

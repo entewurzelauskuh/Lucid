@@ -359,8 +359,7 @@ build the layout assuming three. Dark dims the HUD at **two levels, not one**:
 non-rule chrome (key hints, toasts, cluster scrims) to 32 %, the rule-carrying
 health ring and crescent lives to **60 %**, and the dawn timer not at all. A flat
 32 % put the health ring at ~1.7:1, which is §1.3 hiding a rule rather than
-dimming it. §6 says only "dims" — the two levels are this system's proposal, and
-item 4 of `DOCS-CHANGE-REQUEST.md` asks for them to be written down. Fog doors
+dimming it. `docs/UI.md` §6 states the two levels and §1.6 the rule behind them. Fog doors
 still glow. Molasses shows a 70 % chip top left.
 
 **Spectator.** `YoureAwake` at the top, tabs for each Sleeper *and* the

@@ -13,6 +13,7 @@ Settled alongside this document: audio is SFX first, music much later **[S]**; n
 3. **Never hide a rule.** Every rejected placement shows its reason. Every state change that matters gets a toast. If a player asks "why?", the answer was on screen.
 4. **Party first.** Results are readable across a Discord call: big names, big outcomes, one screen.
 5. **Door states never depend on hue alone.** Fog is dark and matte, Exit is bright and radiant, Solid is a wall, Attached is an opening. Sleeper colours are always paired with a number and a name.
+6. **Anything a rule depends on reading stays readable.** No effect, overlay or dim may take a rule-carrying element below 4.5:1, and nothing a rule depends on may animate while the player needs to read it. This outranks any atmospheric effect, including Dark — whose bite lives in the world, where the lights go out, not in the HUD.
 
 ## 2. Screen map
 
@@ -64,7 +65,7 @@ Three columns and a bottom bar.
 | Centre | Crosshair | A small dot. Over a weak point it grows a ring that drains as the part takes damage; over a mob it brightens |
 | Centre edges | Damage direction | A short vignette arc on the side the hit came from |
 | Top right | Toasts | Stack of three, four seconds each: "The exit moved", "A door hardened", "Anna woke up", "Ben was consumed", "Dark", "Fog", "Molasses — don't jump" |
-| Whole screen | Effects | Dark: HUD dims except the timer. Fog: none. Molasses: a viscous vignette and a small "70 %" icon while it lasts |
+| Whole screen | Effects | Dark: the HUD dims at two levels — key hints, toasts and cluster scrims to 32 %, the health ring and crescent lives held at 60 %, the dawn timer untouched; a flat 32 % put the two readouts a rule depends on at about 1.7:1 (§1.6). Fog: none. Molasses: a viscous vignette and a small "70 %" icon while it lasts |
 
 No panel sits behind a HUD cluster: each gets a faint radial scrim so text stays legible without covering the maze, because a mist panel over a first-person view costs more of the maze than it buys in legibility. Every cluster sits 48 px from its screen edge, all four corners the same, so the eye learns four fixed places. **[D]**, chosen by the design system.
 
@@ -120,7 +121,7 @@ This revises spec §10: the target selector moves from 1–4 to Tab and click, s
 
 ### Possession overlay
 
-First person through the mob, thin red vignette, top line "Possessing a Shade in Anna's dream — P to let go", timer and budget still visible, "Building paused" under the budget. On the body's death: two seconds of black, "Your body died", back to the god view.
+First person through the mob, thin red vignette, top line "Possessing the Shade in Anna's dream — P to let go", timer and budget still visible, "Building paused" under the budget. On the body's death: two seconds of black, "Your body died", back to the god view.
 
 ## 9. Results **[D]**
 
@@ -172,7 +173,7 @@ Strings are the rules made visible; keep them exact so every screen says the sam
 - Doors, Nightmare side: "{name} hardened {n} doors in the {cube}" · "{name} reached the exit"
 - Placement: "Door is solid" · "Doesn't fit here" · "Would trap {name}" · "Not enough budget ({have} / {cost})" · "Not a door"
 - Effects: "Dark" · "Fog" · "Molasses — don't jump"
-- Possession: "Possessing a {mob} in {name}'s dream — P to let go" · "Your body died"
+- Possession: "Possessing the {mob} in {name}'s dream — P to let go" · "Your body died"
 - Lobby: "Nobody picked Nightmare" · "Need at least one Sleeper" · "Waiting for {name} to ready up" · "Tonight's Nightmare is… {name}" · "{n} players want to be the Nightmare — one will be chosen at random." · "The first dream begins."
 - Results: "Everyone woke up" · "Woke at {time}" · "Consumed at {time}" · "Consumed by dawn" — the other two titles are "Dawn." and "Consumed" above
 - Spectator: "You're awake. Watch the others."
@@ -181,7 +182,7 @@ Strings are the rules made visible; keep them exact so every screen says the sam
 - Readouts and hints: "depth {n} · exit {n}" (the Nightmare's Sleeper row, §8) · "you can accept invites from the overlay at any time" (§3)
 - Section captions, the one place uppercase is allowed (§15): PALETTE · PACKS · BUDGET · SLEEPERS · SESSION LEADERBOARD · THE NIGHTMARE
 
-Every string a screen shows comes from this list, and the Unity project reads them from one file (`design-system/unity/Runtime/LucidStrings.cs`, this section transcribed). A screen that needs a string not here adds it here first — never at the call site. The blocked-button reasons (Lobby, above) and the placement rejections replace a control's own label or ride the red ghost verbatim; §1.3 applied to controls. `{mob}` in the possession line is the mob's name as spec §8 gives it — a Shade or an Eye, both possessable per spec §10 — and the "— P to let go" is part of the string, not layout. ("Possessing a Eye" is a real defect in this line's article; it is not fixed here because §14's strings are not changed in passing — **[O]**.)
+Every string a screen shows comes from this list, and the Unity project reads them from one file (`design-system/unity/Runtime/LucidStrings.cs`, this section transcribed). A screen that needs a string not here adds it here first — never at the call site. The blocked-button reasons (Lobby, above) and the placement rejections replace a control's own label or ride the red ghost verbatim; §1.3 applied to controls. `{mob}` in the possession line is the mob's name as spec §8 gives it — a Shade or an Eye, both possessable per spec §10. The article is *the* rather than *a* because the Nightmare possesses a specific mob under the cursor, and because "a Eye" is not English (`docs/DECISIONS.md`, 2026-09-07). The "— P to let go" is part of the string, not layout.
 
 ## 15. Visual style of the UI **[D]**
 

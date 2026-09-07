@@ -17,8 +17,8 @@ date: 2026-09-05T10:32:00Z
 ### Pending upstream
 
 `unity/DOCS-CHANGE-REQUEST.md` listed fourteen edits `docs/` needed. Applied by
-the repository in #85 (2026-09-07); Dark's two dim levels and the general
-readability clause are held as *proposed*. §15's translucency rule turned out to be
+the repository in #85 (2026-09-07), Dark's two dim levels and the general
+readability clause included. §15's translucency rule turned out to be
 `[D]`, not `[S]`.
 
 ## Screen map

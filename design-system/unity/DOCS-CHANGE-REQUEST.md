@@ -6,7 +6,7 @@ the screens: each one is a place where the docs are silent, ambiguous, or — in
 ask for something UI Toolkit cannot do.
 
 Work top to bottom. *(As written on delivery: item 1 was thought to touch an `[S]` rule;
-it does not — see the resolution table below. Items 4 and 4a still need sign-off.)*
+it does not — see the resolution table below. Items 4 and 4a were signed off.)*
 
 ## Resolution (2026-09-07, #85)
 
@@ -18,7 +18,7 @@ moved — the quote had misread its marker:
 |---|---|
 | 1 | **Applied, not escalated.** `docs/UI.md` §15 is `[D]`, not `[S]`; the lifetime rule is written in. |
 | 2, 3, 5, 6, 9 | Applied. §1, §9 and §14 are unmarked and §15 is `[D]`, so none of these touched settled text. |
-| 4, 4a | **Held**, per the owner. Dark's two levels land in `docs/DECISIONS.md` as *proposed*. |
+| 4, 4a | **Decided** (2026-09-07): both confirmed as proposed. `docs/UI.md` §6 states the two levels and §1 carries the clause as its sixth principle. |
 | 7 | **Reconciled.** §11 already listed both toggles, with the hatch on *fog*, not `solid` (the guide's own §7 agrees). Added: both default off, and the two-control rule. |
 | 8 | Applied. The three "gaps" were mostly already in §14 — the lobby blockers and the placement reasons are there verbatim. §14 gained the thirteen strings `LucidStrings.cs` had harvested from §2, §4, §7–§10 and §13, six section captions, and two readouts UI.md shows elsewhere. The UXML skeletons' twenty-two invented strings were **not** added; they are the skeletons' bug. |
 | 10, 11 | Applied. 11 is the one genuine `[S]` edit and has a DECISIONS entry. |
@@ -224,7 +224,7 @@ Also worth recording in §11: Options is built from exactly two controls, `.togg
 **§14 is `[S]` and verbatim**, so nothing here is a change — these are gaps found by
 building screens that needed strings §14 does not contain.
 
-1. **Confirm `Possessing(mob, owner)`'s mob argument.** The mockups render it as
+1. **Confirm `Possessing(mob, owner)`'s mob argument.** *(Resolved: the noun is whatever spec §8 names — Shade or Eye — and the article became* the *so that both read; `docs/DECISIONS.md`, 2026-09-07.)* The mockups render it as
    *"Possessing a Shade in Anna's dream — P to let go"*. A Shade is the only mob a Nest
    spawns, so that was the assumption; confirm it is the right noun and that the em-dash
    hint is part of the string rather than layout.

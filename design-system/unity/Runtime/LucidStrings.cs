@@ -47,7 +47,7 @@ namespace Lucid.Runtime.UI
         public const string EffectMolasses = "Molasses — don't jump";
 
         // --- Possession -----------------------------------------------------------
-        public static string Possessing(string mob, string dreamOwner) => $"Possessing a {mob} in {dreamOwner}'s dream — P to let go";
+        public static string Possessing(string mob, string dreamOwner) => $"Possessing the {mob} in {dreamOwner}'s dream — P to let go";
         public const  string YourBodyDied = "Your body died";
         public const  string BuildingPaused = "Building paused";
 
