@@ -81,3 +81,8 @@ __pycache__/
 # docs/concept/ holds web-sized copies of them, which is what the README needs;
 # the masters would sit in history for ever and never be looked at.
 /concept arts/
+
+# The UI design system is committed; these two are its viewer's cache and a
+# napkin sketch, not part of it.
+/design-system/.thumbnail
+/design-system/scraps/

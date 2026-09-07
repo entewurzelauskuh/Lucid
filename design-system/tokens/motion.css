@@ -1,0 +1,20 @@
+:root{
+/* USS supports the predefined easings only; no arbitrary cubic-bezier. */
+--dur-instant:90ms; /* @kind other */         /* press, chip select */
+--dur-fast:140ms; /* @kind other */           /* hover, focus */
+--dur-base:220ms; /* @kind other */           /* panel and toast in/out, ghost colour */
+--dur-slow:400ms; /* @kind other */           /* screen fade, layer cut-away */
+--dur-veil:900ms; /* @kind other */           /* white-out on waking, sink to black */
+--ease-out:ease-out; /* @kind other */
+--ease-in-out:ease-in-out; /* @kind other */
+--pulse-timer:1200ms; /* @kind other */       /* last 30 s of dawn */
+--pulse-door:2400ms; /* @kind other */        /* the fog door on the Title screen */
+}
+
+/* The only keyframes in the system. USS supports @keyframes-free animation via
+   transitions only, so in Unity these three are driven by a tiny C# tween on
+   the element's opacity/scale — never by a shader. */
+@keyframes lucid-pulse{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes lucid-shimmer{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes lucid-breathe{0%,100%{opacity:1}50%{opacity:.62}}
+@keyframes lucid-drift{0%{transform:translateX(-6px)}100%{transform:translateX(6px)}}

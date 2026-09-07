@@ -1,0 +1,27 @@
+<!-- @dsCard group="Brand" viewport="700x260" name="The connector net" subtitle="How six faces fit in one glyph: filled dot = doorway, dashed = wall" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>The connector net</title>
+<link rel="stylesheet" href="../styles.css">
+<style>html,body{margin:0;height:100%}body{background:radial-gradient(120% 120% at 22% 12%,#233149 0%,#0d1420 55%,#070b12 100%);font-family:var(--font-body);color:var(--text-body);padding:24px;box-sizing:border-box}*{box-sizing:border-box}.lbl{font:500 var(--fs-micro)/1 var(--font-body);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--fg-3);margin:0 0 10px}a{color:var(--exit-500)}a:hover{color:var(--exit-300)}</style></head>
+<body><div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../_ds_bundle.js"></script>
+<script type="text/babel">const { ConnectorNet } = window.DesignSystem_427bea;
+const N=[['Straight','010100'],['Corner','011000'],['T','011100'],['Cross','011110'],['Drop','010001'],['Ladder shaft','100001']];
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <div style={{display:'flex',gap:18,alignItems:'flex-start'}}>
+    <div style={{flex:'0 0 auto',color:'var(--fg-2)'}}>
+      <p className="lbl">Face order</p>
+      <div style={{position:'relative',color:'var(--exit-500)'}}><ConnectorNet mask="111111" size={62}/></div>
+      <ul style={{margin:'10px 0 0',padding:0,listStyle:'none',font:'400 11px/1.7 var(--font-body)',color:'var(--fg-3)'}}>
+        <li>1 top</li><li>2 west · 3 north · 4 east</li><li>5 south</li><li>6 bottom</li></ul>
+    </div>
+    <div style={{display:'flex',gap:16,flexWrap:'wrap',flex:1}}>{N.map(([t,m])=>
+      <div key={t} style={{width:88,display:'flex',flexDirection:'column',alignItems:'center',gap:8}}>
+        <span style={{color:'var(--fg-1)'}}><ConnectorNet mask={m} size={50}/></span>
+        <span style={{font:'400 var(--fs-micro)/1.2 var(--font-body)',color:'var(--fg-2)',textAlign:'center'}}>{t}</span>
+        <code style={{font:'400 10px/1 var(--font-body)',color:'var(--fg-4)'}}>{m}</code>
+      </div>)}</div>
+  </div>);</script>
+</body></html>

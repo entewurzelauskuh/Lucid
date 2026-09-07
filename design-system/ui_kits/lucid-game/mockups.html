@@ -1,0 +1,59 @@
+<!-- @dsCard group="Lucid" viewport="1920x1180" name="In-game mockups" subtitle="Six situations across both roles, annotated with the rules in play" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Lucid — in-game mockups</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>html,body{margin:0;background:#070b12;font-family:var(--font-body);color:var(--text-body)}*{box-sizing:border-box}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden;background:var(--ink-900)}
+a{color:var(--exit-500)}a:hover{color:var(--exit-300)}kbd{font:inherit}
+#caption{width:1920px;padding:20px 28px 26px;background:var(--ink-800);border-top:1px solid var(--line-faint)}
+#caption h2{margin:0;font:400 var(--fs-heading)/1.2 var(--font-display);color:var(--fg-1);letter-spacing:.02em;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:var(--numeric)}
+#caption p{margin:8px 0 0;font:400 var(--fs-body)/1.55 var(--font-body);color:var(--fg-3);max-width:1500px;text-wrap:pretty}
+#nav{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:50;display:flex;gap:6px;padding:8px;border-radius:var(--r-2);background:rgba(7,11,18,.92);border:1px solid var(--line);backdrop-filter:blur(10px)}
+#nav button{padding:7px 11px;border-radius:var(--r-1);background:transparent;border:1px solid var(--line-faint);color:var(--fg-3);font:400 12px/1 var(--font-body);cursor:pointer}
+#nav button[data-on]{background:color-mix(in srgb,var(--exit-500) 14%,transparent);border-color:var(--exit-500);color:var(--exit-300)}</style></head>
+<body><div id="wrap"><div id="stage"><div id="root"></div></div><div id="caption"><h2 id="cap-title"></h2><p id="cap-body"></p></div></div><div id="nav"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" src="Shared.jsx"></script>
+<script type="text/babel" src="NightmareMockups.jsx"></script>
+<script type="text/babel" src="SleeperMockups.jsx"></script>
+<script type="text/babel" data-presets="react">
+const MOCKUPS = [["N1 · Head start","NightmareHeadStart","Nightmare, 0:12 into the 30 s head start. Budget is the starting 12 minus one Straight; the trickle ring is three quarters of the way to the next point. Three cubes exist, the exit sits on the deepest cube's fog doors, and the green ghost is a legal placement on a fog door. Every Sleeper is still in the bedroom at depth 0, so no door has hardened yet and the target selector is on Everyone."],["N2 · Out of budget","NightmareRejected","Mid-run, and the worst moment to be poor. Anna is at depth 11 with the exit at 11 — she is standing at a white door. The Crusher that would stall her costs 4 and the budget is 3, so the ghost is red and states the reason verbatim. Molasses is 17 s into its 30 s cooldown in Anna's dream. Cara is already consumed; the hatched marks are doors the Sleepers' exploration solidified for good."],["N3 · Dawn in 0:24","NightmareDawn","Twenty-four seconds left and one Sleeper still inside. Anna woke at 4:12, Cara and Dev were consumed, and Ben is one door from the exit at depth 13 with 32 HP. Molasses is live in his dream with 4 s to run. The cursor is on a Trapdoor whose trigger is off cooldown — free, 6 s per trap per dream — and his row is expanded to the hover-peek: two Shades alive, one trap already jammed."],["S1 · The bedroom","SleeperBedroom","A Sleeper during the head start. The start cube has exactly one connector and it is sealed with dream mist, with the countdown projected onto it. Health is full, and there is one crescent moon because lives default to 1 — this run is the only run. The three hint cards teach the door language before the first round is played; they appear for the first three rounds only."],["S2 · Molasses, jamming a latch","SleeperJamming","Deep in the maze at depth 9 with the exit at 11. Molasses has 4 of its 6 seconds left, so movement is at 70 % and a full-speed gap is now lethal — the right play is to wait it out. Instead this Sleeper is shooting out a Trapdoor's latch: four of six shots have landed, and the crosshair ring is the jam gauge. Standing still is exactly what the Nightmare paid 4 points for."],["S3 · Dark, dawn in 0:18","SleeperDark","Dark is active: every light is out and the Nightlight is the only source, which is the pool of light in the middle. The HUD dims to 32 % — except the dawn timer, which never dims — and fog doors still glow, so the door language survives. The exit is white and close, health is 24 after a hit from the right, and there is one moon left. Depth 11 equals the exit depth, so that white door is the deepest edge of the dream."]];
+const root = ReactDOM.createRoot(document.getElementById('root'));
+const nav = document.getElementById('nav');
+function go(i) {
+  const entry = MOCKUPS[i];
+  const C = window[entry[1]];
+  root.render(<C />);
+  document.getElementById('cap-title').textContent = entry[0];
+  document.getElementById('cap-body').textContent = entry[2];
+  [...nav.children].forEach((b, n) => b.toggleAttribute('data-on', n === i));
+  try { localStorage.setItem('lucid-mockup', String(i)); } catch (e) {}
+}
+MOCKUPS.forEach((m, i) => { const b = document.createElement('button'); b.textContent = m[0]; b.onclick = () => go(i); nav.appendChild(b); });
+let start = 0;
+try { const s = Number(localStorage.getItem('lucid-mockup')); if (s >= 0 && s < MOCKUPS.length) start = s; } catch (e) {}
+go(start);
+</script>
+<script>
+(function(){
+var s=document.getElementById('wrap'),W=1920,box=document.createElement('div');
+s.parentNode.insertBefore(box,s);box.appendChild(s);
+box.style.cssText='position:fixed;inset:0;display:flex;align-items:flex-start;justify-content:center;overflow:hidden;padding-top:8px';
+var nav=document.getElementById('nav');
+function fit(){
+  var H=s.offsetHeight; if(!H) return;
+  /* Reserve the nav's MEASURED height — it is built by the Babel script, so it
+     is empty on first paint and grows again whenever its labels rewrap. */
+  var reserve=(nav.offsetHeight||0)+34;
+  var k=Math.min(innerWidth/W,(innerHeight-reserve)/H);
+  if(!(k>0)) return;
+  s.style.transformOrigin='top center'; s.style.flex='0 0 auto';
+  s.style.transform='scale('+k+')';
+  s.style.marginBottom=(-(1-k)*H)+'px';
+}
+addEventListener('resize',fit);
+if(window.ResizeObserver){var ro=new ResizeObserver(fit);ro.observe(nav);ro.observe(s);}
+fit();})();
+</script></body></html>

@@ -1,0 +1,4 @@
+/* Cormorant Garamond (OFL) + Inter (OFL). Served from Google Fonts for the HTML
+   system; Unity needs the .ttf binaries on disk instead (USS cannot load a font
+   by URL). See guidelines/asset-checklist.md. */
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Inter:wght@400;500;600&display=swap");

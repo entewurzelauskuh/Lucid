@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Options — structure only. Styling lives in lucid-tokens.uss + lucid-components.uss. -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:lucid="Lucid.UI">
+  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-tokens.uss" />
+  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-components.uss" />
+  <ui:VisualElement name="options-root" class="mist-panel--sunken" style="flex-grow:1; padding:48px;">
+    <ui:VisualElement style="flex-direction:row; justify-content:space-between; align-items:center;">
+      <ui:Label text="Options" class="screen__title" />
+      <ui:Button name="back" text="Back" class="btn btn--secondary" />
+    </ui:VisualElement>
+    <ui:VisualElement style="flex-direction:row; flex-grow:1; margin-top:24px;">
+      <ui:VisualElement name="tabs" style="width:240px;">
+        <ui:Button name="tab-game" text="Game" class="options-tab" />
+        <ui:Button name="tab-video" text="Video" class="options-tab" />
+        <ui:Button name="tab-audio" text="Audio" class="options-tab" />
+        <ui:Button name="tab-controls" text="Controls" class="options-tab" />
+        <ui:Button name="tab-accessibility" text="Accessibility" class="options-tab" />
+      </ui:VisualElement>
+      <ui:ScrollView name="tab-body" class="mist-panel" style="flex-grow:1; margin-left:24px;" />
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>

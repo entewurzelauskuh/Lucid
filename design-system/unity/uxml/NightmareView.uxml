@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- NightmareView — structure only. Styling lives in lucid-tokens.uss + lucid-components.uss. -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:lucid="Lucid.UI">
+  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-tokens.uss" />
+  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-components.uss" />
+  <ui:VisualElement name="nightmare-root" style="flex-grow:1;">
+    <!-- world markers are children of this layer, positioned each frame from
+         WorldToScreenPoint; it never intercepts clicks meant for the view -->
+    <ui:VisualElement name="world-markers" picking-mode="Ignore" style="position:absolute; left:0; right:0; top:0; bottom:0;" />
+
+    <ui:VisualElement name="palette-dock" class="mist-panel mist-panel--docked" style="position:absolute; left:0; top:0; bottom:0; width:340px;">
+      <ui:Label text="PALETTE" class="micro-label" />
+      <ui:VisualElement name="pack-tabs" style="flex-direction:row;" />
+      <ui:VisualElement name="category-chips" style="flex-direction:row; flex-wrap:wrap;" />
+      <ui:ScrollView name="cube-cards" />
+      <ui:VisualElement style="flex-grow:1;" />
+      <ui:VisualElement class="divider" />
+      <ui:VisualElement name="budget" style="flex-direction:row; align-items:center; justify-content:space-between;">
+        <ui:Label text="BUDGET" class="micro-label" />
+        <lucid:CooldownRing name="trickle" class="ring" />
+        <ui:Label name="budget-value" class="budget__value" />
+        <ui:Label name="budget-rate" class="budget__rate" />
+      </ui:VisualElement>
+    </ui:VisualElement>
+
+    <ui:VisualElement name="sleeper-dock" class="mist-panel mist-panel--docked" style="position:absolute; right:0; top:0; bottom:0; width:320px;">
+      <ui:Label text="SLEEPERS" class="micro-label" />
+      <ui:VisualElement name="sleeper-rows" />
+      <ui:VisualElement style="flex-grow:1;" />
+      <ui:VisualElement class="divider" />
+      <ui:VisualElement name="round-stats" />
+    </ui:VisualElement>
+
+    <lucid:TimerArc name="dawn" class="timer-arc" style="position:absolute; top:16px; left:50%; translate:-50% 0;" />
+    <ui:VisualElement name="toasts" style="position:absolute; top:24px; right:364px; align-items:flex-end;" />
+    <ui:VisualElement name="layer-cutaway" style="position:absolute; left:24px; top:50%; translate:0 -50%;" />
+
+    <ui:VisualElement name="powers-bar" class="mist-panel mist-panel--docked" style="position:absolute; bottom:0; left:50%; translate:-50% 0; flex-direction:row; align-items:center;">
+      <lucid:PowerButton name="power-dark" />
+      <lucid:PowerButton name="power-fog" />
+      <lucid:PowerButton name="power-molasses" />
+      <ui:VisualElement class="powers-bar__divider" />
+      <lucid:PowerButton name="target-selector" />
+      <lucid:PowerButton name="power-possess" />
+    </ui:VisualElement>
+
+    <!-- follows the ghost cube in screen space; text is the verbatim reason -->
+    <ui:VisualElement name="rejection" class="rejection" style="display:none;">
+      <ui:VisualElement class="icon icon--reject" />
+      <ui:Label name="rejection-reason" />
+    </ui:VisualElement>
+
+    <ui:VisualElement name="target-selector-modal" class="scrim" style="display:none;">
+      <ui:VisualElement class="mist-panel" style="width:560px;">
+        <ui:Label text="Who feels it" class="mist-panel__title" />
+        <ui:VisualElement name="target-rows" />
+        <ui:Button name="target-cancel" text="Cancel" class="btn btn--secondary" />
+      </ui:VisualElement>
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>

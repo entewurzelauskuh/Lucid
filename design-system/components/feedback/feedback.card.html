@@ -1,0 +1,24 @@
+<!-- @dsCard group="Components" viewport="700x220" name="Toasts" subtitle="Three at a time, four seconds each, glossary strings verbatim" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Toasts</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>html,body{margin:0;height:100%}body{background:radial-gradient(120% 120% at 22% 12%,#233149 0%,#0d1420 55%,#070b12 100%);font-family:var(--font-body);color:var(--text-body);padding:24px;box-sizing:border-box}*{box-sizing:border-box}.lbl{font:500 var(--fs-micro)/1 var(--font-body);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--fg-3);margin:0 0 10px}a{color:var(--exit-500)}a:hover{color:var(--exit-300)}</style></head>
+<body><div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">const { ToastStack, Toast } = window.DesignSystem_427bea;
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <div style={{display:'flex',gap:24,justifyContent:'space-between'}}>
+    <ToastStack toasts={[
+      {text:'The exit moved',icon:'door-exit',tone:'exit'},
+      {text:'A door hardened',icon:'door-solid'},
+      {text:'Ben was consumed',tone:'danger'}]}/>
+    <div style={{display:'flex',flexDirection:'column',gap:8,alignItems:'flex-end'}}>
+      <Toast text="Anna woke up" tone="exit"/>
+      <Toast text="Molasses — don't jump" icon="power-molasses" tone="effect"/>
+      <Toast text="Dark" icon="power-dark" tone="effect"/>
+      <Toast text="You lost a life — 2 moons left" tone="danger"/>
+    </div>
+  </div>);</script>
+</body></html>

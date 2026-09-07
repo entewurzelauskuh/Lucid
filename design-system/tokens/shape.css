@@ -1,0 +1,22 @@
+:root{
+/* The UI is crisp: radii are small and deliberate. Rings are the only circles. */
+--r-0:0; /* @kind radius */
+--r-1:2px;                  /* chips, badges, inputs */
+--r-2:3px;                  /* panels, cards, buttons */
+--r-3:6px;                  /* cube cards, reveal card */
+--r-full:999px;             /* rings, moons, markers, toggles */
+
+--bw-hair:1px; /* @kind spacing */              /* every panel and control edge */
+--bw-focus:2px; /* @kind spacing */             /* keyboard focus */
+--bw-ring:3px; /* @kind spacing */              /* timer arc, health ring, cooldown ring */
+--bw-ring-thin:2px; /* @kind spacing */         /* weak-point ring, trickle ring */
+
+/* USS has no backdrop-filter. These describe the intent; in Unity the panel
+   blur is a pre-blurred background image or one blur render feature behind the
+   overlay. See guidelines/motion.md. */
+--blur-panel:18px; /* @kind other */
+--blur-scrim:8px; /* @kind other */
+--glow-exit:0 0 24px rgba(255,227,163,0.45);
+--glow-danger:0 0 18px rgba(217,69,58,0.5);
+--shadow-panel:0 2px 32px rgba(7,11,18,0.6);
+}

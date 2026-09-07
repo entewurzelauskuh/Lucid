@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lobby — structure only. Styling lives in lucid-tokens.uss + lucid-components.uss. -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:lucid="Lucid.UI">
+  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-tokens.uss" />
+  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-components.uss" />
+  <ui:VisualElement name="lobby-root" style="flex-grow:1; padding:48px;">
+    <ui:VisualElement name="header" style="flex-direction:row; justify-content:space-between; align-items:center;">
+      <ui:Label text="LUCID" class="wordmark wordmark--small" />
+      <ui:VisualElement style="flex-direction:row; align-items:center;">
+        <ui:Label name="invite-code" class="invite-code" />
+        <ui:Button name="leave" text="Leave" class="btn btn--secondary" />
+      </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement style="flex-direction:row; flex-grow:1; margin-top:24px;">
+      <ui:VisualElement name="players-panel" class="mist-panel" style="flex-grow:1;">
+        <ui:Label text="Who is dreaming" class="mist-panel__title" />
+        <!-- one PlayerRow per player, instantiated from PlayerRow.uxml -->
+        <ui:VisualElement name="player-list" />
+        <ui:VisualElement class="divider" />
+        <ui:Label text="SESSION LEADERBOARD" class="micro-label" />
+        <ui:VisualElement name="scoreboard" />
+      </ui:VisualElement>
+      <ui:VisualElement name="settings-panel" class="mist-panel" style="width:420px; margin-left:24px;">
+        <ui:Label text="The dream" class="mist-panel__title" />
+        <ui:Slider name="head-start" label="Head start" low-value="5" high-value="120" class="slider" />
+        <ui:Slider name="dawn" label="Dawn" low-value="120" high-value="900" class="slider" />
+        <ui:Slider name="lives" label="Lives" low-value="1" high-value="5" class="slider" />
+        <ui:VisualElement class="divider" />
+        <ui:Label text="PACKS" class="micro-label" />
+        <ui:VisualElement name="pack-list" />
+        <ui:VisualElement style="flex-grow:1;" />
+        <!-- text is swapped to the blocking reason when the round cannot start -->
+        <ui:Button name="start" text="Start the dream" class="btn btn--primary btn--lg" />
+      </ui:VisualElement>
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>

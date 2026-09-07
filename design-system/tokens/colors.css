@@ -1,0 +1,64 @@
+:root{
+/* ---- Base: the mist stack. Blue-black, translucent over the 3D view. ---- */
+--ink-900:#070b12;          /* void; behind everything, full-screen scrims */
+--ink-800:#0d1420;          /* deepest opaque surface (Options body, Results) */
+--ink-700:#131c2e;          /* raised opaque surface */
+--mist-600:#22314a;         /* PANEL FILL, used at --alpha-panel over the view */
+--mist-500:#2e4160;         /* panel fill, hover / selected row */
+--mist-400:#3b527a;         /* track fill, slider rail, inactive ring */
+
+/* ---- Hairlines and edges ---- */
+--line-strong:rgba(195,212,234,0.55);   /* panel border, the thin light edge */
+--line:rgba(195,212,234,0.28);          /* internal dividers */
+--line-faint:rgba(195,212,234,0.12);    /* grid, disabled edge */
+
+/* ---- Text. Contrast measured against the panel over a dark view (#1a2740). ---- */
+--fg-1:#f2f6fc;             /* 13.4:1  primary text, numerals, titles */
+--fg-2:#c3d4ea;             /* 9.0:1   secondary text, labels */
+--fg-3:#93a7c4;             /* 5.3:1   tertiary, smallest legal body size */
+--fg-4:#6f82a0;             /* 3.1:1   DECORATIVE / >=24px only, never body */
+
+/* ---- Accents (UI.md 15) ---- */
+--exit-300:#fff6de;         /* exit core, the brightest thing on screen */
+--exit-500:#ffe3a3;         /* exit white-gold, strokes and text */
+--exit-700:#c9a557;         /* exit, dimmed / cooldown remainder */
+--fog-300:#c3d4ea;
+--fog-500:#8fa6c8;          /* fog grey-blue */
+--fog-700:#5c7295;
+--danger-300:#ff9c90;       /* 6.1:1  danger TEXT and rejection labels */
+--danger-500:#d9453a;       /* fills, ghost cube reject, low-health ring */
+--danger-700:#8e241d;
+
+/* ---- Sleeper identity: colour-blind-safe four (UI.md 15). ----
+   Never the sole carrier of meaning and never used for text: a chip or marker
+   in the colour, the number inside it, the name beside it in --fg-1.
+   Use these RAW as a chip fill. Do not darken them toward the near-black
+   numeral: an 88 % black mix put --sleeper-3 at 4.46:1, and the number inside
+   the chip is rule-carrying, so it may never sit under AA. */
+--sleeper-1:#e69f00;        /* orange */
+--sleeper-2:#56b4e9;        /* sky blue */
+--sleeper-3:#009e73;        /* green */
+--sleeper-4:#cc79a7;        /* purple-pink */
+
+/* ---- Door language. Shape and light carry it; hue only reinforces. ---- */
+--door-fog:var(--fog-700);          /* dark, matte, drifting */
+--door-exit:var(--exit-300);        /* bright, radiant */
+--door-solid:#4a5568;               /* skin wall, hatched */
+--door-attached:transparent;        /* an opening is an absence */
+
+/* ---- Semantic aliases: what screens actually reference ---- */
+--surface-panel:var(--mist-600);
+--surface-panel-hover:var(--mist-500);
+--surface-sunken:var(--ink-800);
+--surface-scrim:rgba(7,11,18,0.72);
+--border-panel:var(--line-strong);
+--text-body:var(--fg-2);
+--text-strong:var(--fg-1);
+--text-muted:var(--fg-3);
+--accent-exit:var(--exit-500);
+--accent-fog:var(--fog-500);
+--accent-danger:var(--danger-300);
+--focus-ring:var(--exit-500);
+--alpha-panel:0.72; /* @kind other */         /* the settled translucency of a mist panel */
+--alpha-scrim:0.72; /* @kind other */
+}

@@ -1,0 +1,41 @@
+<!-- @dsCard group="Components" viewport="700x360" name="Nightmare — palette, cooldowns, markers, rejection" subtitle="Cube cards with connector nets, power rings, Sleeper markers" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Nightmare — palette, cooldowns, markers, rejection</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>html,body{margin:0;height:100%}body{background:radial-gradient(120% 120% at 22% 12%,#233149 0%,#0d1420 55%,#070b12 100%);font-family:var(--font-body);color:var(--text-body);padding:24px;box-sizing:border-box}*{box-sizing:border-box}.lbl{font:500 var(--fs-micro)/1 var(--font-body);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--fg-3);margin:0 0 10px}a{color:var(--exit-500)}a:hover{color:var(--exit-300)}</style></head>
+<body><div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">const { PaletteTile, ConnectorNet, CooldownRing, SleeperMarker, RejectionLabel, Icon } = window.DesignSystem_427bea;
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <div style={{display:'flex',gap:20,alignItems:'flex-start'}}>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,width:250}}>
+      <PaletteTile name="Straight" cost={1} hotkey={1} mask="010100" selected/>
+      <PaletteTile name="Cross" cost={1} hotkey={4} mask="011110"/>
+      <PaletteTile name="Ladder shaft" cost={2} hotkey={6} mask="100001" category="cat-vertical"/>
+      <PaletteTile name="Nest" cost={4} hotkey={9} mask="010100" category="cat-mob" budget={3}/>
+    </div>
+    <div style={{display:'flex',flexDirection:'column',gap:16,flex:1}}>
+      <div>
+        <p className="lbl">Powers — Q W E, 30 s per dream</p>
+        <div style={{display:'flex',gap:12}}>
+          <CooldownRing progress={0} label="Q"><Icon name="power-dark" size={22}/></CooldownRing>
+          <CooldownRing progress={0.62} label="11"><Icon name="power-fog" size={22}/></CooldownRing>
+          <CooldownRing progress={0.2} label="24"><Icon name="power-molasses" size={22}/></CooldownRing>
+          <CooldownRing progress={0} tone="fog"><Icon name="power-trigger" size={22}/></CooldownRing>
+        </div>
+      </div>
+      <div>
+        <p className="lbl">Sleepers — colour, number and name together</p>
+        <div style={{display:'flex',flexDirection:'column',gap:8}}>
+          <SleeperMarker index={1} name="Anna" facing={215} selected/>
+          <SleeperMarker index={2} name="Ben" facing={40}/>
+          <SleeperMarker index={3} name="Cara" status="awake"/>
+          <SleeperMarker index={4} name="Dev" status="consumed"/>
+        </div>
+      </div>
+      <RejectionLabel reason="Not enough budget (3 / 4)"/>
+    </div>
+  </div>);</script>
+</body></html>

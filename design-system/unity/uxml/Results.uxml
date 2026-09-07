@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Results — structure only. Styling lives in lucid-tokens.uss + lucid-components.uss. -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:lucid="Lucid.UI">
+  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-tokens.uss" />
+  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-components.uss" />
+  <ui:VisualElement name="results-root" class="mist-panel--sunken" style="flex-grow:1; padding:48px;">
+    <ui:VisualElement name="header" style="flex-direction:row; justify-content:space-between; align-items:flex-end;">
+      <ui:VisualElement style="flex-direction:row; align-items:center;">
+        <ui:VisualElement name="outcome-icon" class="icon icon--60" />
+        <ui:VisualElement>
+          <ui:Label name="round-label" class="micro-label" />
+          <ui:Label name="outcome" class="results__outcome" />
+        </ui:VisualElement>
+      </ui:VisualElement>
+      <ui:VisualElement style="align-items:flex-end;">
+        <ui:Label text="THE NIGHTMARE" class="micro-label" />
+        <ui:VisualElement style="flex-direction:row; align-items:center;">
+          <ui:Label name="nightmare-name" class="results__nightmare" />
+          <ui:Label name="nightmare-delta" class="score-row__delta" />
+        </ui:VisualElement>
+      </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="player-cards" style="flex-direction:row; margin-top:32px;" />
+    <ui:VisualElement name="scoreboard" class="mist-panel" style="flex-grow:1; margin-top:32px;" />
+    <ui:VisualElement name="footer" style="flex-direction:row; justify-content:space-between; align-items:center; margin-top:32px;">
+      <ui:Label name="return-countdown" class="results__countdown" />
+      <ui:VisualElement style="flex-direction:row;">
+        <ui:Button name="copy-build" text="Copy the build string" class="btn btn--secondary btn--lg" />
+        <ui:Button name="to-lobby" text="Back to the lobby" class="btn btn--primary btn--lg" />
+      </ui:VisualElement>
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>

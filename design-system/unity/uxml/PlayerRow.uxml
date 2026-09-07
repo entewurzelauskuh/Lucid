@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PlayerRow — one lobby player — structure only. Styling lives in lucid-tokens.uss + lucid-components.uss. -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:lucid="Lucid.UI">
+  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-tokens.uss" />
+  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-components.uss" />
+  <ui:VisualElement name="player-row" class="player-row">
+    <ui:VisualElement name="avatar" class="avatar" />
+    <ui:Label name="player-name" class="player-row__name" />
+    <ui:VisualElement name="host-crown" class="icon icon--crown" />
+    <ui:VisualElement style="flex-grow:1;" />
+    <ui:VisualElement name="role-nightmare" class="role-card">
+      <ui:VisualElement class="icon icon--role-nightmare" />
+      <ui:Label text="Nightmare" />
+    </ui:VisualElement>
+    <ui:VisualElement name="role-sleeper" class="role-card">
+      <ui:VisualElement class="icon icon--role-sleeper" />
+      <ui:Label text="Sleeper" />
+    </ui:VisualElement>
+    <ui:VisualElement name="ready" class="ready-chip">
+      <ui:VisualElement class="icon icon--unready" />
+      <ui:Label name="ready-label" text="Waiting" />
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>

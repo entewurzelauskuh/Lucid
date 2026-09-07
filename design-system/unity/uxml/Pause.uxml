@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pause — structure only. Styling lives in lucid-tokens.uss + lucid-components.uss. -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:lucid="Lucid.UI">
+  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-tokens.uss" />
+  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-components.uss" />
+  <ui:VisualElement name="pause-root" class="scrim" style="flex-grow:1; align-items:center; justify-content:center;">
+    <ui:VisualElement class="mist-panel" style="width:460px;">
+      <ui:Label text="Paused" class="pause__title" />
+      <ui:Label text="The dream keeps going — only your screen is still." class="pause__note" />
+      <ui:Button name="resume" text="Back to the dream" class="btn btn--primary" />
+      <ui:Button name="options" text="Options" class="btn btn--secondary" />
+      <ui:Button name="invite" text="Invite a friend" class="btn btn--secondary" />
+      <ui:Button name="leave" text="Leave the dream" class="btn btn--secondary" />
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>

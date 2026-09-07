@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- RoundStart — countdown then reveal — structure only. Styling lives in lucid-tokens.uss + lucid-components.uss. -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:lucid="Lucid.UI">
+  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-tokens.uss" />
+  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-components.uss" />
+  <ui:VisualElement name="round-start-root" class="scrim" style="flex-grow:1; align-items:center; justify-content:center;">
+    <ui:Label name="count" class="count" />
+    <ui:VisualElement name="reveal-card" class="mist-panel" style="width:620px; align-items:center;">
+      <ui:Label name="round-label" class="micro-label" />
+      <ui:VisualElement class="icon icon--role-nightmare icon--72" />
+      <ui:Label text="Tonight's Nightmare is…" class="reveal__lead" />
+      <ui:Label name="nightmare-name" class="reveal__name" />
+      <ui:Label name="your-role" class="reveal__role" />
+    </ui:VisualElement>
+    <ui:VisualElement name="sleeper-strip" style="flex-direction:row;" />
+    <lucid:TimerArc name="head-start-timer" class="timer-arc" />
+  </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,19 @@
+<!-- @dsCard group="Colors" viewport="700x190" name="Door language" subtitle="Four states told by shape and light, never by hue alone" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Door language</title>
+<link rel="stylesheet" href="../styles.css">
+<style>html,body{margin:0;height:100%}body{background:radial-gradient(120% 120% at 22% 12%,#233149 0%,#0d1420 55%,#070b12 100%);font-family:var(--font-body);color:var(--text-body);padding:24px;box-sizing:border-box}*{box-sizing:border-box}.lbl{font:500 var(--fs-micro)/1 var(--font-body);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--fg-3);margin:0 0 10px}a{color:var(--exit-500)}a:hover{color:var(--exit-300)}</style></head>
+<body><div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../_ds_bundle.js"></script>
+<script type="text/babel">const { Icon } = window.DesignSystem_427bea;
+const D = [['door-attached','Attached','an opening','var(--fg-2)'],['door-fog','Fog','dark, matte, drifting','var(--fog-500)'],['door-exit','Exit','bright, radiant','var(--exit-300)'],['door-solid','Solid','the skin, hatched','var(--door-solid)']];
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <div style={{display:'flex',gap:12}}>{D.map(([n,t,d,c])=>
+    <div key={n} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:8,padding:14,border:'var(--bw-hair) solid var(--line)',borderRadius:'var(--r-2)',background:'color-mix(in srgb, var(--ink-900) 40%, transparent)'}}>
+      <Icon name={n} size={46} color={c} strokeWidth={1.4}/>
+      <span style={{font:'400 var(--fs-body)/1 var(--font-body)',color:'var(--fg-1)'}}>{t}</span>
+      <span style={{font:'400 11px/1.3 var(--font-body)',color:'var(--fg-3)',textAlign:'center'}}>{d}</span>
+    </div>)}</div>);</script>
+</body></html>
