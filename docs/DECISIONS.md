@@ -12,6 +12,27 @@ Reason: why this over the alternatives.
 Spec: sections changed.
 ```
 
+## 2026-09-07 — The UI design system is adopted, with its defaults written down
+
+Context: #85. Claude Design delivered a design system for the interface (`design-system/`): tokens, components, an icon language, every screen at 1920×1080, and a Unity-facing guide. Its `guidelines/decisions-draft.md` lists nineteen defaults it chose where `docs/UI.md` was open, and its change request asked for `docs/` to say the same things so the implementation could be consistent with itself.
+Decision: the design system is the visual source of truth and `design-system/unity/CLAUDE-CODE-UI-GUIDE.md` the implementation authority for how the interface looks; `docs/UI.md` wins where they disagree. The nineteen defaults stand, and the ones that change what a player sees are written into `docs/UI.md` §15 rather than left in a draft file: translucency allocated by lifetime; modal scrims split into frozen and live; five type sizes with the 22 px floor for every *value* on Results and the scoreboard; tabular and lining figures from two extra font files; the three Sleeper-colour rules (raw chip fill, never used as text, the Nightmare reserves the chip footprint); the connector net generated from the mask; no logo, LUCID set in the display face; blocked buttons state their blocker; HUD clusters lit by a radial scrim rather than framed in panels; both Nightmare docks full height; colour-blind marker shapes an option, off by default; scoreboard columns min-width; the rank digit at `--fg-3`; Results derived from one session record; `--fg-4` decorative or ≥ 24 px only. **Proposed, not decided:** Dark dims at two levels — non-rule chrome to 32 %, the health ring and crescent lives held at 60 % — because a flat 32 % measured about 1.7:1 on the two readouts a rule depends on; the numbers are the design system's, and stay proposed until the owner confirms or replaces them, with the general clause (item 4a of the request) held alongside.
+Reason: the defaults were each chosen by building the screen and finding the open question could not stay open — and a default that lives only in a draft file is one the next contributor overrides without knowing it was ever chosen. Translucency by lifetime is the one that looks like a retreat and is not: USS has no `backdrop-filter` and cannot get one, so a 72 % panel over a bright god view is the *worse* look, not a compromise on the intended one. The change request called several of these `[S]` edits; on re-reading, `docs/UI.md` §15 is `[D]`, §9 and §11 are `[D]`, and §1, §6 and §14 carry no marker, so none needed escalating. The design system itself is project work and joins §18's CC-BY-4.0 line.
+Spec: `docs/UI.md` §1, §9, §11, §14, §15; `docs/SPEC.md` §15, §18, §21; `docs/UI-TOOLKIT-LIMITS.md` new. Nothing in `docs/UI.md` §14's existing strings changed; it gained the strings other sections already carried and the five section captions.
+
+## 2026-09-07 — Fonts may be OFL
+
+Context: #85. `CLAUDE.md` rule 5 admits CC0 and CC-BY only, and `docs/UI.md` §15 names Inter and Cormorant Garamond, which — like nearly every open typeface — are OFL. The design system's asset checklist had quietly written "OFL, CC0 or CC-BY only" as though the rule already said so.
+Decision: fonts may be OFL, committed with their licence file beside them and a row in `THIRD_PARTY_NOTICES.md`. The two derivatives with figures frozen in are renamed with the `Lucid` prefix so no Reserved Font Name is carried, and the row says what was frozen. OFL is admitted for fonts only.
+Reason: a rule that refuses the two typefaces the UI is specified in is a rule that gets bypassed the day the first screen needs text. But OFL's terms are font-specific — the reserved-name clause, no selling the font alone — and widening rule 5 to "OFL anything" would invite it into cube assets, where the ledger and the hook exist to keep the licence question simple. The licence gate needs no change: it has no jurisdiction outside a cube's `assets/`, and that stays true.
+Spec: `CLAUDE.md` rule 5; `THIRD_PARTY_NOTICES.md`.
+
+## 2026-09-07 — SPEC §7 names each door state's non-hue channel
+
+Context: #85, item 11 of the design system's change request. §7's fog-door block is **[S]** and says door states never rely on hue alone, with a Look column that describes each; it did not say which channel carries the state when the hue is gone, and four implementers would have invented four encodings.
+Decision: §7 now states the rule as "state is legible in greyscale" and names the channel per state — the mist sheet, the same sheet blazing, the opening condensed to wall, an open passage. No state, transition or semantics changed.
+Reason: the addition is what the settled rule already meant, made testable: desaturate a screenshot and the four must still be told apart. Recorded here because it is text added to an `[S]` section, and rule 7 says an `[S]` edit leaves a trace even when it changes no meaning.
+Spec: `docs/SPEC.md` §7.
+
 ## 2026-09-06 — Concept art is the project's own work, and says how it was made
 
 Context: the owner produced ten concept images and asked for them in the README, so that people can see where the game is going. `docs/SPEC.md` §18's licensing bullet enumerated what the project releases under CC-BY-4.0 — text, briefs, specs, generated shell textures — and concept art was not on the list. It is also not a third-party asset, so rule 5 and `THIRD_PARTY_NOTICES.md` do not describe it either. It fell between the two.
