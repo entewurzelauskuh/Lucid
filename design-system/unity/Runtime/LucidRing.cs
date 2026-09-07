@@ -14,7 +14,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Lucid.UI
+namespace Lucid.Runtime.UI
 {
     [UxmlElement]
     public partial class LucidRing : VisualElement

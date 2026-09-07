@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- RoundStart — countdown then reveal — structure only. Styling lives in lucid-tokens.uss + lucid-components.uss. -->
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:lucid="Lucid.UI">
-  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-tokens.uss" />
-  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-components.uss" />
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:lucid="Lucid.Runtime.UI">
+  <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-tokens.uss" />
+  <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-components.uss" />
   <ui:VisualElement name="round-start-root" class="scrim" style="flex-grow:1; align-items:center; justify-content:center;">
     <ui:Label name="count" class="count" />
     <ui:VisualElement name="reveal-card" class="mist-panel" style="width:620px; align-items:center;">

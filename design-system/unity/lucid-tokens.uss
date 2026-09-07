@@ -1,5 +1,5 @@
 /* Lucid — design tokens as USS custom properties.
-   Paste into Assets/_Lucid/UI/Styles/lucid-tokens.uss and add it to every UXML
+   Paste into Assets/_Lucid/Runtime/UI/Styles/lucid-tokens.uss and add it to every UXML
    via <Style src="..."/>, or once on the root PanelSettings theme.
 
    USS notes baked into this file:
@@ -57,17 +57,17 @@
 
   /* type */
   /* Prose faces: proportional figures, which is correct for running text. */
-  --font-display: url("project:///Assets/_Lucid/UI/Fonts/CormorantGaramond-Light.ttf");
-  --font-display-semibold: url("project:///Assets/_Lucid/UI/Fonts/CormorantGaramond-SemiBold.ttf");
-  --font-body: url("project:///Assets/_Lucid/UI/Fonts/Inter-Regular.ttf");
-  --font-body-medium: url("project:///Assets/_Lucid/UI/Fonts/Inter-Medium.ttf");
+  --font-display: url("project:///Assets/_Lucid/Runtime/UI/Fonts/CormorantGaramond-Light.ttf");
+  --font-display-semibold: url("project:///Assets/_Lucid/Runtime/UI/Fonts/CormorantGaramond-SemiBold.ttf");
+  --font-body: url("project:///Assets/_Lucid/Runtime/UI/Fonts/Inter-Regular.ttf");
+  --font-body-medium: url("project:///Assets/_Lucid/Runtime/UI/Fonts/Inter-Medium.ttf");
 
   /* Numeral faces: the SAME families with tnum (and lnum on the serif) frozen
      in as the default glyphs, because Unity exposes no OpenType switches.
      Built offline with pyftfeatfreeze — see guidelines/asset-checklist.md.
      Use via the .tabular / .lining classes, never as the default face. */
-  --font-body-tabular: url("project:///Assets/_Lucid/UI/Fonts/LucidInter-Tabular.ttf");
-  --font-display-lining: url("project:///Assets/_Lucid/UI/Fonts/LucidCormorant-Lining.ttf");
+  --font-body-tabular: url("project:///Assets/_Lucid/Runtime/UI/Fonts/LucidInter-Tabular.ttf");
+  --font-display-lining: url("project:///Assets/_Lucid/Runtime/UI/Fonts/LucidCormorant-Lining.ttf");
   --fs-display: 64px;
   --fs-title: 34px;
   --fs-heading: 22px;

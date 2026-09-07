@@ -9,6 +9,28 @@ Work top to bottom. **Item 1 is a rule marked `[S]` that the platform cannot hon
 written**; it needs a human decision, not a patch. Items 4 and 4a also need sign-off.
 Everything else is safe to write down as-is.
 
+## Resolution (2026-09-07, #85)
+
+Applied to `docs/` on branch `m0/85-design-system-docs`, one commit per file.
+Where a "currently says" quote did not match the live doc, the doc had not
+moved — the quote had misread its marker:
+
+| Item | Outcome |
+|---|---|
+| 1 | **Applied, not escalated.** `docs/UI.md` §15 is `[D]`, not `[S]`; the lifetime rule is written in. |
+| 2, 3, 5, 6, 9 | Applied. §1, §9 and §14 are unmarked and §15 is `[D]`, so none of these touched settled text. |
+| 4, 4a | **Held**, per the owner. Dark's two levels land in `docs/DECISIONS.md` as *proposed*. |
+| 7 | **Reconciled.** §11 already listed both toggles, with the hatch on *fog*, not `solid` (the guide's own §7 agrees). Added: both default off, and the two-control rule. |
+| 8 | Applied. The three "gaps" were mostly already in §14 — the lobby blockers and the placement reasons are there verbatim. §14 gained the nine strings `LucidStrings.cs` had harvested from §2, §4, §7–§10 and §13, and five section captions. The UXML skeletons' twenty-two invented strings were **not** added; they are the skeletons' bug. |
+| 10, 11 | Applied. 11 is the one genuine `[S]` edit and has a DECISIONS entry. |
+| 12 | Rule 5 amended for OFL fonts; the ledger rows go in `THIRD_PARTY_NOTICES.md` when the files land, since rule 5's ledger is per cube. |
+| 13 | The nineteen entries land as one entry in that file's format; Dark marked proposed. |
+| 14 | Written: `docs/UI-TOOLKIT-LIMITS.md`. |
+
+Also corrected in this folder: the guide's §5 put `depth · exit` on the Sleeper
+HUD (it is the Nightmare's row); §1's layout would have landed the C# outside
+every assembly; §4's `connectorMask` field does not exist.
+
 ## How to use this file
 
 1. **Re-read each section before editing it.** The "currently says" quotes below are from

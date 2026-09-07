@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Spectator — structure only. Styling lives in lucid-tokens.uss + lucid-components.uss. -->
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:lucid="Lucid.UI">
-  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-tokens.uss" />
-  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-components.uss" />
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:lucid="Lucid.Runtime.UI">
+  <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-tokens.uss" />
+  <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-components.uss" />
   <ui:VisualElement name="spectator-root" picking-mode="Ignore" style="flex-grow:1;">
     <ui:VisualElement name="watch-frame" picking-mode="Ignore" class="watch-frame" />
     <ui:VisualElement name="status" style="position:absolute; left:48px; top:48px; flex-direction:row; align-items:center;">

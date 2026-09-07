@@ -15,13 +15,14 @@ including one `[S]` rule that UI Toolkit cannot honour as written.
 | `DOCS-CHANGE-REQUEST.md` | Edits the repo's `docs/` need. Read second. |
 | `lucid-tokens.uss` | Every token as a USS custom property |
 | `lucid-components.uss` | A class block per component, with states |
-| `uxml/*.uxml` | A structure-only skeleton per screen |
+| `uxml/*.uxml` | A structure-only skeleton per screen — **a shape, not a source**: they carry inline `style=` attributes and twenty-two strings that are not in `docs/UI.md`, both of which the guide's §0 forbids in the real screens. Take the hierarchy; take styling from the two stylesheets and every string from `LucidStrings` |
 | `Runtime/LucidRing.cs` | Every ring and arc — the one thing USS cannot draw |
 | `Runtime/LucidConnectorNet.cs` | The six-face cube net, generated from the mask |
 | `Runtime/LucidStrings.cs` | `docs/UI.md` §14 transcribed; the only source of copy |
 
-Drop `Styles/`, `Screens/` and `Runtime/` under `Assets/_Lucid/UI/` per the
-layout in §1 of the guide. The C# needs no packages beyond UI Toolkit itself.
+Drop `Styles/`, `Screens/` and `Runtime/` under `Assets/_Lucid/Runtime/UI/` per
+the layout in §1 of the guide — inside `Lucid.Runtime`, because this project's
+assemblies cannot reference a folder outside them. The C# needs no packages beyond UI Toolkit itself.
 
 ## Resolved UI Toolkit limitations
 

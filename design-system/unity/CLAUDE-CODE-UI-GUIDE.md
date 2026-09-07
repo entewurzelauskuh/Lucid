@@ -44,7 +44,7 @@ the screen you are building.
 ## 1. Files and where they go
 
 ```
-Assets/_Lucid/UI/
+Assets/_Lucid/Runtime/UI/          (inside Lucid.Runtime; see below)
   Styles/
     lucid-tokens.uss          every token; import first
     lucid-components.uss      component classes; depends on tokens
@@ -64,6 +64,12 @@ Assets/_Lucid/UI/
   Icons/
     lucid-icons.png           sprite atlas, or the individual SVGs
 ```
+
+Everything sits under `Runtime/` because every script in this project lives in
+an assembly definition: a folder outside them lands in `Assembly-CSharp`, which
+`Lucid.Runtime` cannot reference, so a screen controller in the scene flow could
+never see `LucidStrings`. The C# namespace is `Lucid.Runtime.UI` and the UXML
+declares `xmlns:lucid="Lucid.Runtime.UI"` (`docs/DECISIONS.md`, 2026-09-07).
 
 Attach both stylesheets once on the root `PanelSettings` theme rather than per
 UXML, so a restyle is one file. Every UXML in `Screens/` still carries its
@@ -220,19 +226,23 @@ Never author a per-cube glyph. `LucidConnectorNet` takes the six-bit mask the
 `CubeDefinition` already has:
 
 ```csharp
-net.SetMask(cubeDefinition.connectorMask);   // bool[6]
+net.SetMask(cubeDefinition.Connectors);      // Lucid.Core.FaceMask
 // or net.mask = "010100";
 ```
 
-Order is `[top, west, north, east, south, bottom]`. A new cube type gets its
-glyph for free, forever. This is why there is no cube icon in `Icons/`.
+The net's own order is `[top, west, north, east, south, bottom]`; `SetMask`
+takes Core's `FaceMask` (North, East, South, West, Up, Down) and reorders it, so
+no caller does. A new cube type gets its glyph for free, forever. This is why
+there is no cube icon in `Icons/`.
 
 ---
 
 ## 5. Layout
 
 **The Sleeper HUD has exactly six positions.** Six, not seven. Adding one costs
-the player a place to look.
+the player a place to look. Depth is not one of them: `depth 7 · exit 11` is the
+Nightmare's Sleeper row (`docs/UI.md` §8), and §1.2 gives the Sleeper the timer,
+health, lives and the door language — the way out is read off the doors.
 
 | Position | Contents |
 |---|---|
@@ -240,7 +250,7 @@ the player a place to look.
 | Top left | active effect chips (Molasses' 70 %, Dark, Fog) |
 | Top right | toast stack |
 | Centre | crosshair |
-| Bottom left | health ring, crescent moons, `depth 7 · exit 11` |
+| Bottom left | health ring, crescent moons |
 | Bottom right | key reminders |
 
 Every cluster sits `--hud-margin` (48 px) from its screen edge. There is **no
@@ -321,7 +331,11 @@ exit keeps its radiance (it is a game rule).
 
 **Title.** Wordmark in `--font-display` Light at 0.24em tracking — *there is no
 logo asset and you must not create one*. Menu is Host a dream / Join / Sandbox /
-Options / Quit. The bedroom's fog door breathes behind the wordmark.
+Options / Quit; in M0 only Sandbox and Quit exist (`docs/UI.md` §16) and the
+other three are absent rather than greyed, since rule 0.3 would demand a blocker
+string §14 does not have. Build for five so nothing moves when they arrive. The
+bedroom's fog door breathes behind the wordmark — the real start cube, through
+`DreamInstance`, not an image (`docs/UI.md` §3).
 
 **Lobby.** Three columns and a bottom bar. Only the local player's row is
 interactive. Start's label is its blocker, from `LucidStrings`. Roles and ready

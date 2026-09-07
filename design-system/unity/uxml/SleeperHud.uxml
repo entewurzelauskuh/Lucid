@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- SleeperHud — structure only. Styling lives in lucid-tokens.uss + lucid-components.uss. -->
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:lucid="Lucid.UI">
-  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-tokens.uss" />
-  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-components.uss" />
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:lucid="Lucid.Runtime.UI">
+  <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-tokens.uss" />
+  <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-components.uss" />
   <ui:VisualElement name="hud-root" picking-mode="Ignore" style="flex-grow:1;">
     <ui:VisualElement name="damage-arc" picking-mode="Ignore" class="damage-arc" />
     <lucid:TimerArc name="dawn" class="timer-arc" style="position:absolute; top:24px; left:50%; translate:-50% 0;" />

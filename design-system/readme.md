@@ -25,16 +25,21 @@ Markers in those docs matter: **[S]** is settled and was not reinterpreted here;
 **[D]** is open, and every deviation is recorded in `guidelines/decisions-draft.md`
 ready to paste into `docs/DECISIONS.md`.
 
-## What is settled [S]
+## What is settled
 
 The world is painted and soft-focus; the UI over it is crisp and renders after
-post-processing on a Screen Space Overlay. Panels are translucent blue-black mist
-with thin light borders. Accents are exit white-gold, fog grey-blue, danger red.
-**Door states never rely on hue alone** — Fog is dark and matte, Exit is bright
-and radiant, Solid is a wall, Attached is an opening. The four Sleeper colours are
+post-processing on a Screen Space Overlay. **Door states never rely on hue alone**
+— Fog is dark and matte, Exit is bright and radiant, Solid is a wall, Attached is
+an opening (`docs/SPEC.md` §7, marked `[S]`). The four Sleeper colours are
 `#E69F00` `#56B4E9` `#009E73` `#CC79A7`, always paired with a number *and* a name.
 Every string comes from the §14 glossary verbatim. Titles are a soft serif, body a
 humanist sans, both open-licence. Implementation is UI Toolkit (UXML/USS).
+
+A correction to the first draft of this section: `docs/UI.md` §15 — panels,
+accents, type — is marked `[D]`, and §1, §6 and §14 carry no marker. Only the
+door-state rule above is `[S]`. Everything else here is a default this system
+chose and the owner then wrote into `docs/UI.md` (`docs/DECISIONS.md`,
+2026-09-07), not a rule it inherited.
 
 ---
 

@@ -188,14 +188,14 @@
    The "light chrome" answer: no panel behind a HUD cluster, just a faint
    radial wash so text stays legible over the maze. One tinted texture. */
 .cluster-scrim {
-  background-image: url("project:///Assets/_Lucid/UI/Icons/radial-soft.png");
+  background-image: url("project:///Assets/_Lucid/Runtime/UI/Icons/radial-soft.png");
   -unity-background-image-tint-color: rgba(7, 11, 18, 0.62);
   -unity-background-scale-mode: stretch-to-fill;
   padding: 16px;
 }
 .damage-arc {
   position: absolute; left: 0; right: 0; top: 0; bottom: 0;
-  background-image: url("project:///Assets/_Lucid/UI/Icons/radial-soft.png");
+  background-image: url("project:///Assets/_Lucid/Runtime/UI/Icons/radial-soft.png");
   -unity-background-image-tint-color: rgba(217, 69, 58, 0.38);
   opacity: 0;
   transition-property: opacity; transition-duration: var(--dur-base);
@@ -307,7 +307,7 @@
    own fallback instead: a wall is a fainter stroke with no dot, a doorway is a
    full stroke with a filled dot. */
 .dashed-box {
-  background-image: url("project:///Assets/_Lucid/UI/Icons/dash-border.png");
+  background-image: url("project:///Assets/_Lucid/Runtime/UI/Icons/dash-border.png");
   -unity-slice-left: 8; -unity-slice-right: 8; -unity-slice-top: 8; -unity-slice-bottom: 8;
   -unity-slice-scale: 1;
   -unity-background-image-tint-color: var(--line-faint);

@@ -9,7 +9,7 @@
 
 using System;
 
-namespace Lucid.UI
+namespace Lucid.Runtime.UI
 {
     public static class LucidStrings
     {

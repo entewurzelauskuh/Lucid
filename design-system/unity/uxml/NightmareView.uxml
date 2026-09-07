@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- NightmareView — structure only. Styling lives in lucid-tokens.uss + lucid-components.uss. -->
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:lucid="Lucid.UI">
-  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-tokens.uss" />
-  <Style src="project:///Assets/_Lucid/UI/Styles/lucid-components.uss" />
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:lucid="Lucid.Runtime.UI">
+  <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-tokens.uss" />
+  <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-components.uss" />
   <ui:VisualElement name="nightmare-root" style="flex-grow:1;">
     <!-- world markers are children of this layer, positioned each frame from
          WorldToScreenPoint; it never intercepts clicks meant for the view -->

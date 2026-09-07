@@ -13,7 +13,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Lucid.UI
+namespace Lucid.Runtime.UI
 {
     [UxmlElement]
     public partial class LucidConnectorNet : VisualElement
@@ -53,12 +53,20 @@ namespace Lucid.UI
             });
         }
 
-        /// <summary>Convenience for CubeDefinition's bool[6] connector mask.</summary>
-        public void SetMask(bool[] faces)
+        /// <summary>
+        /// From Core's mask, whose order is North, East, South, West, Up, Down
+        /// (<c>Lucid.Core.Face</c>). The net's own order is top, west, north,
+        /// east, south, bottom; the reorder happens here and nowhere else.
+        /// </summary>
+        public void SetMask(Lucid.Core.FaceMask faces)
         {
-            if (faces == null || faces.Length < 6) return;
+            var f = new[]
+            {
+                Lucid.Core.Face.Up, Lucid.Core.Face.West, Lucid.Core.Face.North,
+                Lucid.Core.Face.East, Lucid.Core.Face.South, Lucid.Core.Face.Down,
+            };
             var chars = new char[6];
-            for (int i = 0; i < 6; i++) chars[i] = faces[i] ? '1' : '0';
+            for (int i = 0; i < 6; i++) chars[i] = Lucid.Core.Faces.Has(faces, f[i]) ? '1' : '0';
             mask = new string(chars);
         }
 
