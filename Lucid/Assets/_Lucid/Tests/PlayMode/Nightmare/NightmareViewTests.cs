@@ -466,9 +466,8 @@ namespace Lucid.Tests.PlayMode.Nightmare
             // entry is what the host loop consumes, and the feet are M0.6's.
             Sandbox().EnterSleeper();
             yield return null;
-            yield return new WaitForFixedUpdate();   // the bedroom's volume has noticed them
+            yield return new WaitForFixedUpdate();   // the bedroom's volume has noticed the new body
             Assert.That(Sandbox().Sleeper, Is.Not.Null);
-            Assert.That(round.Sleepers[LocalRound.LocalSleeper].Cube, Is.EqualTo(BedroomDoor.Cube), "Core does not know the Sleeper is in the bedroom");
             Assert.That(c.gameObject.activeInHierarchy, Is.False, "the god view is still up beside the Sleeper");
             Assert.That(Object.FindFirstObjectByType<NightmareHud>(FindObjectsInactive.Include).gameObject.activeInHierarchy,
                 Is.False, "the Nightmare's HUD is still up on the Sleeper's screen");
@@ -479,8 +478,10 @@ namespace Lucid.Tests.PlayMode.Nightmare
             c.Round.Dream.Cubes[tee].OnSleeperInside();
             // Where they stand is the trap rule's input (docs/CORE-API.md §10),
             // so the report has to move Core's Sleeper as well as explore.
-            // Read before the frame turns: the Sleeper's body is still in the
-            // bedroom, whose volume will rightly report them back there.
+            // Read before the frame turns: the report is by hand, and the
+            // body it stands for is in the bedroom, whose volume reports that
+            // on its own first physics step. The physics path is
+            // SandboxTests' to prove.
             Assert.That(round.Sleepers[LocalRound.LocalSleeper].Cube, Is.EqualTo(tee), "Core does not know where the Sleeper is");
             yield return null;
 

@@ -177,18 +177,28 @@ namespace Lucid.Tests.PlayMode.Flow
             SleeperMotor sleeper = sandbox.Sleeper;
             Coord one = new Coord(0, 1, 0), two = new Coord(0, 2, 0);
 
+            // On foot, not by warp: a warp toggles the controller, and the
+            // trigger events that makes are not the ones a walk makes.
             sleeper.Warp(DreamSpace.Origin(one) + new Vector3(0f, 0.1f, 0f));
+            sleeper.transform.rotation = Quaternion.LookRotation(DreamSpace.Direction(Face.North), Vector3.up);
             Step();
             Assert.That(round.Sleepers[0].Cube, Is.EqualTo(one));
             Assert.That(round.Lattice.IsExplored(one), Is.True);
 
-            sleeper.Warp(DreamSpace.Origin(two) + new Vector3(0f, 0.1f, 0f));
-            Step();
-            Assert.That(round.Sleepers[0].Cube, Is.EqualTo(two));
+            WalkForward(sleeper, 3f, () => round.Sleepers[0].Cube == two);
+            Assert.That(round.Sleepers[0].Cube, Is.EqualTo(two), $"never reached the second room; feet at {sleeper.Feet}");
+            Assert.That(round.Lattice.IsExplored(two), Is.True);
 
-            sleeper.Warp(DreamSpace.Origin(one) + new Vector3(0f, 0.1f, 0f));
-            Step();
-            Assert.That(round.Sleepers[0].Cube, Is.EqualTo(one), "walking back into an explored room did not move Core's Sleeper");
+            sleeper.transform.rotation = Quaternion.LookRotation(DreamSpace.Direction(Face.South), Vector3.up);
+            WalkForward(sleeper, 3f, () => round.Sleepers[0].Cube == one);
+            Assert.That(round.Sleepers[0].Cube, Is.EqualTo(one), $"walking back into an explored room did not move Core's Sleeper; feet at {sleeper.Feet}");
+
+            // F5 back to the god view: no body, so no phantom in room one —
+            // Core's Sleeper stands where the next drop-in puts them.
+            sandbox.EnterNightmare();
+            yield return null;
+            Assert.That(round.Sleepers[0].Cube, Is.EqualTo(round.Lattice.Start), "Core keeps a phantom Sleeper while the Nightmare builds");
+            Assert.That(round.Sleepers[0].Status, Is.EqualTo(SleeperStatus.InDream));
         }
     }
 }

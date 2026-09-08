@@ -77,7 +77,9 @@ namespace Lucid.Runtime
         /// console's — `RoundSettings` says M0.9c is the only thing that
         /// changes a round's settings, and this changes the round instead.
         /// The dream is handed the new lattice, which retires the old one (a
-        /// new round is a new dream).
+        /// new round is a new dream). It is not M0.9's round restart either:
+        /// a standing Sleeper, the HUD's binding and the Sandbox's exit count
+        /// are left to the caller, and a bedroom-only dream keeps its cube.
         /// </summary>
         internal void Restart(RoundSettings settings)
         {
@@ -118,6 +120,14 @@ namespace Lucid.Runtime
         /// thinks they are, and the trap rule is judged from the right cube.
         /// </summary>
         void OnArrived(Coord cube) => Round.UpdateSleeperCube(LocalSleeper, cube);
+
+        /// <summary>
+        /// The Sleeper's body is gone — the Sandbox went back to the god view —
+        /// so Core's Sleeper stands where the next drop-in will put them, the
+        /// start cube, rather than as a phantom in the last room they reached
+        /// with the trap rule judged from there.
+        /// </summary>
+        public void SleeperLeft() => Round.UpdateSleeperCube(LocalSleeper, Round.Lattice.Start);
 
         void Update()
         {

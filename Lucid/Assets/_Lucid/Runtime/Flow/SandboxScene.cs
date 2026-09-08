@@ -139,7 +139,11 @@ namespace Lucid.Runtime
 
             if (nightmare)
             {
-                if (_sleeper != null) Destroy(_sleeper.gameObject);
+                if (_sleeper != null)
+                {
+                    Destroy(_sleeper.gameObject);
+                    GetComponent<LocalRound>().SleeperLeft();
+                }
                 _sleeper = null;
             }
             else if (_sleeper == null)
