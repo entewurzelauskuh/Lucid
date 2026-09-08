@@ -72,9 +72,12 @@ namespace Lucid.Runtime
         internal void ConfigureUnbounded() => _unbounded = true;
 
         /// <summary>
-        /// A fresh round on other settings, for a test of the bounded HUD in a
-        /// scene built for the Sandbox. The dream is handed the new lattice,
-        /// which retires the old one (a new round is a new dream).
+        /// A test seam: a fresh round on other settings, so the bounded HUD can
+        /// be tested in the scene built for the Sandbox. Not the tuning
+        /// console's — `RoundSettings` says M0.9c is the only thing that
+        /// changes a round's settings, and this changes the round instead.
+        /// The dream is handed the new lattice, which retires the old one (a
+        /// new round is a new dream).
         /// </summary>
         internal void Restart(RoundSettings settings)
         {
