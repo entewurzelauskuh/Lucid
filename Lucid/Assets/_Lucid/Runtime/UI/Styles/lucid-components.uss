@@ -349,7 +349,7 @@
 .palette-tile__net { width: 36px; height: 48px; margin-right: var(--sp-4); }
 .palette-tile__body { flex-grow: 1; }
 .palette-tile__row { flex-direction: row; align-items: center; justify-content: space-between; }
-.nightmare__budget { flex-direction: row; align-items: center; margin-top: var(--sp-5); }
+.nightmare__budget { flex-direction: row; align-items: center; margin-top: var(--sp-3); margin-bottom: var(--sp-5); }
 .nightmare__budget-figures { margin-left: var(--sp-4); }
 .nightmare__dawn { position: absolute; top: var(--sp-5); left: 50%; translate: -50% 0; align-items: center; }
 .nightmare__phase { font-size: var(--fs-body); color: var(--fg-2); margin-top: var(--sp-2); }

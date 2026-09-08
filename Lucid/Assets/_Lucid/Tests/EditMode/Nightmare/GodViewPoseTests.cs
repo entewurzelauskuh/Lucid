@@ -8,6 +8,13 @@ namespace Lucid.Tests.EditMode.Nightmare
     public sealed class GodViewPoseTests
     {
         static readonly Vector3 Pivot = new Vector3(0f, 4f, 0f);
+        static readonly System.Collections.Generic.IEqualityComparer<Vector3> Near = new NearVector();
+
+        sealed class NearVector : System.Collections.Generic.IEqualityComparer<Vector3>
+        {
+            public bool Equals(Vector3 a, Vector3 b) => (a - b).sqrMagnitude < 1e-6f;
+            public int GetHashCode(Vector3 v) => 0;
+        }
 
         [Test]
         public void TheCameraLooksAtThePivotFromItsDistance()
@@ -60,12 +67,17 @@ namespace Lucid.Tests.EditMode.Nightmare
         [Test]
         public void PanningFollowsTheScreenAndStaysOnTheLayer()
         {
-            // Turned a quarter, "screen right" is world +z, not +x.
-            GodViewPose pose = new GodViewPose(Pivot, 90f, 45f, 20f, false);
-            GodViewPose panned = pose.Panned(new Vector2(1f, 0f), 2f);
+            // Facing north, screen right is world +x and screen up world +z.
+            GodViewPose north = new GodViewPose(Pivot, 0f, 45f, 20f, false);
+            Assert.That(north.Panned(new Vector2(1f, 0f), 2f).Pivot, Is.EqualTo(Pivot + new Vector3(2f, 0f, 0f)).Using(Near));
+            Assert.That(north.Panned(new Vector2(0f, 1f), 2f).Pivot, Is.EqualTo(Pivot + new Vector3(0f, 0f, 2f)).Using(Near));
 
-            Assert.That(panned.Pivot.z - Pivot.z, Is.EqualTo(-2f).Within(1e-4f).Or.EqualTo(2f).Within(1e-4f));
-            Assert.That(panned.Pivot.x, Is.EqualTo(Pivot.x).Within(1e-4f));
+            // Turned a quarter clockwise, the camera faces east: screen right
+            // is world -z — the sign is the point, a flipped pan passes a
+            // test that only asks for movement along z.
+            GodViewPose east = new GodViewPose(Pivot, 90f, 45f, 20f, false);
+            GodViewPose panned = east.Panned(new Vector2(1f, 0f), 2f);
+            Assert.That(panned.Pivot, Is.EqualTo(Pivot + new Vector3(0f, 0f, -2f)).Using(Near));
             Assert.That(panned.Pivot.y, Is.EqualTo(Pivot.y), "a pan never changes the layer");
         }
 

@@ -8,10 +8,8 @@
   <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-components.uss" />
   <ui:VisualElement name="nightmare-root" class="nightmare" picking-mode="Ignore">
 
+    <!-- docs/UI.md §8's region table: budget top left, palette left. -->
     <ui:VisualElement name="palette-dock" class="mist-panel mist-panel--chrome mist-panel--docked nightmare__dock nightmare__dock--palette">
-      <ui:Label text="PALETTE" class="micro-label" />
-      <ui:ScrollView name="cube-cards" class="nightmare__cards" />
-      <ui:VisualElement class="divider" />
       <ui:Label text="BUDGET" class="micro-label" />
       <ui:VisualElement name="budget" class="nightmare__budget">
         <lucid:LucidRing name="trickle" class="ring" round-caps="false" />
@@ -20,6 +18,9 @@
           <ui:Label name="budget-rate" class="budget__rate tabular" />
         </ui:VisualElement>
       </ui:VisualElement>
+      <ui:VisualElement class="divider" />
+      <ui:Label text="PALETTE" class="micro-label" />
+      <ui:ScrollView name="cube-cards" class="nightmare__cards" />
     </ui:VisualElement>
 
     <ui:VisualElement name="dawn" class="nightmare__dawn" picking-mode="Ignore">

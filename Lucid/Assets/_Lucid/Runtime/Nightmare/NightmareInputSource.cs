@@ -7,6 +7,8 @@ namespace Lucid.Runtime
     public struct NightmareInput
     {
         public Vector2 Point;
+        /// <summary>Whether there is a pointer at all. Without one, Point is nothing and nothing is under it.</summary>
+        public bool HasPointer;
         public Vector2 Look;
         public Vector2 Pan;
         public float Zoom;
@@ -83,6 +85,7 @@ namespace Lucid.Runtime
             return new NightmareInput
             {
                 Point = _point?.ReadValue<Vector2>() ?? Vector2.zero,
+                HasPointer = Pointer.current != null,
                 Look = _look?.ReadValue<Vector2>() ?? Vector2.zero,
                 Pan = _pan?.ReadValue<Vector2>() ?? Vector2.zero,
                 Zoom = _zoom?.ReadValue<float>() ?? 0f,

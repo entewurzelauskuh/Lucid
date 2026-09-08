@@ -74,6 +74,10 @@ namespace Lucid.Tests.PlayMode.Nightmare
             VisualElement cards = Hud().Root.Q("cube-cards");
             Assert.That(cards.Query(className: "palette-tile").ToList(), Has.Count.EqualTo(4));
             Assert.That(cards.Query<Label>(name: "cost").ToList().Select(l => l.text), Is.All.EqualTo("1"));
+
+            // docs/UI.md §8's region table: the budget is top left, above the palette.
+            Assert.That(Hud().Root.Q("budget").worldBound.yMax, Is.LessThanOrEqualTo(cards.worldBound.yMin),
+                "the budget is not above the palette");
         }
 
         [UnityTest]
@@ -96,6 +100,10 @@ namespace Lucid.Tests.PlayMode.Nightmare
                 Assert.That(c.Ghost.IsShown && c.Ghost.Ok, Is.True, "the ghost is not green for a legal placement");
 
                 PlaceVerdict placed = c.Place();
+                // Before the frame turns: a success must not leave the ghost
+                // standing red on the door it just made Attached.
+                Assert.That(c.LastVerdict.Ok, Is.True, "a successful placement left a refusal on the ghost");
+                Assert.That(c.Ghost.IsShown, Is.False, "the ghost stands on a door that is no longer one");
                 yield return null;
 
                 Assert.That(placed.Ok, Is.True, $"{type.Id}: {placed}");
@@ -241,6 +249,152 @@ namespace Lucid.Tests.PlayMode.Nightmare
             Assert.That(c.Place().Ok, Is.False, "a cube was placed after dawn");
             yield return null;
             Assert.That(round.Lattice.Cubes.Count, Is.EqualTo(cubesBefore));
+        }
+
+        [UnityTest]
+        public IEnumerator TheGhostStandsInTheDreamNotOnTheCamera()
+        {
+            // The first draft parented the ghost to the camera rig: it stood
+            // eight metres down the view axis and swung with every orbit, and
+            // no test looked at where it was.
+            yield return OpenTheSandbox();
+            NightmareController c = Controller();
+            DreamInstance dream = c.Round.Dream;
+
+            c.Select(c.Palette.First(d => d.Id == "core.straight"));
+            c.Hover(BedroomDoor);
+            Coord target = BedroomDoor.Cube.Offset(BedroomDoor.Face);
+            Vector3 expected = dream.transform.TransformPoint(DreamSpace.Centre(target));
+            Assert.That((c.Ghost.transform.position - expected).magnitude, Is.LessThan(1e-3f),
+                $"the ghost stands at {c.Ghost.transform.position}, the cube at {expected}");
+
+            c.View.Orbit(new Vector2(240f, 60f));
+            c.View.Zoom(2f);
+            yield return null;
+            Assert.That((c.Ghost.transform.position - expected).magnitude, Is.LessThan(1e-3f), "the ghost moved with the camera");
+        }
+
+        [UnityTest]
+        public IEnumerator AStandingGhostAsksCoreAgainEveryFrame()
+        {
+            // Nothing moves: the cursor stays on the door, and the clock runs
+            // out under it. The ghost has to turn red without a hover change.
+            yield return OpenTheSandbox();
+            NightmareController c = Controller();
+            Round round = c.Round.Round;
+
+            c.Select(c.Palette.First(d => d.Id == "core.straight"));
+            c.Hover(BedroomDoor);
+            Assert.That(c.LastVerdict.Ok, Is.True);
+            Assert.That(c.Ghost.Ok, Is.True);
+
+            round.Advance(round.Settings.RoundLengthMs);
+            yield return null;
+            yield return null;
+
+            Assert.That(c.LastVerdict.Ok, Is.False, "the ghost kept yesterday's verdict");
+            Assert.That(c.Ghost.Ok, Is.False, "the ghost is still green after dawn");
+            Assert.That(Hud().RejectionText, Is.EqualTo("Not a door"));
+        }
+
+        [UnityTest]
+        public IEnumerator TheHudIsOpaqueToTheWorld()
+        {
+            // A screen point on the palette dock is the HUD's; one in the open
+            // middle of the screen is the world's. The controller asks before
+            // it picks, zooms or places.
+            yield return OpenTheSandbox();
+            NightmareHud hud = Hud();
+            VisualElement dock = hud.Root.Q("palette-dock");
+            Rect panelBounds = hud.Root.panel.visualTree.worldBound;
+            float scale = Screen.width / panelBounds.width;
+
+            Vector2 dockCentre = dock.worldBound.center * scale;
+            Vector2 onDock = new Vector2(dockCentre.x, Screen.height - dockCentre.y);
+            Vector2 open = new Vector2(Screen.width * 0.6f, Screen.height * 0.5f);
+
+            Assert.That(hud.Covers(onDock), Is.True, $"the dock at {onDock} does not cover");
+            Assert.That(hud.Covers(open), Is.False, $"the open screen at {open} is covered");
+        }
+
+        [UnityTest]
+        public IEnumerator ReturningFromTheSleeperRebuildsTheHud()
+        {
+            // A UIDocument rebuilds its tree on enable; the palette was built
+            // once, into the tree that is gone.
+            yield return OpenTheSandbox();
+            SandboxScene sandbox = Sandbox();
+            NightmareController c = Controller();
+
+            c.Select(c.Palette[0]);
+            sandbox.EnterSleeper();
+            yield return null;
+            Assert.That(c.Selected, Is.Null, "the Sleeper went in with a cube in the Nightmare's hand");
+            sandbox.EnterNightmare();
+            yield return null;
+            yield return null;
+
+            NightmareHud hud = Hud();
+            Assert.That(hud.gameObject.activeInHierarchy, Is.True);
+            Assert.That(hud.Root.Q("cube-cards").Query(className: "palette-tile").ToList(), Has.Count.EqualTo(4),
+                "the palette did not come back with the god view");
+            Assert.That(hud.Root.Q<Label>("layer-value").text, Is.Not.Empty, "the layer readout is blank");
+            Assert.That(hud.Root.Q<Label>("budget-value").text, Is.Not.Empty);
+            Assert.That(Object.FindObjectsByType<SleeperMotor>(FindObjectsSortMode.None), Is.Empty);
+        }
+
+        [UnityTest]
+        public IEnumerator FogAndExitDoorsAreHighlightedOnTheGodViewOnly()
+        {
+            // docs/UI.md §8: "fog doors highlighted as buildable". Attached
+            // doors are not, and the Sleeper never sees the overlay.
+            yield return OpenTheSandbox();
+            NightmareController c = Controller();
+            SandboxScene sandbox = Sandbox();
+            FogDoorVisual Visual(Coord cube, Face face) => c.Round.Dream.Cubes[cube].Doors[face].GetComponent<FogDoorVisual>();
+
+            Assert.That(Visual(BedroomDoor.Cube, Face.North).Highlight, Is.GreaterThan(1f), "the bedroom's exit is not lit");
+
+            // A T on the bedroom and a straight beyond its east door: the
+            // straight's far door is the exit, the T's west door is fog, and
+            // the three doors that met are attached. Fog and exit are lit.
+            c.Select(c.Palette.First(d => d.Id == "core.tee"));
+            c.Hover(BedroomDoor);
+            Assert.That(c.Place().Ok, Is.True);
+            yield return null;
+            Coord tee = BedroomDoor.Cube.Offset(BedroomDoor.Face);
+            ConnectorRef east = new ConnectorRef(tee, Face.East);
+            c.Select(c.Palette.First(d => d.Id == "core.straight"));
+            c.Hover(east);
+            for (int turn = 0; turn < 4 && !c.LastVerdict.Ok; turn++) c.RotateGhost();
+            Assert.That(c.Place().Ok, Is.True);
+            yield return null;
+            Coord straight = east.Cube.Offset(east.Face);
+
+            Assert.That(c.Round.Round.Derived.Connectors[new ConnectorRef(tee, Face.West)], Is.EqualTo(ConnectorState.Fog));
+            Assert.That(c.Round.Round.Derived.Connectors[new ConnectorRef(straight, Face.East)], Is.EqualTo(ConnectorState.Exit));
+            Assert.That(Visual(tee, Face.West).Highlight, Is.GreaterThan(1f), "a fog door is not lit as buildable");
+            Assert.That(Visual(straight, Face.East).Highlight, Is.GreaterThan(1f), "the exit is not lit");
+            Assert.That(Visual(BedroomDoor.Cube, Face.North).Highlight, Is.EqualTo(1f), "an attached door is lit as buildable");
+            Assert.That(Visual(tee, Face.South).Highlight, Is.EqualTo(1f), "an attached door is lit as buildable");
+            Assert.That(Visual(tee, Face.East).Highlight, Is.EqualTo(1f), "an attached door is lit as buildable");
+
+            // Cut the straight away (it is on layer 0; the slider at -1 hides
+            // it) and its door is not on offer either; bring it back and it is.
+            while (c.View.Cutaway.Layer >= 0) c.LayerDown();
+            Assert.That(c.Round.Dream.Cubes[straight].IsCutAway, Is.True);
+            Assert.That(Visual(straight, Face.East).Highlight, Is.EqualTo(1f), "a hidden cube's door is on offer");
+            c.LayerUp();
+            Assert.That(c.Round.Dream.Cubes[straight].IsCutAway, Is.False);
+            Assert.That(Visual(straight, Face.East).Highlight, Is.GreaterThan(1f), "the straight is on layer 0 and showing");
+
+            sandbox.EnterSleeper();
+            yield return null;
+            Assert.That(Visual(straight, Face.East).Highlight, Is.EqualTo(1f), "the Sleeper sees the Nightmare's overlay");
+            Assert.That(Visual(tee, Face.West).Highlight, Is.EqualTo(1f), "the Sleeper sees the Nightmare's overlay");
+            sandbox.EnterNightmare();
+            yield return null;
+            Assert.That(Visual(straight, Face.East).Highlight, Is.GreaterThan(1f), "the overlay did not come back");
         }
 
         [UnityTest]

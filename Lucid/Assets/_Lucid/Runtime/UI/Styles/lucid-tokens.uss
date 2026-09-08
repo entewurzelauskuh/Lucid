@@ -86,8 +86,8 @@
   --pad-panel: 24px;
   --pad-row: 12px;
   --hud-margin: 48px;
-  --w-menu: 340px;
-  --w-palette: 340px;   /* the Nightmare's palette dock (guide §5) */      /* the Title's and the Pause menu's column */
+  --w-menu: 340px;      /* the Title's and the Pause menu's column */
+  --w-palette: 340px;   /* the Nightmare's palette dock (guide §5) */
   --hit-min: 44px;
 
   /* shape */

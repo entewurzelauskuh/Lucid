@@ -101,8 +101,18 @@ namespace Lucid.Runtime
             Mode = mode;
             bool nightmare = mode == SandboxMode.Nightmare;
 
+            // The god view's overlay — a selection in hand, the buildable
+            // highlights — is the Nightmare's and never the Sleeper's.
+            NightmareController controller = Nightmare;
+            if (controller != null && !nightmare)
+            {
+                controller.Cancel();
+                controller.ShowBuildable(false);
+            }
+
             if (_nightmareRig != null) _nightmareRig.SetActive(nightmare);
             if (_nightmareHud != null) _nightmareHud.SetActive(nightmare);
+            if (controller != null && nightmare) controller.ShowBuildable(true);
 
             if (nightmare)
             {

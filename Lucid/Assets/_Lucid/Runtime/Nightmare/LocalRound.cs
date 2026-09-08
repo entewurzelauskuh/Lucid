@@ -35,8 +35,12 @@ namespace Lucid.Runtime
         public Round Round { get; private set; }
         public DreamInstance Dream => _dream;
 
-        /// <summary>The lattice grew; the god view re-applies its cut-away.</summary>
-        public event Action<PlaceRequest> Placed;
+        /// <summary>
+        /// The dream was handed a new lattice or derived state — a placement
+        /// or an exploration — so the god view re-applies what it lays over
+        /// the cubes: the cut-away, the buildable highlights, the ghost.
+        /// </summary>
+        public event Action Applied;
 
         internal void Configure(int headStartMs, int roundLengthMs, int startingBudget, int trickleIntervalMs)
         {
@@ -88,7 +92,7 @@ namespace Lucid.Runtime
             if (!verdict.Ok) return verdict;
 
             _dream.Apply(Round.Lattice, Round.Derived);
-            Placed?.Invoke(request);
+            Applied?.Invoke();
             return verdict;
         }
 
@@ -96,7 +100,10 @@ namespace Lucid.Runtime
         {
             Round.UpdateSleeperCube(LocalSleeper, cube);
             if (Round.TryExplore(LocalSleeper, cube) == ExploreError.None)
+            {
                 _dream.Apply(Round.Lattice, Round.Derived);
+                Applied?.Invoke();
+            }
         }
     }
 }

@@ -15,7 +15,11 @@ namespace Lucid.Runtime
     {
         const float Reach = 400f;
 
-        static readonly RaycastHit[] s_Hits = new RaycastHit[32];
+        // A top-down ray down a full column crosses every cube's shell, entry
+        // volume and door barriers; 32 was short of that, and RaycastNonAlloc
+        // drops hits past its buffer in no particular order — including,
+        // possibly, the nearest door.
+        static readonly RaycastHit[] s_Hits = new RaycastHit[256];
 
         public static bool Pick(Camera camera, Vector2 screen, out ConnectorRef door, out FogDoor hit)
         {

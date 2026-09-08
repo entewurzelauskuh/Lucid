@@ -79,7 +79,13 @@ namespace Lucid.Runtime.UI
 
         // --- Readouts ------------------------------------------------------------
         public static string Build(string version, string engine) => $"{version} · Unity {engine}";
-        public static string Trickle(int seconds) => $"1 per {seconds} s";
+        /// <summary>"1 per {n} s" from the interval in milliseconds: whole seconds, or one decimal when it is not whole.</summary>
+        public static string Trickle(int intervalMs) =>
+            intervalMs % 1000 == 0
+                ? $"1 per {intervalMs / 1000} s"
+                : $"1 per {(intervalMs / 1000f).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)} s";
+        /// <summary>A Sleeper with no name yet, by seat (docs/UI.md §14): the Sandbox's own.</summary>
+        public static string SleeperSeat(int n) => $"Sleeper {n}";
 
         // --- The one clock format -------------------------------------------------
         // Always m:ss. Tabular numerals in USS, so a ticking value never shifts.

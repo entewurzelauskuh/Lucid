@@ -53,8 +53,29 @@ namespace Lucid.Runtime.UI
             _rejection = root.Q("rejection");
             _rejectionText = root.Q<Label>("rejection-reason");
 
-            root.Q<Button>("layer-up").clicked += () => { _controller?.View.LayerUp(); ShowLayer(_controller.View.Cutaway); };
-            root.Q<Button>("layer-down").clicked += () => { _controller?.View.LayerDown(); ShowLayer(_controller.View.Cutaway); };
+            root.Q<Button>("layer-up").clicked += () => { if (_controller != null) _controller.LayerUp(); };
+            root.Q<Button>("layer-down").clicked += () => { if (_controller != null) _controller.LayerDown(); };
+
+            // A UIDocument drops its tree on disable and clones the UXML again
+            // on enable, so everything built into the old tree is gone. Bind
+            // runs once, from the controller's Start; a return from the
+            // Sleeper's side needs the palette built again.
+            if (_controller != null) Bind(_controller);
+        }
+
+        /// <summary>
+        /// Whether a screen point — Input System convention, origin bottom-left —
+        /// lands on the chrome rather than the world. The root and the
+        /// read-only clusters ignore picking, so only the docks and buttons
+        /// answer.
+        /// </summary>
+        public bool Covers(Vector2 screenPoint)
+        {
+            VisualElement root = Root;
+            if (root == null || root.panel == null) return false;
+            var topLeft = new Vector2(screenPoint.x, Screen.height - screenPoint.y);
+            Vector2 local = RuntimePanelUtils.ScreenToPanel(root.panel, topLeft);
+            return root.panel.Pick(local) != null;
         }
 
         /// <summary>Builds the palette from the controller's list and starts following its state.</summary>
@@ -113,10 +134,13 @@ namespace Lucid.Runtime.UI
             Round round = _controller.Round.Round;
 
             // Budget: the number steps, the ring fills toward the next point.
+            // The intervals are clamped to a millisecond: zero is legal to
+            // Core and would be a NaN ring here.
             int points = round.Budget.Points;
+            int trickleMs = Math.Max(1, round.Settings.TrickleIntervalMs);
             _budgetValue.text = points.ToString();
-            _budgetRate.text = LucidStrings.Trickle(round.Settings.TrickleIntervalMs / 1000);
-            _trickle.progress = 1f - (float)round.Budget.MsUntilNextPoint / round.Settings.TrickleIntervalMs;
+            _budgetRate.text = LucidStrings.Trickle(trickleMs);
+            _trickle.progress = 1f - (float)round.Budget.MsUntilNextPoint / trickleMs;
 
             for (int i = 0; i < _tiles.Count; i++)
             {
@@ -129,7 +153,7 @@ namespace Lucid.Runtime.UI
 
             // Dawn: the arc is the whole round, the digits the time left.
             int remaining = Math.Max(0, round.Settings.RoundLengthMs - round.ClockMs);
-            _dawnArc.progress = (float)round.ClockMs / round.Settings.RoundLengthMs;
+            _dawnArc.progress = (float)round.ClockMs / Math.Max(1, round.Settings.RoundLengthMs);
             _dawnArc.EnableInClassList("timer-arc--urgent", remaining <= UrgentMs && round.Phase != Phase.Dawn);
             _dawnValue.text = LucidStrings.Clock(TimeSpan.FromMilliseconds(remaining));
             _phase.text = PhaseCopy(round, remaining);
