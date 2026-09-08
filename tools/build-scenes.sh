@@ -72,19 +72,22 @@ set -e
 # Unity can abort before running anything — most often because the editor has
 # the project open — and does not always exit non-zero when it does. Without
 # this the script reports success over a build that never started.
-if grep -q "Aborting batchmode due to" "$LOG"; then
-  echo "Unity aborted before running anything:" >&2
-  grep -A4 "Aborting batchmode due to" "$LOG" >&2
-  exit 1
-fi
-
+# Compile errors first: "Aborting batchmode due to failure: Scripts have compiler
+# errors" is the abort's whole message, and reporting it alone sent the reader
+# back for the log to learn which line.
 if grep -qE "error CS[0-9]+" "$LOG"; then
   echo "COMPILATION FAILED - the build below would be from stale assemblies" >&2
   grep -oE "[^ ]+\.cs\([0-9]+,[0-9]+\): error CS[0-9]+: .*" "$LOG" | sort -u | head -15 >&2
   exit 1
 fi
 
-grep -E "^(gauntlet|fogdoors|scenes): " "$LOG" || true
+if grep -q "Aborting batchmode due to" "$LOG"; then
+  echo "Unity aborted before running anything:" >&2
+  grep -A4 "Aborting batchmode due to" "$LOG" >&2
+  exit 1
+fi
+
+grep -E "^(gauntlet|fogdoors|scenes|ui|boot|title|dream|buildsettings): " "$LOG" || true
 
 if [[ $code -ne 0 ]]; then
   echo "FAILED (exit $code); full log at $LOG" >&2

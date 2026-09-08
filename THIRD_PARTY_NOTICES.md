@@ -34,10 +34,16 @@ unless the package states otherwise. Versions are pinned in
 
 ## Fonts
 
-None committed yet. `docs/UI.md` §15 names Inter and Cormorant Garamond, both
-OFL 1.1, plus two feature-frozen derivatives renamed with the `Lucid` prefix;
-each gets a row here — source, version, licence, and what was frozen — in the
-pull request that adds the files.
+All under `Lucid/Assets/_Lucid/Runtime/UI/Fonts/`, with each family's OFL text
+beside it. OFL 1.1 is admitted for fonts only (CLAUDE.md rule 5). Neither
+family declares a Reserved Font Name; the derivatives are renamed anyway.
+
+| File | Source | Version | Licence | Notes |
+|---|---|---|---|---|
+| `Inter-Regular.ttf`, `Inter-Medium.ttf`, `Inter-SemiBold.ttf` | [rsms/inter](https://github.com/rsms/inter), release v4.1, `extras/ttf/` | 4.001 | OFL 1.1 (`OFL-Inter.txt`) | as published |
+| `CormorantGaramond-Light.ttf`, `CormorantGaramond-SemiBold.ttf` | [google/fonts](https://github.com/google/fonts/tree/main/ofl/cormorantgaramond), upstream CatharsisFonts/Cormorant | 4.001 | OFL 1.1, instanced (`OFL-CormorantGaramond.txt`) | static instances at wght 300 and 600, cut from the published variable file with `fontTools.varLib.instancer --update-name-table`; outlines as published, a name table per weight |
+| `LucidInter-Tabular.ttf` | Inter-Regular, above | 4.001 | OFL 1.1, modified | `tnum` frozen as the default figures with `pyftfeatfreeze`; family renamed LucidInter |
+| `LucidCormorant-Lining.ttf` | CormorantGaramond-Light, above | 4.001 | OFL 1.1, modified | `lnum` and `tnum` frozen with `pyftfeatfreeze`; family renamed LucidCormorant |
 
 ## Planned
 

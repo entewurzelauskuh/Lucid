@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Title (docs/UI.md §3, §16). Structure only: every style is a class in
+     Styles/, every string is docs/UI.md §14. M0 shows the two entries that
+     work offline; Host a dream, Join and Options arrive with M1 and slot in
+     between (guide §8). -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:lucid="Lucid.Runtime.UI">
+  <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-tokens.uss" />
+  <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-components.uss" />
+  <ui:VisualElement name="title-root" class="screen">
+    <ui:Label name="wordmark" text="LUCID" class="wordmark" />
+    <ui:VisualElement name="menu" class="title__menu">
+      <ui:Button name="sandbox" text="Sandbox" class="btn btn--primary btn--lg" />
+      <ui:Button name="quit" text="Quit" class="btn btn--secondary btn--lg" />
+    </ui:VisualElement>
+    <ui:Label name="build" class="micro-label screen__corner tabular" />
+  </ui:VisualElement>
+</ui:UXML>
