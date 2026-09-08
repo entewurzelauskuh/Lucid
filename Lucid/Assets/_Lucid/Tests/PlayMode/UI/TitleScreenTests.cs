@@ -132,9 +132,16 @@ namespace Lucid.Tests.PlayMode.UI
 
             Scene dream = SceneManager.GetSceneByName("Dream");
             Assert.That(dream.isLoaded, Is.True);
+            // docs/UI.md §12: the Sandbox opens as the Nightmare, building;
+            // the Sleeper's side is a switch away (M0.9b).
             SandboxScene scene = Object.FindFirstObjectByType<SandboxScene>();
+            Assert.That(scene.Mode, Is.EqualTo(SandboxMode.Nightmare));
+            Assert.That(scene.Nightmare, Is.Not.Null, "no god view");
+            Assert.That(scene.GetComponent<DreamInstance>().Cubes.Count, Is.EqualTo(1), "no bedroom to build from");
+
+            scene.EnterSleeper();
+            yield return null;
             Assert.That(scene.Sleeper, Is.Not.Null, "no Sleeper standing in the bedroom");
-            Assert.That(scene.GetComponent<DreamInstance>().Cubes.Count, Is.EqualTo(1), "no bedroom to stand in");
         }
     }
 }

@@ -71,6 +71,29 @@ namespace Lucid.Runtime
         /// <summary>The doors, by the world face each one faces.</summary>
         public IReadOnlyDictionary<Face, FogDoor> Doors => _doors;
 
+        /// <summary>The lattice's name for one of this cube's doors, or null if it is not one.</summary>
+        public ConnectorRef? RefOf(FogDoor door)
+        {
+            foreach (KeyValuePair<Face, FogDoor> pair in _doors)
+                if (pair.Value == door) return new ConnectorRef(_coord, pair.Key);
+            return null;
+        }
+
+        /// <summary>Whether the god view's layer slider has hidden this cube.</summary>
+        public bool IsCutAway { get; private set; }
+
+        /// <summary>
+        /// Hides or shows the cube for the god view. Renderers only: a cube the
+        /// Nightmare has cut away is still there for the Sleeper walking
+        /// through it, so colliders, doors and the entry volume are untouched.
+        /// </summary>
+        public void SetCutAway(bool cutAway)
+        {
+            if (IsCutAway == cutAway) return;
+            IsCutAway = cutAway;
+            foreach (Renderer r in GetComponentsInChildren<Renderer>(true)) r.enabled = !cutAway;
+        }
+
         /// <summary>
         /// Plants <paramref name="prefab"/> at <paramref name="coord"/> and
         /// wires it up. The cube is not yet showing any state; call

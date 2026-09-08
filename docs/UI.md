@@ -179,9 +179,11 @@ Strings are the rules made visible; keep them exact so every screen says the sam
 - Spectator: "You're awake. Watch the others."
 - Nightmare view: "Building paused"
 - Edge flows: "The dream collapsed" · "The Nightmare fled" · "The dream will collapse for all Sleepers." · "Round in progress, {time} left" · "Steam is offline"
-- Readouts and hints: "depth {n} · exit {n}" (the Nightmare's Sleeper row, §8) · "{version} · Unity {engine}" (the build string, §3) · "you can accept invites from the overlay at any time" (§3)
+- Readouts and hints: "depth {n} · exit {n}" (the Nightmare's Sleeper row, §8) · "{version} · Unity {engine}" (the build string, §3) · "1 per {n} s" (the budget's trickle rate, §8; n is whole seconds, or one decimal when the interval is not whole) · "Sleeper {n}" (a Sleeper who has no name yet, by seat — the Sandbox's, §12) · "you can accept invites from the overlay at any time" (§3)
 - Title: "LUCID" (the wordmark, §15) · "Host a dream" · "Join" · "Sandbox" · "Options" · "Quit"
 - Section captions, the one place uppercase is allowed (§15): PALETTE · PACKS · BUDGET · SLEEPERS · SESSION LEADERBOARD · THE NIGHTMARE
+
+Hotkey captions — the `1`…`9` on palette cards, `PgUp` and `PgDn` on the layer buttons, a key on any button that has one — are the key's own name as bound in M0, and not copy. Reading them off the action map so a rebinding changes them is Options' work (M1).
 
 Every string a screen shows comes from this list, and the Unity project reads them from one file (`design-system/unity/Runtime/LucidStrings.cs`, this section transcribed). A screen that needs a string not here adds it here first — never at the call site. The blocked-button reasons (Lobby, above) and the placement rejections replace a control's own label or ride the red ghost verbatim; §1.3 applied to controls. `{mob}` in the possession line is the mob's name as spec §8 gives it — a Shade or an Eye, both possessable per spec §10. The article is *the* rather than *a* because the Nightmare possesses a specific mob under the cursor, and because "a Eye" is not English (`docs/DECISIONS.md`, 2026-09-07). The "— P to let go" is part of the string, not layout.
 

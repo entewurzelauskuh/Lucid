@@ -6,7 +6,7 @@ Read in this order before doing anything: `docs/SPEC.md` (what the game is), `do
 
 ## Status
 
-**M0.1 through M0.6b are merged; M0.7 (#7) is next** (`docs/WORKPLAN.md` §4). Unity **6000.3.11f1** at `Lucid/`.
+**M0.1 through M0.7 are merged; M0.9b (#10) is next** (`docs/WORKPLAN.md` §4). Unity **6000.3.11f1** at `Lucid/`.
 
 - `Lucid.Core` implements `docs/CORE-API.md` in full — lattice, derivation, the placement and exploration rules, round, budget, powers and scoring. Nearly every item of its §12 test list is covered — depth on a loop is not (#84).
 - The cube pipeline runs end to end: `tools/build-cube.sh core` builds Straight, Corner, T, Cross and the Bedroom from `cube.spec.json`, validates each, and renders three previews apiece. Rebuilding changes nothing on disk.
@@ -14,7 +14,8 @@ Read in this order before doing anything: `docs/SPEC.md` (what the game is), `do
 - Fog doors behave. `FogDoorTransitions` is `docs/SPEC.md` §7's table as a pure function — including the rule it states by omission, that an Exit never hardens, without which a Sleeper could seal the way out by walking towards it. The mist is a generated-noise shader on a quad stack; a Solid door stops moving rather than becoming the cube's wall material, which is deferred to M0.6 (`docs/DECISIONS.md`).
 - **The dream stands up.** `DreamInstance` replays an event log into cubes, wires every door to what Core derived, and reports the two things the rules care about — a Sleeper's first entry into a cube, and a Sleeper walking into an exit. It reports and does not decide: exploration is global across every dream and waking ends a round, so both are the host's to adjudicate (`docs/SPEC.md` §5, §14), and nothing consumes either event yet. `DreamSpace` is the only place the lattice's axes meet Unity's.
 - **The flow stands.** Boot holds `Services` and `GameFlow`; Title and Dream are loaded beside it and never load each other. `FlowTable` is the only place a transition is written down, and `GameFlow.Go` throws on one it lacks. The Title renders with the design system's tokens and real fonts — two families, two feature-frozen derivatives for figures — over the real bedroom; Sandbox is a Sleeper in that bedroom and Esc back, the shell M0.7 and M0.9b fill.
-- Still no networking, and no god view — M0.7 and M0.8 build those.
+- **The Nightmare builds.** The Sandbox opens in the god view: an orbit/top-down camera over the lattice with a layer cut-away that hides renderers and nothing else, a palette of the pack's connectors, a ghost that asks `Rules.ValidatePlace` every frame it stands and turns red with §14's verbatim reason, fog and exit doors lit as buildable on the god view only, and a budget and dawn timer read off a local `Round` — the host loop of `docs/CORE-API.md` §10 played on this machine. `PlacementCopy` is the one table from Core's nine refusals to the glossary's five strings.
+- Still no networking — M0.8 builds it.
 - **PlayMode works and is proven to fail when it should** — before M0.4 the platform had never run a test, so `0/0 passed` and "nothing ran" looked identical. It carries the Sleeper's tests now; `Lucid.Netcode` remains a stub.
 
 Things the tree does not tell you:
@@ -74,7 +75,7 @@ Unity is invoked in batch mode by these scripts: `Unity -batchmode -nographics -
 | Path | What lives there |
 |---|---|
 | `Lucid/Assets/_Lucid/Core/` | `Lucid.Core` — lattice, cube types, event log, rules, `Validate`, `Derive` |
-| `Lucid/Assets/_Lucid/Runtime/` | `Lucid.Runtime` — dream instance, Sleeper controller, Nightmare view, fog doors, traps, mobs, UI; `Input/` holds the action maps, `Dev/` the gauntlet, which is in Runtime so the editor script and the PlayMode tests build one course rather than two, `UI/` the stylesheets, screens, fonts and the three UI Toolkit elements (namespace `Lucid.Runtime.UI`), and `Flow/` the Boot bootstrap, `Services`, `GameFlow` and its table |
+| `Lucid/Assets/_Lucid/Runtime/` | `Lucid.Runtime` — dream instance, Sleeper controller, Nightmare view, fog doors, traps, mobs, UI; `Input/` holds the action maps, `Dev/` the gauntlet, which is in Runtime so the editor script and the PlayMode tests build one course rather than two, `UI/` the stylesheets, screens, fonts and the three UI Toolkit elements (namespace `Lucid.Runtime.UI`), `Flow/` the Boot bootstrap, `Services`, `GameFlow` and its table, and `Nightmare/` the god view, the picker, the ghost, the local round and the controller |
 | `design-system/` | The interface's design system: tokens, components, icons, every screen mocked, and `unity/` with the paste-ready USS, UXML skeletons and the implementation guide. `docs/UI.md` wins where they disagree |
 | `Lucid/Assets/_Lucid/Netcode/` | `Lucid.Netcode` — `Approval`, `SessionState`, `RoundSync`, `LatticeMirror`, `DreamRelay`, transports (UTP dev, Facepunch Steam); message IDs from `docs/NETCODE.md` §12 |
 | `Lucid/Assets/_Lucid/Editor/` | `Lucid.Editor` — `CubeBuilder`, `CubeValidator`, `AssetNormalizer`, scene setup scripts |

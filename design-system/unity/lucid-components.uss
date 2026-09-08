@@ -107,15 +107,18 @@
 /* ---------------------------------------------------------- rings and arcs
    USS cannot stroke an arc. Each of these is a VisualElement with a
    generateVisualContent callback (Painter2D.Arc) that reads these properties. */
-.ring { width: 56px; height: 56px; --ring-track: var(--line-faint); --ring-fill: var(--exit-500); --ring-width: var(--bw-ring-thin); }
+/* --ring-width is a bare number: ICustomStyle reads custom properties as floats,
+   not lengths, and Painter2D strokes in panel pixels anyway. It mirrors --bw-ring
+   and --bw-ring-thin, which stay lengths for border-width. */
+.ring { width: 56px; height: 56px; --ring-track: var(--line-faint); --ring-fill: var(--exit-500); --ring-width: 2; }
 .ring--cooling { --ring-fill: var(--exit-700); color: var(--fg-4); }
-.timer-arc { width: 190px; height: 130px; --ring-fill: var(--exit-500); --ring-width: var(--bw-ring); }
+.timer-arc { width: 190px; height: 130px; --ring-fill: var(--exit-500); --ring-width: 3; }
 .timer-arc--urgent { --ring-fill: var(--danger-300); }
 .timer-arc__value { font-size: var(--fs-title); color: var(--fg-1); -unity-text-align: middle-center; }
 .timer-arc--urgent .timer-arc__value { color: var(--danger-300); }
-.health-ring { width: 84px; height: 84px; --ring-fill: var(--fog-300); --ring-width: var(--bw-ring); }
+.health-ring { width: 84px; height: 84px; --ring-fill: var(--fog-300); --ring-width: 3; }
 .health-ring--low { --ring-fill: var(--danger-300); }
-.crosshair { width: 56px; height: 56px; --ring-fill: var(--exit-300); --ring-width: var(--bw-ring-thin); }
+.crosshair { width: 56px; height: 56px; --ring-fill: var(--exit-300); --ring-width: 2; }
 
 /* ---------------------------------------------------------- moons */
 .moon { width: 22px; height: 22px; -unity-background-image-tint-color: var(--fg-1); }

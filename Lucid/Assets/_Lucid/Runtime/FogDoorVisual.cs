@@ -47,6 +47,14 @@ namespace Lucid.Runtime
         /// <summary>The look currently on screen, after any transition blend.</summary>
         public FogDoorLook Shown { get; private set; }
 
+        /// <summary>
+        /// A multiplier on the sheet's brightness, 1 for none. The god view
+        /// raises it on doors the Nightmare can build on (docs/UI.md §8,
+        /// "fog doors highlighted as buildable"); nothing on the Sleeper's
+        /// side ever sets it, so a Sleeper sees the door's own look and no more.
+        /// </summary>
+        public float Highlight { get; set; } = 1f;
+
         public int Layers => _layers;
 
         void Awake() => EnsureReady();
@@ -145,7 +153,7 @@ namespace Lucid.Runtime
 
                 renderer.GetPropertyBlock(_block);
                 _block.SetColor("_Tint", Shown.Tint);
-                _block.SetFloat("_Brightness", Shown.Brightness);
+                _block.SetFloat("_Brightness", Shown.Brightness * Highlight);
                 _block.SetFloat("_Density", Shown.Density / _renderers.Length * 1.6f * depth);
                 _block.SetFloat("_Base", Shown.Opacity);
                 _block.SetFloat("_Scale", 1.6f + i * 0.7f);

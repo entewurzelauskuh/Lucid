@@ -22,3 +22,7 @@ needed at a new alpha is a new named token rather than a computation.
 Rings and arcs are the one thing USS cannot express at all; they are a single
 `VisualElement` subclass drawing with `Painter2D.Arc` and reading its colours from
 `--ring-*` custom properties, so a stylesheet still configures them.
+`--ring-width` is a bare number rather than a length: `ICustomStyle` reads a
+custom property as a float, a colour, a string or a texture, never as a
+dimension, and `3px` there is a warning and the default width. The stroke is in
+panel pixels either way.

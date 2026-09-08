@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Nightmare view, M0 (docs/UI.md §8, §16): palette v0, budget, timer, the
+     ghost's reason, the layer buttons. The Sleeper panel, powers bar and target
+     selector are M0.9 and M1 and slot into the same root. Structure only: every
+     style is a class in Styles/, every string is docs/UI.md §14. -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:lucid="Lucid.Runtime.UI">
+  <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-tokens.uss" />
+  <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-components.uss" />
+  <ui:VisualElement name="nightmare-root" class="nightmare" picking-mode="Ignore">
+
+    <!-- docs/UI.md §8's region table: budget top left, palette left. -->
+    <ui:VisualElement name="palette-dock" class="mist-panel mist-panel--chrome mist-panel--docked nightmare__dock nightmare__dock--palette">
+      <ui:Label text="BUDGET" class="micro-label" />
+      <ui:VisualElement name="budget" class="nightmare__budget">
+        <lucid:LucidRing name="trickle" class="ring" round-caps="false" />
+        <ui:VisualElement class="nightmare__budget-figures">
+          <ui:Label name="budget-value" class="budget__value tabular" />
+          <ui:Label name="budget-rate" class="budget__rate tabular" />
+        </ui:VisualElement>
+      </ui:VisualElement>
+      <ui:VisualElement class="divider" />
+      <ui:Label text="PALETTE" class="micro-label" />
+      <ui:ScrollView name="cube-cards" class="nightmare__cards" />
+    </ui:VisualElement>
+
+    <!-- Read-only clusters and every leaf in them ignore picking: Ignore is
+         not inherited, and a pickable label riding the ghost would answer
+         Covers, clear the hover it labels, and flicker. -->
+    <ui:VisualElement name="dawn" class="nightmare__dawn" picking-mode="Ignore">
+      <lucid:LucidRing name="dawn-arc" class="timer-arc" sweep-angle="180" start-angle="-90" round-caps="false" />
+      <ui:Label name="dawn-value" class="timer-arc__value tabular" picking-mode="Ignore" />
+      <ui:Label name="phase" class="nightmare__phase" picking-mode="Ignore" />
+    </ui:VisualElement>
+
+    <ui:VisualElement name="layers" class="nightmare__layers">
+      <ui:Button name="layer-up" text="PgUp" class="btn btn--secondary" />
+      <ui:Label name="layer-value" class="nightmare__layer-value tabular" />
+      <ui:Button name="layer-down" text="PgDn" class="btn btn--secondary" />
+    </ui:VisualElement>
+
+    <ui:VisualElement name="rejection" class="rejection rejection--hidden" picking-mode="Ignore">
+      <ui:Label name="rejection-reason" picking-mode="Ignore" />
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>

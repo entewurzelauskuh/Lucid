@@ -37,6 +37,10 @@ namespace Lucid.Runtime
         /// <summary>A Sleeper walked into this exit door.</summary>
         public event Action<ConnectorRef> TouchedExit;
 
+        public DreamPack Pack => _pack;
+        public string StartTypeId => _startTypeId;
+        public Rotation StartRotation => _startRotation;
+
         public Lattice Lattice { get; private set; }
         public Derived Derived { get; private set; }
         public CubeRegistry Registry { get; private set; }
