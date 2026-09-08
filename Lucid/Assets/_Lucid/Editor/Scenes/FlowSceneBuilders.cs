@@ -90,13 +90,37 @@ namespace Lucid.Editor.Scenes
 
         // ---- Dream --------------------------------------------------------------
 
+        public const string NightmareUxmlPath = "Assets/_Lucid/Runtime/UI/Screens/NightmareView.uxml";
+
         static void PopulateDream()
         {
             DreamInstance dream = Bedroom();
             AddNightLight(dream.transform);
+            var round = dream.gameObject.AddComponent<LocalRound>();
+
+            // The Nightmare's side (docs/UI.md §8): a camera the god view
+            // drives, the input that drives it, and the hands that build.
+            var rig = new GameObject("Nightmare");
+            rig.transform.SetParent(dream.transform, false);
+            var camera = rig.AddComponent<Camera>();
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = new Color(0.03f, 0.04f, 0.07f);
+            var view = rig.AddComponent<GodViewCamera>();
+            view.Configure(dream);
+            var input = rig.AddComponent<NightmareInputSource>();
+            var controller = rig.AddComponent<NightmareController>();
+
+            var ui = new GameObject("NightmareView");
+            ui.transform.SetParent(dream.transform, false);
+            var document = ui.AddComponent<UIDocument>();
+            document.panelSettings = Load<PanelSettings>(UiAssets.PanelSettingsPath);
+            document.visualTreeAsset = Load<VisualTreeAsset>(NightmareUxmlPath);
+            var hud = ui.AddComponent<NightmareHud>();
+
+            controller.Configure(view, round, input, hud);
 
             var sandbox = dream.gameObject.AddComponent<SandboxScene>();
-            sandbox.Configure(Load<InputActionAsset>(GauntletSceneBuilder.InputActionsPath));
+            sandbox.Configure(Load<InputActionAsset>(GauntletSceneBuilder.InputActionsPath), rig, ui);
         }
 
         // ---- shared -------------------------------------------------------------

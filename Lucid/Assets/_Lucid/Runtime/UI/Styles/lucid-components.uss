@@ -107,15 +107,18 @@
 /* ---------------------------------------------------------- rings and arcs
    USS cannot stroke an arc. Each of these is a VisualElement with a
    generateVisualContent callback (Painter2D.Arc) that reads these properties. */
-.ring { width: 56px; height: 56px; --ring-track: var(--line-faint); --ring-fill: var(--exit-500); --ring-width: var(--bw-ring-thin); }
+/* --ring-width is a bare number: ICustomStyle reads custom properties as floats,
+   not lengths, and Painter2D strokes in panel pixels anyway. It mirrors --bw-ring
+   and --bw-ring-thin, which stay lengths for border-width. */
+.ring { width: 56px; height: 56px; --ring-track: var(--line-faint); --ring-fill: var(--exit-500); --ring-width: 2; }
 .ring--cooling { --ring-fill: var(--exit-700); color: var(--fg-4); }
-.timer-arc { width: 190px; height: 130px; --ring-fill: var(--exit-500); --ring-width: var(--bw-ring); }
+.timer-arc { width: 190px; height: 130px; --ring-fill: var(--exit-500); --ring-width: 3; }
 .timer-arc--urgent { --ring-fill: var(--danger-300); }
 .timer-arc__value { font-size: var(--fs-title); color: var(--fg-1); -unity-text-align: middle-center; }
 .timer-arc--urgent .timer-arc__value { color: var(--danger-300); }
-.health-ring { width: 84px; height: 84px; --ring-fill: var(--fog-300); --ring-width: var(--bw-ring); }
+.health-ring { width: 84px; height: 84px; --ring-fill: var(--fog-300); --ring-width: 3; }
 .health-ring--low { --ring-fill: var(--danger-300); }
-.crosshair { width: 56px; height: 56px; --ring-fill: var(--exit-300); --ring-width: var(--bw-ring-thin); }
+.crosshair { width: 56px; height: 56px; --ring-fill: var(--exit-300); --ring-width: 2; }
 
 /* ---------------------------------------------------------- moons */
 .moon { width: 22px; height: 22px; -unity-background-image-tint-color: var(--fg-1); }
@@ -336,3 +339,22 @@
 .title__menu { width: var(--w-menu); margin-top: var(--sp-8); }
 .title__menu > .btn { margin-bottom: var(--sp-3); }
 .screen__corner { position: absolute; left: var(--hud-margin); bottom: var(--sp-6); }
+
+/* ---------------------------------------------------------- nightmare view: layout (docs/UI.md §8, guide §5) */
+.nightmare { flex-grow: 1; }
+.nightmare__dock { position: absolute; top: 0; bottom: 0; }
+.nightmare__dock--palette { left: 0; width: var(--w-palette); }
+.nightmare__cards { flex-grow: 1; margin-top: var(--sp-4); }
+.nightmare__cards > .palette-tile { margin-bottom: var(--sp-3); flex-direction: row; align-items: center; }
+.palette-tile__net { width: 36px; height: 48px; margin-right: var(--sp-4); }
+.palette-tile__body { flex-grow: 1; }
+.palette-tile__row { flex-direction: row; align-items: center; justify-content: space-between; }
+.nightmare__budget { flex-direction: row; align-items: center; margin-top: var(--sp-5); }
+.nightmare__budget-figures { margin-left: var(--sp-4); }
+.nightmare__dawn { position: absolute; top: var(--sp-5); left: 50%; translate: -50% 0; align-items: center; }
+.nightmare__phase { font-size: var(--fs-body); color: var(--fg-2); margin-top: var(--sp-2); }
+.nightmare__layers { position: absolute; left: var(--w-palette); top: 50%; translate: 0 -50%; margin-left: var(--sp-6); }
+.nightmare__layers > .btn { margin-bottom: var(--sp-2); min-width: var(--hit-min); }
+.nightmare__layer-value { -unity-text-align: middle-center; margin-bottom: var(--sp-2); }
+.rejection { position: absolute; }
+.rejection--hidden { display: none; }

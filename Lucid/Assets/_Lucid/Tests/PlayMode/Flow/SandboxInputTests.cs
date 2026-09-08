@@ -44,10 +44,10 @@ namespace Lucid.Tests.PlayMode.Flow
 
             // Each link, named, so a failure says which one broke.
             SandboxScene sandbox = Object.FindFirstObjectByType<SandboxScene>();
-            Assert.That(sandbox.Back, Is.Not.Null, "no Back action: the Flow map or its action is missing from the asset");
-            Assert.That(sandbox.Back.enabled, Is.True, "Back is not enabled");
-            Assert.That(sandbox.Back.controls.Count, Is.GreaterThan(0),
-                $"Back resolved to no control; bindings: {string.Join(", ", sandbox.Back.bindings)}; devices: {string.Join(", ", InputSystem.devices)}");
+            Assert.That(sandbox.BackInput, Is.Not.Null, "no Back action: the Flow map or its action is missing from the asset");
+            Assert.That(sandbox.BackInput.enabled, Is.True, "Back is not enabled");
+            Assert.That(sandbox.BackInput.controls.Count, Is.GreaterThan(0),
+                $"Back resolved to no control; bindings: {string.Join(", ", sandbox.BackInput.bindings)}; devices: {string.Join(", ", InputSystem.devices)}");
 
             Press(keyboard.escapeKey);
             yield return null;

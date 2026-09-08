@@ -79,6 +79,7 @@ namespace Lucid.Runtime.UI
 
         // --- Readouts ------------------------------------------------------------
         public static string Build(string version, string engine) => $"{version} · Unity {engine}";
+        public static string Trickle(int seconds) => $"1 per {seconds} s";
 
         // --- The one clock format -------------------------------------------------
         // Always m:ss. Tabular numerals in USS, so a ticking value never shifts.

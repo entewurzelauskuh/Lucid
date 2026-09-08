@@ -179,7 +179,7 @@ Strings are the rules made visible; keep them exact so every screen says the sam
 - Spectator: "You're awake. Watch the others."
 - Nightmare view: "Building paused"
 - Edge flows: "The dream collapsed" · "The Nightmare fled" · "The dream will collapse for all Sleepers." · "Round in progress, {time} left" · "Steam is offline"
-- Readouts and hints: "depth {n} · exit {n}" (the Nightmare's Sleeper row, §8) · "{version} · Unity {engine}" (the build string, §3) · "you can accept invites from the overlay at any time" (§3)
+- Readouts and hints: "depth {n} · exit {n}" (the Nightmare's Sleeper row, §8) · "{version} · Unity {engine}" (the build string, §3) · "1 per {n} s" (the budget's trickle rate, §8) · "you can accept invites from the overlay at any time" (§3)
 - Title: "LUCID" (the wordmark, §15) · "Host a dream" · "Join" · "Sandbox" · "Options" · "Quit"
 - Section captions, the one place uppercase is allowed (§15): PALETTE · PACKS · BUDGET · SLEEPERS · SESSION LEADERBOARD · THE NIGHTMARE
 

@@ -12,6 +12,13 @@ Reason: why this over the alternatives.
 Spec: sections changed.
 ```
 
+## 2026-09-08 — How the god view is built
+
+Context: #7, M0.7. The Nightmare's side of the Sandbox: camera, layer slider, palette, ghost, budget and timer, every placement through `Rules.ValidatePlace`.
+Decision: (1) **The Sandbox opens as the Nightmare.** docs/UI.md §12 says build first and drop in second, so the Dream scene starts in the god view and the Sleeper of M0.6b is a mode switch away — `SandboxScene.EnterSleeper()`, which M0.9b binds to F5. (2) **Core's nine refusals share the glossary's five strings, by what the Nightmare can do about them.** `OutOfBounds` reads as "Doesn't fit here" — not here, not this way — and `DoorOccupied`, `UnknownType` and `StartProtected` read as "Not a door" — look elsewhere; the last two cannot reach the palette at all. The mapping is one pure function with a test over every enum value. If a later playtest wants "outside the dream" to say so, that is a §14 string to add, not a call site to change. (3) **The trickle rate reads "1 per 4 s"**, the design system's own copy, now in §14. (4) **The ghost is a translucent box, not the cube's prefab**, so a rejected placement never looks like a red room; its two colours are world geometry and not tokens, since nothing in the overlay is ever that green. (5) **The layer slider hides renderers and nothing else**: a cut-away cube is still there for the Sleeper walking through it, and the picker skips its doors so the Nightmare cannot build on a room they cannot see. (6) **Right button: drag orbits, click cancels**, told apart on release by distance travelled — §8 gives the button both jobs. (7) **A local `Round` plays host**: the Sandbox runs the rules engine on this machine with the default settings, so the budget and the timer on the HUD are Core's numbers. §12's unlimited budget and no timer are M0.9b's, and Core has no such mode yet (#10).
+Reason: each is the smallest reading of §8 and §10 that makes the acceptance measurable — every connector on any fog door, every refusal rendered, every placement through Validate — without deciding what M0.9 or M1 own.
+Spec: none. `docs/UI.md` §14 gains the trickle readout.
+
 ## 2026-09-07 — How the scene flow is built
 
 Context: #79, M0.6b. The first screens, and the structure every later one hangs off. Four choices deviate from what the design system's guide or the plan literally says, and one settles a default.
