@@ -208,7 +208,10 @@ namespace Lucid.Tests.PlayMode.Nightmare
             sandbox.Back();
             yield return null;
             Assert.That(c.Selected, Is.Null, "Esc did not drop the selection");
+            // Both halves: the state is still Sandbox, and no leave is under way
+            // either — a Go(Title) shows first as IsTransitioning, not as State.
             Assert.That(Services.Current.Flow.State, Is.EqualTo(FlowState.Sandbox), "Esc left with a cube in hand");
+            Assert.That(Services.Current.Flow.IsTransitioning, Is.False, "Esc started leaving with a cube in hand");
 
             sandbox.Back();
             yield return SceneFlowTests.Settled(FlowState.Title);
@@ -285,6 +288,9 @@ namespace Lucid.Tests.PlayMode.Nightmare
             yield return null;
 
             Assert.That(round.Lattice.IsExplored(tee), Is.True, "Core never heard the Sleeper");
+            // Where they stand is the trap rule's input (docs/CORE-API.md §10),
+            // so the report has to move Core's Sleeper as well as explore.
+            Assert.That(round.Sleepers[LocalRound.LocalSleeper].Cube, Is.EqualTo(tee), "Core does not know where the Sleeper is");
             int fogAfter = round.Derived.Connectors.Count(k => k.Key.Cube == tee && k.Value == ConnectorState.Fog);
             Assert.That(fogAfter, Is.EqualTo(0), "the fog doors did not harden");
             Assert.That(c.Round.Dream.Cubes[tee].Doors.Values.Count(d => d.State == ConnectorState.Solid), Is.EqualTo(fogBefore),
