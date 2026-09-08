@@ -182,12 +182,19 @@ namespace Lucid.Tests.PlayMode.Nightmare
             Assert.That(bedroom.GetComponentsInChildren<Collider>(true).Any(col => col.enabled), Is.True,
                 "a collider went with the renderers: the Sleeper would fall through a hidden room");
 
-            // The picker will not build on what the slider hid.
-            Assert.That(DoorPicker.Pick(c.View.Camera, new Vector2(Screen.width / 2f, Screen.height / 2f), out _, out _),
-                Is.False, "picked a door on a cut-away cube");
+            // The picker will not build on what the slider hid: aimed at the
+            // bedroom's one door, it finds it with the room showing and not
+            // with the room cut away.
+            FogDoor door = bedroom.Doors[Face.North];
+            Vector2 atDoor = c.View.Camera.WorldToScreenPoint(door.transform.position);
+            Assert.That(DoorPicker.Pick(c.View.Camera, atDoor, out _, out _), Is.False, "picked a door on a cut-away cube");
 
             c.View.SetCutaway(LayerCutaway.ShowAll(Limits.Default));
             Assert.That(bedroom.IsCutAway, Is.False);
+            Assert.That(bedroom.GetComponentsInChildren<Renderer>(true).All(r => r.enabled), Is.True, "a renderer stayed off");
+            Assert.That(DoorPicker.Pick(c.View.Camera, atDoor, out ConnectorRef picked, out _), Is.True,
+                "the bedroom's door is not under the cursor that points at it");
+            Assert.That(picked, Is.EqualTo(BedroomDoor));
         }
 
         [UnityTest]
@@ -205,6 +212,32 @@ namespace Lucid.Tests.PlayMode.Nightmare
 
             sandbox.Back();
             yield return SceneFlowTests.Settled(FlowState.Title);
+        }
+
+        [UnityTest]
+        public IEnumerator AtDawnNothingCanBePlaced()
+        {
+            // docs/SPEC.md §5: the round ends at dawn. The local round is
+            // Core's, so its clock can be run out directly; the ghost, the
+            // label and the banner all follow in the next frame.
+            yield return OpenTheSandbox();
+            NightmareController c = Controller();
+            Round round = c.Round.Round;
+            int cubesBefore = round.Lattice.Cubes.Count;
+
+            round.Advance(round.Settings.RoundLengthMs);
+            yield return null;
+            Assert.That(round.Phase, Is.EqualTo(Phase.Dawn));
+            Assert.That(Hud().Root.Q<Label>("phase").text, Is.EqualTo("Dawn."));
+            Assert.That(Hud().Root.Q<Label>("dawn-value").text, Is.EqualTo("0:00"));
+
+            c.Select(c.Palette.First(d => d.Id == "core.straight"));
+            c.Hover(BedroomDoor);
+            Assert.That(c.LastVerdict.Ok, Is.False, "the ghost stands green after dawn");
+            Assert.That(Hud().RejectionText, Is.EqualTo("Not a door"));
+            Assert.That(c.Place().Ok, Is.False, "a cube was placed after dawn");
+            yield return null;
+            Assert.That(round.Lattice.Cubes.Count, Is.EqualTo(cubesBefore));
         }
 
         [UnityTest]
@@ -240,6 +273,14 @@ namespace Lucid.Tests.PlayMode.Nightmare
             // entry is what the host loop consumes, and the feet are M0.6's.
             Sandbox().EnterSleeper();
             yield return null;
+            Assert.That(Sandbox().Sleeper, Is.Not.Null);
+            Assert.That(c.gameObject.activeInHierarchy, Is.False, "the god view is still up beside the Sleeper");
+            Assert.That(Object.FindFirstObjectByType<NightmareHud>(FindObjectsInactive.Include).gameObject.activeInHierarchy,
+                Is.False, "the Nightmare's HUD is still up on the Sleeper's screen");
+            Camera[] cameras = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None);
+            Assert.That(cameras, Has.Length.EqualTo(1), "two cameras are rendering");
+            Assert.That(cameras[0].GetComponent<GodViewCamera>(), Is.Null, "the Sleeper is looking through the god view");
+
             c.Round.Dream.Cubes[tee].OnSleeperInside();
             yield return null;
 
