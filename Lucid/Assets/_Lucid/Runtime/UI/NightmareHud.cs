@@ -30,7 +30,7 @@ namespace Lucid.Runtime.UI
         VisualElement _cards;
         Label _budgetValue, _budgetRate, _dawnValue, _phase, _layerValue, _rejectionText;
         LucidRing _trickle, _dawnArc;
-        VisualElement _rejection;
+        VisualElement _rejection, _budgetCluster, _budgetCaption, _dawnCluster;
         readonly List<VisualElement> _tiles = new List<VisualElement>();
 
         public VisualElement Root => _document != null ? _document.rootVisualElement : null;
@@ -43,6 +43,9 @@ namespace Lucid.Runtime.UI
                 throw new InvalidOperationException($"{name}: the UIDocument has no root; is a PanelSettings assigned?");
 
             _cards = root.Q("cube-cards");
+            _budgetCluster = root.Q("budget");
+            _budgetCaption = root.Q("budget-caption");
+            _dawnCluster = root.Q("dawn");
             _budgetValue = root.Q<Label>("budget-value");
             _budgetRate = root.Q<Label>("budget-rate");
             _trickle = root.Q<LucidRing>("trickle");
@@ -127,9 +130,20 @@ namespace Lucid.Runtime.UI
                 _tiles.Add(tile);
             }
 
+            // docs/UI.md §12: the Sandbox has an unlimited budget and no
+            // timer, and neither is a number to show.
+            bool unbounded = controller.Round != null && controller.Round.Unbounded;
+            _budgetCluster.EnableInClassList("nightmare__readout--hidden", unbounded);
+            _budgetCaption.EnableInClassList("nightmare__readout--hidden", unbounded);
+            _dawnCluster.EnableInClassList("nightmare__readout--hidden", unbounded);
+
             ShowLayer(controller.View.Cutaway);
             ShowVerdict(controller);
         }
+
+        /// <summary>Whether the budget and the dawn timer are on screen; the Sandbox shows neither.</summary>
+        public bool ShowsRoundReadouts =>
+            _budgetCluster != null && !_budgetCluster.ClassListContains("nightmare__readout--hidden");
 
         void Update()
         {

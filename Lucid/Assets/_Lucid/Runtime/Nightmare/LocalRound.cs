@@ -28,12 +28,29 @@ namespace Lucid.Runtime
         [SerializeField] int _roundLengthMs = 300_000;
         [SerializeField] int _startingBudget = 12;
         [SerializeField] int _trickleIntervalMs = 4_000;
+        [SerializeField] bool _unbounded;
+
+        /// <summary>
+        /// docs/UI.md §12's "unlimited budget and no timer", said in Core's own
+        /// terms rather than as a mode Core does not have: no head start, a
+        /// dawn nobody will reach, no trickle, and a budget nobody can spend.
+        /// Every rule still runs — fit, frontier, trap, explored — which is
+        /// the point of a sandbox for trying cubes.
+        /// </summary>
+        public static readonly RoundSettings SandboxSettings = new RoundSettings(
+            HeadStartMs: 0,
+            RoundLengthMs: int.MaxValue,
+            StartingBudget: int.MaxValue / 2,
+            TrickleIntervalMs: 0);
 
         DreamInstance _dream;
         float _carryMs;
 
         public Round Round { get; private set; }
         public DreamInstance Dream => _dream;
+
+        /// <summary>Whether this round runs on <see cref="SandboxSettings"/>: nothing to count down or spend.</summary>
+        public bool Unbounded => Round != null ? SandboxSettings.Equals(Round.Settings) : _unbounded;
 
         /// <summary>
         /// The dream was handed a new lattice or derived state — a placement
@@ -48,23 +65,56 @@ namespace Lucid.Runtime
             _roundLengthMs = roundLengthMs;
             _startingBudget = startingBudget;
             _trickleIntervalMs = trickleIntervalMs;
+            _unbounded = false;
+        }
+
+        /// <summary>The Sandbox's round. M0.9's flow will choose per round; the Dream scene is built this way until then.</summary>
+        internal void ConfigureUnbounded() => _unbounded = true;
+
+        /// <summary>
+        /// A fresh round on other settings, for a test of the bounded HUD in a
+        /// scene built for the Sandbox. The dream is handed the new lattice,
+        /// which retires the old one (a new round is a new dream).
+        /// </summary>
+        internal void Restart(RoundSettings settings)
+        {
+            Round = new Round(settings, _dream.Registry, _dream.StartTypeId, _dream.StartRotation,
+                new[] { new PlayerId(LocalSleeper) });
+            _carryMs = 0f;
+            _dream.Apply(Round.Lattice, Round.Derived);
+            Applied?.Invoke();
         }
 
         void Awake()
         {
             _dream = GetComponent<EmptyDream>().Ensure();
-            Round = new Round(
-                new RoundSettings(_headStartMs, _roundLengthMs, StartingBudget: _startingBudget,
-                    TrickleIntervalMs: _trickleIntervalMs),
+            RoundSettings settings = _unbounded
+                ? SandboxSettings
+                : new RoundSettings(_headStartMs, _roundLengthMs, StartingBudget: _startingBudget,
+                    TrickleIntervalMs: _trickleIntervalMs);
+            Round = new Round(settings,
                 _dream.Registry, _dream.StartTypeId, _dream.StartRotation,
                 new[] { new PlayerId(LocalSleeper) });
+            _dream.SleeperArrived += OnArrived;
             _dream.Explored += OnExplored;
         }
 
         void OnDestroy()
         {
-            if (_dream != null) _dream.Explored -= OnExplored;
+            if (_dream != null)
+            {
+                _dream.SleeperArrived -= OnArrived;
+                _dream.Explored -= OnExplored;
+            }
         }
+
+        /// <summary>
+        /// docs/CORE-API.md §10's "on Telemetry: UpdateSleeperCube", fed from
+        /// the dream's own volumes since there is no wire here. Every arrival,
+        /// so a Sleeper walking back into an explored room is where Core
+        /// thinks they are, and the trap rule is judged from the right cube.
+        /// </summary>
+        void OnArrived(Coord cube) => Round.UpdateSleeperCube(LocalSleeper, cube);
 
         void Update()
         {

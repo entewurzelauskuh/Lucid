@@ -5,15 +5,17 @@ using UnityEngine.InputSystem;
 namespace Lucid.Runtime
 {
     /// <summary>
-    /// The Dream scene while the Sandbox is a shell (docs/WORKPLAN.md §4,
-    /// M0.6b): a Sleeper standing in the bedroom, and Esc to go back.
+    /// The Sandbox (docs/UI.md §12): build as the Nightmare with nothing to
+    /// spend or count down, F5 to drop into the lattice as a Sleeper, F5 again
+    /// to come back to the god view, Esc to leave.
     /// </summary>
     /// <remarks>
-    /// M0.7 puts the god view here and M0.9b the F5 switch between the two;
-    /// the state they fill is this one. The Sleeper is created at run time
-    /// rather than saved in the scene because its spawn point comes from the
-    /// lattice, which does not exist until <see cref="EmptyDream"/> has built
-    /// it.
+    /// The Sleeper is created at run time rather than saved in the scene
+    /// because its spawn point comes from the lattice, which does not exist
+    /// until <see cref="EmptyDream"/> has built it. Reaching an exit in the
+    /// Sandbox is not waking — there is no round to end and no results to
+    /// show — so the Sleeper is put back in the bedroom to try the next
+    /// route, and §14's line for it goes to the log (`docs/DECISIONS.md`).
     /// </remarks>
     public enum SandboxMode { Nightmare, Sleeper }
 
@@ -28,6 +30,7 @@ namespace Lucid.Runtime
         /// </summary>
         public const string BackMap = "Flow";
         public const string BackAction = "Back";
+        public const string SwitchAction = "Switch";
 
         [SerializeField] InputActionAsset _actions;
         [SerializeField] GameObject _nightmareRig;
@@ -36,7 +39,9 @@ namespace Lucid.Runtime
 
         InputActionAsset _own;
         InputAction _back;
+        InputAction _switch;
         SleeperMotor _sleeper;
+        DreamInstance _dream;
 
         public SleeperMotor Sleeper => _sleeper;
 
@@ -49,6 +54,12 @@ namespace Lucid.Runtime
         /// <summary>The Back action as bound, for a test to inspect each link.</summary>
         internal InputAction BackInput => _back;
 
+        /// <summary>The Switch action as bound, likewise.</summary>
+        internal InputAction SwitchInput => _switch;
+
+        /// <summary>How often a Sleeper has reached an exit here; each time they are back in the bedroom.</summary>
+        public int ExitsReached { get; private set; }
+
         internal void Configure(InputActionAsset actions, GameObject nightmareRig, GameObject nightmareHud)
         {
             _actions = actions;
@@ -58,7 +69,8 @@ namespace Lucid.Runtime
 
         void Start()
         {
-            GetComponent<EmptyDream>().Ensure();
+            _dream = GetComponent<EmptyDream>().Ensure();
+            _dream.TouchedExit += OnReachedExit;
 
             if (_actions != null)
             {
@@ -80,6 +92,14 @@ namespace Lucid.Runtime
                     _back.Enable();
                 }
 
+                _switch = _own.FindActionMap(BackMap, throwIfNotFound: false)
+                    ?.FindAction(SwitchAction, throwIfNotFound: false);
+                if (_switch != null)
+                {
+                    _switch.performed += OnSwitch;
+                    _switch.Enable();
+                }
+
                 var nightmareInput = _nightmareRig != null ? _nightmareRig.GetComponent<NightmareInputSource>() : null;
                 if (nightmareInput != null) nightmareInput.Bind(_own);
             }
@@ -95,6 +115,9 @@ namespace Lucid.Runtime
 
         /// <summary>The Sleeper's side: a body in the bedroom with the movement kit.</summary>
         public void EnterSleeper() => Enter(SandboxMode.Sleeper);
+
+        /// <summary>F5: the other side (docs/UI.md §12).</summary>
+        public void Toggle() => Enter(Mode == SandboxMode.Nightmare ? SandboxMode.Sleeper : SandboxMode.Nightmare);
 
         void Enter(SandboxMode mode)
         {
@@ -130,15 +153,41 @@ namespace Lucid.Runtime
 
         void OnDestroy()
         {
+            if (_dream != null) _dream.TouchedExit -= OnReachedExit;
             if (_back != null)
             {
                 _back.performed -= OnBack;
                 _back.Disable();
             }
+            if (_switch != null)
+            {
+                _switch.performed -= OnSwitch;
+                _switch.Disable();
+            }
             if (_own != null) Destroy(_own);
         }
 
         void OnBack(InputAction.CallbackContext _) => Back();
+
+        void OnSwitch(InputAction.CallbackContext _)
+        {
+            if (Services.Current != null && Services.Current.Flow.IsTransitioning) return;
+            Toggle();
+        }
+
+        /// <summary>
+        /// The Sleeper walked into a white door. Not adjudicated as waking —
+        /// Core would mark them Awake and the round over, and a Sandbox has
+        /// neither — but back to the bedroom, so the next route can be tried
+        /// without leaving the dream.
+        /// </summary>
+        void OnReachedExit(Lucid.Core.ConnectorRef door)
+        {
+            if (_sleeper == null) return;
+            ExitsReached++;
+            Debug.Log($"{name}: {Lucid.Runtime.UI.LucidStrings.ReachedTheExit(Lucid.Runtime.UI.LucidStrings.SleeperSeat(LocalRound.LocalSleeper + 1))} at {door}");
+            _dream.Respawn(_sleeper);
+        }
 
         /// <summary>
         /// Esc. With a cube selected it drops the selection (docs/UI.md §8:

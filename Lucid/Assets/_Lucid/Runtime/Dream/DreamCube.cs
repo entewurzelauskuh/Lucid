@@ -56,6 +56,14 @@ namespace Lucid.Runtime
         /// </summary>
         public event Action<DreamCube> Entered;
 
+        /// <summary>
+        /// A Sleeper stepped in — every time, not only the first. Where a
+        /// Sleeper stands is the trap rule's input (docs/CORE-API.md §10), and
+        /// <see cref="Entered"/> alone would leave the host's idea of it at
+        /// the room they first explored.
+        /// </summary>
+        public event Action<DreamCube> Arrived;
+
         /// <summary>A Sleeper walked into one of this cube's exit doors.</summary>
         public event Action<DreamCube, Face> DoorTouched;
 
@@ -228,6 +236,7 @@ namespace Lucid.Runtime
 
         internal void OnSleeperInside()
         {
+            Arrived?.Invoke(this);
             if (_reported || _exempt) return;
             Report();
         }

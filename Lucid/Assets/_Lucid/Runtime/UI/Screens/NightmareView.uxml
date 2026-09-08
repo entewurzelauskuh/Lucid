@@ -10,7 +10,7 @@
 
     <!-- docs/UI.md §8's region table: budget top left, palette left. -->
     <ui:VisualElement name="palette-dock" class="mist-panel mist-panel--chrome mist-panel--docked nightmare__dock nightmare__dock--palette">
-      <ui:Label text="BUDGET" class="micro-label" />
+      <ui:Label name="budget-caption" text="BUDGET" class="micro-label" />
       <ui:VisualElement name="budget" class="nightmare__budget">
         <lucid:LucidRing name="trickle" class="ring" round-caps="false" />
         <ui:VisualElement class="nightmare__budget-figures">

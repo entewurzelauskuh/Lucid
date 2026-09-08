@@ -97,6 +97,9 @@ namespace Lucid.Editor.Scenes
             DreamInstance dream = Bedroom();
             AddNightLight(dream.transform);
             var round = dream.gameObject.AddComponent<LocalRound>();
+            // The one Dream scene is the Sandbox's until M0.9's flow chooses a
+            // round's settings per round (docs/UI.md §12).
+            round.ConfigureUnbounded();
 
             // The Nightmare's side (docs/UI.md §8): a camera the god view
             // drives, the input that drives it, and the hands that build.
