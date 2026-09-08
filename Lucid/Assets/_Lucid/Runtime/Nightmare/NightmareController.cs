@@ -59,6 +59,14 @@ namespace Lucid.Runtime
             _hud = hud;
         }
 
+        /// <summary>
+        /// For tests: the controller's methods are the input, and a pointer on
+        /// the machine running them must not be. Without this, a mouse in an
+        /// interactive editor would re-pick under the real cursor each frame
+        /// and clear the hover a test had set.
+        /// </summary>
+        internal void DetachInput() => _input = null;
+
         void Start()
         {
             // The ghost lives in the dream's frame, where the cubes are laid

@@ -183,7 +183,7 @@ Strings are the rules made visible; keep them exact so every screen says the sam
 - Title: "LUCID" (the wordmark, §15) · "Host a dream" · "Join" · "Sandbox" · "Options" · "Quit"
 - Section captions, the one place uppercase is allowed (§15): PALETTE · PACKS · BUDGET · SLEEPERS · SESSION LEADERBOARD · THE NIGHTMARE
 
-Hotkey captions — the `1`…`9` on palette cards, `PgUp` and `PgDn` on the layer buttons, a key on any button that has one — are the key's own name and not copy; they come from the binding, and change when it does.
+Hotkey captions — the `1`…`9` on palette cards, `PgUp` and `PgDn` on the layer buttons, a key on any button that has one — are the key's own name as bound in M0, and not copy. Reading them off the action map so a rebinding changes them is Options' work (M1).
 
 Every string a screen shows comes from this list, and the Unity project reads them from one file (`design-system/unity/Runtime/LucidStrings.cs`, this section transcribed). A screen that needs a string not here adds it here first — never at the call site. The blocked-button reasons (Lobby, above) and the placement rejections replace a control's own label or ride the red ghost verbatim; §1.3 applied to controls. `{mob}` in the possession line is the mob's name as spec §8 gives it — a Shade or an Eye, both possessable per spec §10. The article is *the* rather than *a* because the Nightmare possesses a specific mob under the cursor, and because "a Eye" is not English (`docs/DECISIONS.md`, 2026-09-07). The "— P to let go" is part of the string, not layout.
 

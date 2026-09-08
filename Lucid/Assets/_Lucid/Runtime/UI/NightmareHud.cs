@@ -69,13 +69,16 @@ namespace Lucid.Runtime.UI
         /// read-only clusters ignore picking, so only the docks and buttons
         /// answer.
         /// </summary>
-        public bool Covers(Vector2 screenPoint)
+        public bool Covers(Vector2 screenPoint) => Under(screenPoint) != null;
+
+        /// <summary>The chrome element under a screen point, or null for the world.</summary>
+        public VisualElement Under(Vector2 screenPoint)
         {
             VisualElement root = Root;
-            if (root == null || root.panel == null) return false;
+            if (root == null || root.panel == null) return null;
             var topLeft = new Vector2(screenPoint.x, Screen.height - screenPoint.y);
             Vector2 local = RuntimePanelUtils.ScreenToPanel(root.panel, topLeft);
-            return root.panel.Pick(local) != null;
+            return root.panel.Pick(local);
         }
 
         /// <summary>Builds the palette from the controller's list and starts following its state.</summary>

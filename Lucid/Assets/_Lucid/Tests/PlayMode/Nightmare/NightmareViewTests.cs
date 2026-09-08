@@ -38,6 +38,9 @@ namespace Lucid.Tests.PlayMode.Nightmare
             yield return SceneFlowTests.Settled(FlowState.Sandbox);
             yield return null;
             yield return null;   // the HUD's Bind runs in the controller's Start
+            // These tests are the input. The runner has no pointer, but an
+            // interactive editor does, and its cursor must not pick.
+            Controller().DetachInput();
         }
 
         static SandboxScene Sandbox() => Object.FindFirstObjectByType<SandboxScene>();
@@ -309,12 +312,36 @@ namespace Lucid.Tests.PlayMode.Nightmare
             Rect panelBounds = hud.Root.panel.visualTree.worldBound;
             float scale = Screen.width / panelBounds.width;
 
-            Vector2 dockCentre = dock.worldBound.center * scale;
-            Vector2 onDock = new Vector2(dockCentre.x, Screen.height - dockCentre.y);
-            Vector2 open = new Vector2(Screen.width * 0.6f, Screen.height * 0.5f);
+            Vector2 Screen_(VisualElement e) { Vector2 c = e.worldBound.center * scale; return new Vector2(c.x, Screen.height - c.y); }
 
+            Vector2 onDock = Screen_(dock);
+            Vector2 open = new Vector2(Screen.width * 0.6f, Screen.height * 0.5f);
             Assert.That(hud.Covers(onDock), Is.True, $"the dock at {onDock} does not cover");
             Assert.That(hud.Covers(open), Is.False, $"the open screen at {open} is covered");
+
+            // The dock is full height, so the two points above cannot tell a
+            // flipped y from a right one. The budget sits at the dock's top;
+            // the point over it must land on it and not on the cards below.
+            VisualElement budget = hud.Root.Q("budget");
+            VisualElement hit = hud.Under(Screen_(budget));
+            Assert.That(hit, Is.Not.Null);
+            Assert.That(hit == budget || budget.Contains(hit), Is.True, $"the point over the budget landed on '{hit.name}'");
+
+            // A label riding the ghost is read, never picked: were it pickable,
+            // the guard would clear the hover it labels and the ghost would
+            // flicker under the cursor.
+            NightmareController c = Controller();
+            c.Select(c.Palette.First(d => d.Id == "core.corner"));
+            c.Hover(BedroomDoor);
+            c.RotateGhost();
+            c.RotateGhost();
+            yield return null;
+            Assert.That(hud.RejectionText, Is.EqualTo("Doesn't fit here"));
+            VisualElement label = hud.Root.Q("rejection-reason");
+            Assert.That(label.worldBound.width, Is.GreaterThan(0f), "the label has no size to point at");
+            VisualElement underLabel = hud.Under(Screen_(label));
+            Assert.That(underLabel == null || !(underLabel == label || hud.Root.Q("rejection").Contains(underLabel)), Is.True,
+                $"the rejection label answers the pointer: '{underLabel?.name}'");
         }
 
         [UnityTest]

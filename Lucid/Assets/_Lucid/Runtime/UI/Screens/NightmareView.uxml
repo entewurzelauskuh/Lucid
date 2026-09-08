@@ -23,10 +23,13 @@
       <ui:ScrollView name="cube-cards" class="nightmare__cards" />
     </ui:VisualElement>
 
+    <!-- Read-only clusters and every leaf in them ignore picking: Ignore is
+         not inherited, and a pickable label riding the ghost would answer
+         Covers, clear the hover it labels, and flicker. -->
     <ui:VisualElement name="dawn" class="nightmare__dawn" picking-mode="Ignore">
       <lucid:LucidRing name="dawn-arc" class="timer-arc" sweep-angle="180" start-angle="-90" round-caps="false" />
-      <ui:Label name="dawn-value" class="timer-arc__value tabular" />
-      <ui:Label name="phase" class="nightmare__phase" />
+      <ui:Label name="dawn-value" class="timer-arc__value tabular" picking-mode="Ignore" />
+      <ui:Label name="phase" class="nightmare__phase" picking-mode="Ignore" />
     </ui:VisualElement>
 
     <ui:VisualElement name="layers" class="nightmare__layers">
@@ -36,7 +39,7 @@
     </ui:VisualElement>
 
     <ui:VisualElement name="rejection" class="rejection rejection--hidden" picking-mode="Ignore">
-      <ui:Label name="rejection-reason" />
+      <ui:Label name="rejection-reason" picking-mode="Ignore" />
     </ui:VisualElement>
   </ui:VisualElement>
 </ui:UXML>
