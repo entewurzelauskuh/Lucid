@@ -20,6 +20,7 @@ namespace Lucid.Runtime
     public enum SandboxMode { Nightmare, Sleeper }
 
     [RequireComponent(typeof(EmptyDream))]
+    [RequireComponent(typeof(LocalRound))]
     public sealed class SandboxScene : MonoBehaviour
     {
         /// <summary>
