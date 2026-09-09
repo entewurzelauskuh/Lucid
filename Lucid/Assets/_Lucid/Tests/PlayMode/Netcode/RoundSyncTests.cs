@@ -15,18 +15,17 @@ using UnityEngine.TestTools;
 namespace Lucid.Tests.PlayMode.Netcode
 {
     /// <summary>
-    /// M0.8's acceptance (docs/WORKPLAN.md §4, docs/NETCODE.md §15): a host
-    /// and one client in this process over Unity Transport on loopback — the
-    /// harness NGO tests itself with. The host is the Nightmare, the client a
-    /// Sleeper's machine; nothing here stands a cube up, because what is
-    /// under test is the wire and the two ends' agreement about the lattice.
+    /// A host and one client in this process over Unity Transport on loopback
+    /// — the harness NGO tests itself with. The host is the Nightmare, the
+    /// client a Sleeper's machine. Fixtures derive from this and add what they
+    /// stand up on the client's side.
     /// </summary>
-    public sealed class RoundSyncTests : NetcodeIntegrationTest
+    public abstract class NetHarness : NetcodeIntegrationTest
     {
-        const string Start = "test.start";
-        const string Straight = "test.straight";
-        const string Tee = "test.tee";
-        const string Corner = "test.corner";
+        protected const string Start = "test.start";
+        protected const string Straight = "test.straight";
+        protected const string Tee = "test.tee";
+        protected const string Corner = "test.corner";
 
         protected override int NumberOfClients => 1;
 
@@ -34,28 +33,29 @@ namespace Lucid.Tests.PlayMode.Netcode
         // approval says so, and the harness must not expect one.
         protected override bool ShouldCheckForSpawnedPlayers() => false;
 
-        readonly List<Object> _assets = new List<Object>();
-        readonly List<GameObject> _spawned = new List<GameObject>();
-        GameObject _prefab;
-        Hello _hello;
-        RoundSync _host, _client;
-        Round _round;
-        string _logFolder;
+        protected readonly List<Object> _assets = new List<Object>();
+        protected readonly List<GameObject> _spawned = new List<GameObject>();
+        protected GameObject _prefab;
+        protected DreamPack _pack;
+        protected Hello _hello;
+        protected RoundSync _host, _client;
+        protected Round _round;
+        protected string _logFolder;
 
         protected override void OnServerAndClientsCreated()
         {
-            DreamPack pack = CodeBuiltPack.Create(_assets, _spawned,
+            _pack = CodeBuiltPack.Create(_assets, _spawned,
                 (Start, FaceMask.North, CubeCategory.Start, false),
                 (Straight, FaceMask.North | FaceMask.South, CubeCategory.Connector, false),
                 (Tee, FaceMask.North | FaceMask.East | FaceMask.South, CubeCategory.Connector, false),
                 (Corner, FaceMask.North | FaceMask.East, CubeCategory.Connector, false));
 
             _prefab = NetcodeIntegrationTestHelpers.CreateNetworkObjectPrefab("RoundSync", m_ServerNetworkManager, m_ClientNetworkManagers);
-            _prefab.AddComponent<RoundSync>().Configure(pack);
+            _prefab.AddComponent<RoundSync>().Configure(_pack);
 
             // 001 on the happy path: the client says who it is, the host checks.
             var registry = new CubeRegistry();
-            pack.RegisterAll(registry);
+            _pack.RegisterAll(registry);
             _hello = NetSession.LocalHello(registry, "Anna");
             NetSession.ArmApproval(m_ServerNetworkManager, _hello);
             foreach (NetworkManager client in m_ClientNetworkManagers) NetSession.PrepareClient(client, _hello);
@@ -63,6 +63,7 @@ namespace Lucid.Tests.PlayMode.Netcode
 
         protected override IEnumerator OnTearDown()
         {
+            OnTearDownClient();
             foreach (GameObject go in _spawned) if (go != null) Object.DestroyImmediate(go);
             _spawned.Clear();
             foreach (Object asset in _assets) if (asset != null) Object.DestroyImmediate(asset);
@@ -72,9 +73,14 @@ namespace Lucid.Tests.PlayMode.Netcode
             yield return base.OnTearDown();
         }
 
-        ulong ClientId => m_ClientNetworkManagers[0].LocalClientId;
+        protected virtual void OnTearDownClient() { }
 
-        RoundSync ClientSync()
+        protected ulong ClientId => m_ClientNetworkManagers[0].LocalClientId;
+
+        /// <summary>The client's side stands up here, before RoundStart lands.</summary>
+        protected virtual void OnClientSyncReady(RoundSync client) { }
+
+        protected RoundSync ClientSync()
         {
             foreach (RoundSync s in Object.FindObjectsByType<RoundSync>(FindObjectsSortMode.None))
                 if (s.IsSpawned && s.NetworkManager == m_ClientNetworkManagers[0]) return s;
@@ -82,13 +88,14 @@ namespace Lucid.Tests.PlayMode.Netcode
         }
 
         /// <summary>Spawns the sync, begins a round with the client as Sleeper 0, and waits for RoundStart to land.</summary>
-        IEnumerator Begin(RoundSettings settings = null)
+        protected IEnumerator Begin(RoundSettings settings = null)
         {
             GameObject go = SpawnObject(_prefab, m_ServerNetworkManager);
             _host = go.GetComponent<RoundSync>();
             yield return WaitForConditionOrTimeOut(() => ClientSync() != null);
             AssertOnTimeout("the client never spawned its RoundSync");
             _client = ClientSync();
+            OnClientSyncReady(_client);
 
             _round = new Round(settings ?? new RoundSettings(HeadStartMs: 0), _host.Registry, Start, Rotation.R0,
                 new[] { new PlayerId((int)ClientId) });
@@ -98,11 +105,11 @@ namespace Lucid.Tests.PlayMode.Netcode
             AssertOnTimeout("RoundStart never reached the client");
         }
 
-        static PlaceRequest On(Coord cube, Face face, string type, Rotation rotation = Rotation.R0) =>
+        protected static PlaceRequest On(Coord cube, Face face, string type, Rotation rotation = Rotation.R0) =>
             new PlaceRequest(new ConnectorRef(cube, face), type, rotation, "*");
 
         /// <summary>The host's Nightmare places (401/402), and the event reaches the client (201/202).</summary>
-        IEnumerator Place(PlaceRequest request, PlaceError expected = PlaceError.None)
+        protected IEnumerator Place(PlaceRequest request, PlaceError expected = PlaceError.None)
         {
             int replies = _host.PlaceReplies, applied = _client.AppliedEvents, matches = _host.HashMatches;
             ushort id = _host.SendPlaceRequest(request);
@@ -116,7 +123,7 @@ namespace Lucid.Tests.PlayMode.Netcode
             AssertOnTimeout("the LatticeEvent or its HashReport never arrived");
         }
 
-        IEnumerator Explore(Coord cube)
+        protected IEnumerator Explore(Coord cube)
         {
             int applied = _client.AppliedEvents, matches = _host.HashMatches;
             _client.SendExplored(cube);
@@ -124,13 +131,22 @@ namespace Lucid.Tests.PlayMode.Netcode
             AssertOnTimeout("the exploration never came back as an event");
         }
 
-        void AssertInSync(string when)
+        protected void AssertInSync(string when)
         {
             Assert.That(_client.Mirror.Derived.Hash, Is.EqualTo(_round.Derived.Hash), $"{when}: the client's hash is not the host's");
             Assert.That(_client.Mirror.Lattice.Cubes.Count, Is.EqualTo(_round.Lattice.Cubes.Count));
             Assert.That(_client.Mirror.Derived.Exits, Is.EqualTo(_round.Derived.Exits));
         }
 
+    }
+
+    /// <summary>
+    /// M0.8's acceptance (docs/WORKPLAN.md §4, docs/NETCODE.md §15) on the
+    /// wire alone: nothing here stands a cube up, because what is under test
+    /// is the protocol and the two ends' agreement about the lattice.
+    /// </summary>
+    public sealed class RoundSyncTests : NetHarness
+    {
         [UnityTest]
         public IEnumerator RoundStartBuildsIdenticalLattices()
         {

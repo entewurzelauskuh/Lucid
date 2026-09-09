@@ -7,7 +7,8 @@
         "Lucid.Netcode",
         "Unity.InputSystem",
         "Unity.AI.Navigation",
-        "Unity.AI.Navigation.Editor"
+        "Unity.AI.Navigation.Editor",
+        "Unity.Netcode.Runtime"
     ],
     "includePlatforms": [
         "Editor"

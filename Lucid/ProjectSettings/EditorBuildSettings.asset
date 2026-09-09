@@ -20,6 +20,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Lucid/Scenes/FogDoors.unity
     guid: d736c45f1a9694a81852ec0a09adc379
+  - enabled: 1
+    path: Assets/_Lucid/Scenes/NetDream.unity
+    guid: c62abc5505bd44bc4bb679f79b5c0921
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

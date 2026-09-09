@@ -6,7 +6,8 @@
         "Lucid.Runtime",
         "Unity.Netcode.Runtime",
         "Unity.Collections",
-        "Unity.Networking.Transport"
+        "Unity.Networking.Transport",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

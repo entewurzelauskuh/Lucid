@@ -338,6 +338,12 @@
 .screen { flex-grow: 1; align-items: center; justify-content: center; }
 .title__menu { width: var(--w-menu); margin-top: var(--sp-8); }
 .title__menu > .btn { margin-bottom: var(--sp-3); }
+/* the netcode dev scene's panel (a tool, not a §14 screen) */
+.netdev { width: var(--w-menu); padding: var(--sp-5); }
+.netdev > .btn { margin-top: var(--sp-3); }
+.netdev__address { margin-top: var(--sp-3); }
+.netdev--hidden { display: none; }
+.netdev__status { position: absolute; bottom: var(--sp-5); left: var(--sp-5); color: var(--fg-2); font-size: var(--fs-body); }
 .screen__corner { position: absolute; left: var(--hud-margin); bottom: var(--sp-6); }
 
 /* ---------------------------------------------------------- nightmare view: layout (docs/UI.md §8, guide §5) */

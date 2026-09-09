@@ -10,3 +10,5 @@ using System.Runtime.CompilerServices;
 // reach them, and it lives in Lucid.Editor.
 [assembly: InternalsVisibleTo("Lucid.Editor")]
 [assembly: InternalsVisibleTo("Lucid.Tests.EditMode")]
+// The netcode binds the same input sources the flow does.
+[assembly: InternalsVisibleTo("Lucid.Netcode")]

@@ -19,9 +19,11 @@ namespace Lucid.Editor.Scenes
         {
             // The panel settings first: the Title scene references them.
             UiAssets.Build();
+            NetPrefabs.Build();   // before the scene that references it
             FlowSceneBuilders.BuildAll();
             GauntletSceneBuilder.Build();
             FogDoorSceneBuilder.Build();
+            NetDreamSceneBuilder.Build();
         }
 
         /// <summary>Entry point for <c>-executeMethod</c>.</summary>

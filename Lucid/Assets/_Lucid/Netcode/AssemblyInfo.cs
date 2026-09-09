@@ -4,3 +4,4 @@ using System.Runtime.CompilerServices;
 // the game consumes. See docs/NETCODE.md §13 for the intended split.
 [assembly: InternalsVisibleTo("Lucid.Tests.PlayMode")]
 [assembly: InternalsVisibleTo("Lucid.Tests.EditMode")]
+[assembly: InternalsVisibleTo("Lucid.Editor")]
