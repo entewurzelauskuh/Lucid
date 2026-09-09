@@ -111,6 +111,10 @@ namespace Lucid.Netcode
                 Debug.Log($"{name}: client {clientId} connected after the round began; nothing for them until M1.3", this);
                 return;
             }
+            // A fresh round now, not the one that has been ticking since the
+            // scene loaded: RoundStart stamps t = 0 and the head start begins
+            // for both ends together.
+            _round.Restart(new RoundSettings());
             _sync.BeginRound(_round.Round, _manager.LocalClientId, new[] { clientId });
             Say($"round begun; Sleeper is client {clientId}");
         }

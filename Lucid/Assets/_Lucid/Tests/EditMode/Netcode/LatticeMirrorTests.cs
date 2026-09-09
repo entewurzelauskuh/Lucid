@@ -93,5 +93,23 @@ namespace Lucid.Tests.EditMode.Netcode
             Assert.That(u.Unknown, Is.True);
             Assert.That(u.Applied, Is.False);
         }
+
+        [Test]
+        public void AnEventThatCannotBeAppliedFaultsRatherThanThrows()
+        {
+            // A cube on the bedroom's own coord: an honest host never sends it,
+            // and the mirror must say so rather than throw inside an RPC and
+            // go quiet for the rest of the round.
+            Round host = Host();
+            LatticeMirror mirror = Mirror(host);
+            List<LatticeEventMsg> sent = Broadcasts(host);
+            LatticeEventMsg bad = sent[0];
+            bad.Cube = WireCoord.From(new Coord(0, 0, 0));
+            MirrorResult r = mirror.Apply(bad);
+            Assert.That(r.Faulted, Is.True, r.ToString());
+            Assert.That(r.Applied, Is.False);
+            Assert.That(mirror.Log.NextSeq, Is.EqualTo(0), "a faulted event moved the log");
+            Assert.That(mirror.Apply(sent[0]).InSync, Is.True, "the honest event after a fault still applies");
+        }
     }
 }

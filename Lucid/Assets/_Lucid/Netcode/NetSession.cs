@@ -66,7 +66,9 @@ namespace Lucid.Netcode
 
         public static bool Host(NetworkManager manager, Hello local, ushort port = DefaultPort)
         {
-            Transport(manager).SetConnectionData("0.0.0.0", port, "0.0.0.0");
+            // forceOverrideCommandLineArgs: UTP reads -ip and -port itself and
+            // would otherwise win over --connect and --port.
+            Transport(manager).SetConnectionData(true, "0.0.0.0", port, "0.0.0.0");
             manager.NetworkConfig.ConnectionData = local.ToBytes();
             ArmApproval(manager, local);
             return manager.StartHost();
@@ -75,7 +77,7 @@ namespace Lucid.Netcode
         public static bool Connect(NetworkManager manager, Hello local, string address, ushort port = DefaultPort)
         {
             if (string.IsNullOrEmpty(address)) throw new ArgumentException("an address to connect to", nameof(address));
-            Transport(manager).SetConnectionData(address, port);
+            Transport(manager).SetConnectionData(true, address, port);
             PrepareClient(manager, local);
             return manager.StartClient();
         }

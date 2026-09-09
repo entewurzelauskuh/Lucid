@@ -45,6 +45,8 @@ namespace Lucid.Tests.EditMode.Netcode
             var m = new LatticeEventMsg { Seq = 0, Kind = (byte)EventKind.Placed, TypeIndex = 9999 };
             Assert.That(c.Decode(m), Is.Null);
             Assert.That(c.Decode(new PlaceRequestMsg { TypeIndex = 9999 }), Is.Null, "docs/NETCODE.md §14: UnknownType, not a throw");
+            Assert.That(c.Decode(new PlaceRequestMsg { TypeIndex = 0, SkinIndex = 1 }), Is.Null, "a skin M0 has not got is unknown, not a throw");
+            Assert.That(c.Decode(new LatticeEventMsg { Kind = (byte)EventKind.Placed, TypeIndex = 0, SkinIndex = 7 }), Is.Null);
             Assert.That(c.Decode(new LatticeEventMsg { Kind = 7 }), Is.Null);
         }
 

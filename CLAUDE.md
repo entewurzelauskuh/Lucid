@@ -23,7 +23,7 @@ Things the tree does not tell you:
 
 - The editor path comes from `UNITY_PATH`. `tools/run-tests.sh`, `tools/build-cube.sh` and `tools/build-scenes.sh` all refuse to run while the editor holds the project, so ask the owner to close it rather than working around them.
 - `build-cube.sh` deliberately omits `-nographics`: previews need a graphics device, and the renderer degrades to writing no images rather than failing. `verify-generated.sh` inherits that, so it cannot run on a headless box (#70).
-- `verify-generated.sh` proves every generator still runs and still agrees its committed artefact is current. It is exactly as strong as the two comparators that decide whether to write — `CubeEquivalence` (#66) and `SceneSignature` (#67, #72) — so a hand edit to a field neither compares survives it: setting `m_Fog` in a scene by hand passes, setting `m_Text` does not. Run it when you touch a generator, and **commit** first rather than stashing, or it verifies the committed generator instead of yours.
+- `verify-generated.sh` proves every generator still runs and still agrees its committed artefact is current. It is exactly as strong as the three comparators that decide whether to write — `CubeEquivalence` (#66), `SceneSignature` (#67, #72) and `NetPrefabs.Matches` (the network prefab's components, pack and `GlobalObjectIdHash`) — so a hand edit to a field none compares survives it: setting `m_Fog` in a scene by hand passes, setting `m_Text` does not. Run it when you touch a generator, and **commit** first rather than stashing, or it verifies the committed generator instead of yours.
 - Driving Unity through the MCP bridge instead? Read the console for compile errors between every refresh and test run — the bridge has no compile guard and will happily run stale assemblies (`.claude/skills/pr-review/SKILL.md` §3).
 - The git remote is HTTPS. This machine has two GitHub accounts and the SSH key is the wrong one.
 - Steam is deferred, not blocked; see the pinned #28. Without it, two machines meet through `NetDream.unity`: open it, press Host on one and Connect on the other, or start a build with `--host` or `--connect <address>`. Multiplayer Play Mode (installed) runs a virtual player in the same editor for the same loop.
@@ -88,7 +88,7 @@ Unity is invoked in batch mode by these scripts: `Unity -batchmode -nographics -
 | `docs/` | `SPEC.md`, `UI.md`, `CORE-API.md`, `CUBE-SPEC.md`, `CHICANES.md`, `NETCODE.md`, `WORKPLAN.md`, `DECISIONS.md`, `HISTORY.md`, `cube-spec.schema.json`, `playtests/` (plans, template, session notes, csv) |
 | `tools/` | the scripts above |
 
-Assembly references: Runtime → Core; Netcode → Runtime, Core; Editor → everything; Tests → what they test. Core references nothing.
+Assembly references: Runtime → Core; Netcode → Runtime, Core, and NGO with its transport, collections and the Input System; Editor → everything; Tests → what they test. Core references nothing.
 
 ## Making a cube (short form; long form in `docs/SPEC.md` §17)
 

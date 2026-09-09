@@ -69,15 +69,18 @@ namespace Lucid.Tests.PlayMode.Netcode
 
             Assert.That(_dream.Cubes.Count, Is.EqualTo(1), "the client's dream did not stand up from RoundStart");
             Assert.That(_dreamClient.Sleeper, Is.Not.Null, "nobody in the bedroom");
+            Assert.That(_dreamClient.DreamId, Is.EqualTo(0), "the client does not know which dream it is");
             yield return WaitForConditionOrTimeOut(() => _host.DreamsReady.Contains(ClientId));
             AssertOnTimeout("DreamReady never arrived");
 
-            // The host builds; the client's dream grows without any hand of its own.
+            // The host builds two rooms north; the client's dream grows without any hand of its own.
             yield return Place(On(new Coord(0, 0, 0), Face.North, Straight));
-            yield return WaitForConditionOrTimeOut(() => _dream.Cubes.Count == 2);
+            yield return Place(On(new Coord(0, 1, 0), Face.North, Straight));
+            yield return WaitForConditionOrTimeOut(() => _dream.Cubes.Count == 3);
             AssertOnTimeout("the client's dream did not grow");
             Coord corridor = new Coord(0, 1, 0);
-            Assert.That(_dream.Cubes[corridor].Doors[Face.North].State, Is.EqualTo(ConnectorState.Exit), "the exit did not move north on the client");
+            Coord far = new Coord(0, 2, 0);
+            Assert.That(_dream.Cubes[far].Doors[Face.North].State, Is.EqualTo(ConnectorState.Exit), "the exit did not move north on the client");
 
             // The body walks in: the entry volume reports, the host adjudicates,
             // the event comes back and the hashes still agree.
@@ -85,14 +88,29 @@ namespace Lucid.Tests.PlayMode.Netcode
             yield return WalkForward(sleeper, 4f, () => _round.Lattice.IsExplored(corridor));
             Assert.That(_round.Lattice.IsExplored(corridor), Is.True, $"the host never explored the corridor; feet at {sleeper.Feet}");
             Assert.That(_dreamClient.Explorations, Is.EqualTo(1));
-            yield return WaitForConditionOrTimeOut(() => _client.AppliedEvents == 2 && _host.HashMatches == 2);
+            yield return WaitForConditionOrTimeOut(() => _client.AppliedEvents == 3 && _host.HashMatches == 3);
             AssertOnTimeout("the exploration did not come back to the client");
             AssertInSync("after the Sleeper explored");
             Assert.That(_round.Sleepers[0].Cube, Is.EqualTo(corridor), "telemetry or the report did not move Core's Sleeper");
             Assert.That(_dreamClient.TelemetrySent, Is.GreaterThan(0), "no telemetry went up");
+            Assert.That(_dreamClient.LastTelemetry.LocalY, Is.LessThan(256), "the body's height reads as if from a cube below the floor");
+            Assert.That(_dreamClient.LastTelemetry.LocalX, Is.EqualTo(CubeMetrics.Half * 256).Within(128), "x is not from the cube's west edge");
 
-            // On into the white door: the host says woke, the body is done.
-            yield return WalkForward(sleeper, 4f, () => _dreamClient.Woke);
+            // Into the far room and back into the corridor: the corridor is
+            // explored already, so no report goes up, and only telemetry can
+            // tell Core the body is there again.
+            yield return WalkForward(sleeper, 4f, () => _round.Lattice.IsExplored(far));
+            Assert.That(_round.Lattice.IsExplored(far), Is.True, $"never reached the far room; feet at {sleeper.Feet}");
+            yield return WaitForConditionOrTimeOut(() => _round.Sleepers[0].Cube == far);
+            AssertOnTimeout("Core's Sleeper did not reach the far room");
+            sleeper.transform.rotation = Quaternion.LookRotation(DreamSpace.Direction(Face.South), Vector3.up);
+            yield return WalkForward(sleeper, 4f, () => _round.Sleepers[0].Cube == corridor);
+            Assert.That(_round.Sleepers[0].Cube, Is.EqualTo(corridor), $"telemetry did not bring Core's Sleeper back; feet at {sleeper.Feet}");
+            Assert.That(_dreamClient.Explorations, Is.EqualTo(2), "walking back into an explored room reported again");
+            sleeper.transform.rotation = Quaternion.LookRotation(DreamSpace.Direction(Face.North), Vector3.up);
+
+            // On through the far room into the white door: the host says woke, the body is done.
+            yield return WalkForward(sleeper, 6f, () => _dreamClient.Woke);
             Assert.That(_dreamClient.ExitTouches, Is.EqualTo(1), "the exit was not touched once");
             Assert.That(_dreamClient.Woke, Is.True, $"no wake; feet at {(sleeper != null ? sleeper.Feet.ToString() : "gone")}");
             Assert.That(_round.Sleepers[0].Status, Is.EqualTo(SleeperStatus.Awake));
@@ -108,13 +126,18 @@ namespace Lucid.Tests.PlayMode.Netcode
             // the room they stood in rather than leave them in the new cube.
             yield return Begin();
             SleeperMotor sleeper = _dreamClient.Sleeper;
-            Vector3 centre = _dream.transform.TransformPoint(DreamSpace.Origin(new Coord(0, 0, 0)));
-            sleeper.Warp(centre + new Vector3(0f, 0.1f, CubeMetrics.Half - 0.6f));   // in the doorway
+            var door = new ConnectorRef(new Coord(0, 0, 0), Face.North);
+            Vector3 centre = _dream.transform.TransformPoint(DreamSpace.Origin(door.Cube));
+            sleeper.Warp(centre + new Vector3(0f, 0.1f, CubeMetrics.Half + 0.5f));   // past the door, in the cube that just appeared
+            _dreamClient.NoteTouched(door);
 
             _dreamClient.HandleWakeVerdict(new WakeVerdictMsg { Accepted = false, Reason = (byte)WakeVerdict.NotAnExit });
             Assert.That(_dreamClient.Woke, Is.False);
             Assert.That(_dreamClient.Sleeper, Is.Not.Null);
-            Assert.That((sleeper.Feet - centre).magnitude, Is.LessThan(0.5f), $"not rolled back to the room's centre: {sleeper.Feet}");
+            Vector3 doorway = _dreamClient.Doorway(door);
+            Assert.That((sleeper.Feet - doorway).magnitude, Is.LessThan(0.5f), $"not rolled back into the doorway {doorway}: {sleeper.Feet}");
+            Assert.That(sleeper.Feet.z, Is.EqualTo(CubeMetrics.Half - 1f).Within(0.5f), "not a metre inside the room");
+            Assert.That((sleeper.Feet - centre).magnitude, Is.GreaterThan(1f), "rolled back to the room's centre instead of its doorway");
         }
     }
 }

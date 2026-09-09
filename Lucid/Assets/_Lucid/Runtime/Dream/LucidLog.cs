@@ -42,6 +42,14 @@ namespace Lucid.Runtime
             events.Write(s);
         }
 
+        /// <summary>A count from the file is data: negative or absurd is a bad file, not a bad allocation.</summary>
+        static int Count(BinaryReader r, string what)
+        {
+            int n = r.ReadInt32();
+            if (n < 0 || n > 1 << 16) throw new InvalidDataException($".lucidlog: {n} {what}");
+            return n;
+        }
+
         public static Contents Read(Stream s)
         {
             using (var r = new BinaryReader(s, Encoding.UTF8, leaveOpen: true))
@@ -53,10 +61,10 @@ namespace Lucid.Runtime
                 if (version != Version) throw new InvalidDataException($".lucidlog version {version}, expected {Version}");
                 string note = r.ReadString();
                 var settings = new RoundSettings(r.ReadInt32(), r.ReadInt32(), r.ReadInt32(), r.ReadInt32(), r.ReadInt32(), r.ReadInt32());
-                int n = r.ReadInt32();
+                int n = Count(r, "players");
                 var players = new List<Player>(n);
                 for (int i = 0; i < n; i++) players.Add(new Player(r.ReadInt32(), r.ReadString()));
-                int m = r.ReadInt32();
+                int m = Count(r, "registry ids");
                 var ids = new List<string>(m);
                 for (int i = 0; i < m; i++) ids.Add(r.ReadString());
                 EventLog events = EventLog.Read(s);

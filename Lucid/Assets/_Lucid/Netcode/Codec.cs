@@ -44,7 +44,13 @@ namespace Lucid.Netcode
                 : throw new ArgumentException($"skin '{skinId}': skins arrive with M1", nameof(skinId));
 
         public static string SkinId(ushort index) =>
-            index == DefaultSkin ? DefaultSkinId : throw new ArgumentException($"skin index {index}: skins arrive with M1", nameof(index));
+            TrySkinId(index, out string id) ? id : throw new ArgumentException($"skin index {index}: skins arrive with M1", nameof(index));
+
+        public static bool TrySkinId(ushort index, out string skinId)
+        {
+            skinId = index == DefaultSkin ? DefaultSkinId : null;
+            return skinId != null;
+        }
 
         public LatticeEventMsg Encode(LatticeEvent e, ulong postHash)
         {
@@ -73,8 +79,8 @@ namespace Lucid.Netcode
             switch ((EventKind)m.Kind)
             {
                 case EventKind.Placed:
-                    if (!TryTypeId(m.TypeIndex, out string typeId)) return null;
-                    return new CubePlaced(m.Seq, m.Cube.ToCoord(), typeId, (Rotation)m.Rotation, SkinId(m.SkinIndex));
+                    if (!TryTypeId(m.TypeIndex, out string typeId) || !TrySkinId(m.SkinIndex, out string skin)) return null;
+                    return new CubePlaced(m.Seq, m.Cube.ToCoord(), typeId, (Rotation)m.Rotation, skin);
                 case EventKind.Explored:
                     return new CubeExplored(m.Seq, m.Cube.ToCoord(), m.SleeperId);
                 default:
@@ -88,11 +94,11 @@ namespace Lucid.Netcode
             TypeIndex = TypeIndex(r.TypeId), Rotation = (byte)r.Rotation, SkinIndex = SkinIndex(r.SkinId),
         };
 
-        /// <summary>Null for an unknown type index, which the host answers with <see cref="PlaceError.UnknownType"/> (§14).</summary>
+        /// <summary>Null for an unknown type or skin index, which the host answers with <see cref="PlaceError.UnknownType"/> (§14) rather than a throw nobody replies to.</summary>
         public PlaceRequest Decode(PlaceRequestMsg m)
         {
-            if (!TryTypeId(m.TypeIndex, out string typeId)) return null;
-            return new PlaceRequest(new ConnectorRef(m.TargetCube.ToCoord(), (Face)m.TargetFace), typeId, (Rotation)m.Rotation, SkinId(m.SkinIndex));
+            if (!TryTypeId(m.TypeIndex, out string typeId) || !TrySkinId(m.SkinIndex, out string skin)) return null;
+            return new PlaceRequest(new ConnectorRef(m.TargetCube.ToCoord(), (Face)m.TargetFace), typeId, (Rotation)m.Rotation, skin);
         }
     }
 }

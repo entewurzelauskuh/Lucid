@@ -88,7 +88,7 @@ namespace Lucid.Tests.PlayMode.Netcode
         }
 
         /// <summary>Spawns the sync, begins a round with the client as Sleeper 0, and waits for RoundStart to land.</summary>
-        protected IEnumerator Begin(RoundSettings settings = null)
+        protected IEnumerator Begin(RoundSettings settings = null, System.Action<Round> before = null)
         {
             GameObject go = SpawnObject(_prefab, m_ServerNetworkManager);
             _host = go.GetComponent<RoundSync>();
@@ -99,6 +99,7 @@ namespace Lucid.Tests.PlayMode.Netcode
 
             _round = new Round(settings ?? new RoundSettings(HeadStartMs: 0), _host.Registry, Start, Rotation.R0,
                 new[] { new PlayerId((int)ClientId) });
+            before?.Invoke(_round);
             _host.BeginRound(_round, m_ServerNetworkManager.LocalClientId, new[] { ClientId });
 
             yield return WaitForConditionOrTimeOut(() => _client.RoundStarted);
@@ -229,10 +230,16 @@ namespace Lucid.Tests.PlayMode.Netcode
             yield return Place(On(new Coord(0, 0, 0), Face.North, Tee));
             yield return Place(On(tee, Face.East, Straight, Rotation.R90));   // E, W: W meets the T
 
-            yield return Explore(tee);
+            // The straight's west door was the fog the placement attached;
+            // exploring the straight now finds its only other door the exit,
+            // and nothing hardens.
+            int solidBefore = _round.Derived.Connectors.Count(k => k.Value == ConnectorState.Solid);
+            yield return Explore(east);
             AssertInSync("after the late exploration");
-            Assert.That(_client.Mirror.Derived.StateOf(new ConnectorRef(tee, Face.East)), Is.EqualTo(ConnectorState.Attached));
+            Assert.That(_client.Mirror.Derived.StateOf(new ConnectorRef(east, Face.West)), Is.EqualTo(ConnectorState.Attached));
             Assert.That(_client.Mirror.Derived.StateOf(new ConnectorRef(east, Face.East)), Is.EqualTo(ConnectorState.Exit), "the straight's far door is the way out");
+            Assert.That(_round.Derived.Connectors.Count(k => k.Value == ConnectorState.Solid), Is.EqualTo(solidBefore), "the late exploration hardened a door it had no fog for");
+            Assert.That(_round.Lattice.IsExplored(east), Is.True);
             Assert.That(_client.Mirror.Log.Events.Count, Is.EqualTo(3));
         }
 
@@ -281,6 +288,16 @@ namespace Lucid.Tests.PlayMode.Netcode
             Assert.That(_host.Desyncs[0].Seq, Is.EqualTo(0u));
             Assert.That(_host.Desyncs[0].ClientId, Is.EqualTo(ClientId));
 
+            // Hashes are cumulative: the same client's next report mismatches
+            // too, and is counted rather than announced and saved again.
+            string first = _host.LastSavedLog;
+            _client.ReportHash(0, _client.Mirror.Derived.Hash ^ 2);
+            yield return WaitForConditionOrTimeOut(() => _host.SuppressedDesyncs == 1);
+            AssertOnTimeout("the second mismatch was not counted");
+            Assert.That(_host.Desyncs.Count, Is.EqualTo(1));
+            Assert.That(_client.DesyncNotices, Is.EqualTo(1));
+            Assert.That(_host.LastSavedLog, Is.EqualTo(first), "a second log was saved for the same client");
+
             Assert.That(_host.LastSavedLog, Is.Not.Null.And.Not.Empty, "no .lucidlog was saved");
             Assert.That(File.Exists(_host.LastSavedLog), Is.True, _host.LastSavedLog);
             using (FileStream f = File.OpenRead(_host.LastSavedLog))
@@ -317,6 +334,80 @@ namespace Lucid.Tests.PlayMode.Netcode
             _client.SendTelemetry(new TelemetryMsg { Cube = WireCoord.From(new Coord(5, 5, 0)) });
             for (int i = 0; i < 5; i++) yield return null;
             Assert.That(_round.Sleepers[0].Cube, Is.EqualTo(new Coord(0, 0, 0)));
+        }
+    }
+
+    /// <summary>The rest of §14 and §4 on the wire: answered, never dropped; a fault reported; the phase carried.</summary>
+    public sealed class RoundSyncEdgeTests : NetHarness
+    {
+        protected override int NumberOfClients => 1;
+        protected override bool ShouldCheckForSpawnedPlayers() => false;
+
+        [UnityTest]
+        public IEnumerator AnUnknownTypeOrSkinIsAnsweredNotDropped()
+        {
+            // docs/NETCODE.md §14: "PlaceRequest for an unknown typeIndex →
+            // PlaceReply UnknownType"; a skin M0 has not got is the same
+            // answer, where the first draft threw inside the handler and the
+            // Nightmare's ghost waited for ever.
+            yield return Begin();
+            int replies = _host.PlaceReplies;
+            _host.SendPlaceRequestRaw(new PlaceRequestMsg { ReqId = 77, TargetCube = WireCoord.From(new Coord(0, 0, 0)), TargetFace = (byte)Face.North, TypeIndex = 9999 });
+            yield return WaitForConditionOrTimeOut(() => _host.PlaceReplies > replies);
+            AssertOnTimeout("no reply to an unknown type");
+            Assert.That((PlaceError)_host.LastPlaceReply.Verdict, Is.EqualTo(PlaceError.UnknownType));
+            Assert.That(_host.LastPlaceReply.ReqId, Is.EqualTo((ushort)77));
+
+            replies = _host.PlaceReplies;
+            _host.SendPlaceRequestRaw(new PlaceRequestMsg { ReqId = 78, TargetCube = WireCoord.From(new Coord(0, 0, 0)), TargetFace = (byte)Face.North, TypeIndex = _host.Codec.TypeIndex(Straight), SkinIndex = 1 });
+            yield return WaitForConditionOrTimeOut(() => _host.PlaceReplies > replies);
+            AssertOnTimeout("no reply to an unknown skin");
+            Assert.That((PlaceError)_host.LastPlaceReply.Verdict, Is.EqualTo(PlaceError.UnknownType));
+            Assert.That(_round.Lattice.Cubes.Count, Is.EqualTo(1), "an unknown skin placed a cube");
+        }
+
+        [UnityTest]
+        public IEnumerator ACorruptEventFaultsTheMirrorAndTheHostHears()
+        {
+            // An event the host's log never held — a cube on the bedroom's own
+            // coord. The mirror cannot apply it; the first draft threw inside
+            // the RPC, sent no report, and the host waited on nothing.
+            yield return Begin();
+            _logFolder = System.IO.Path.Combine(Application.temporaryCachePath, "lucid-test-logs-" + System.IO.Path.GetRandomFileName());
+            _host.LogFolder = _logFolder;
+
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("cannot be applied"));
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("DESYNC at seq 0"));
+            _host.BroadcastRaw(new LatticeEventMsg
+            {
+                Seq = 0, Kind = (byte)EventKind.Placed, Cube = WireCoord.From(new Coord(0, 0, 0)),
+                TypeIndex = _host.Codec.TypeIndex(Straight), PostHash = 12345,
+            });
+            yield return WaitForConditionOrTimeOut(() => _client.Faults == 1 && _host.Desyncs.Count == 1);
+            AssertOnTimeout("the fault never reached the host as a desync");
+            Assert.That(_client.Mirror.Log.NextSeq, Is.EqualTo(0), "the corrupt event moved the mirror's log");
+            Assert.That(_client.AppliedEvents, Is.EqualTo(0));
+        }
+
+        [UnityTest]
+        public IEnumerator TheHeadStartEndsOnTheWire()
+        {
+            // 102: the host's phase change reaches the client; and a round that
+            // has already left its head start says so at RoundStart.
+            yield return Begin(new RoundSettings(HeadStartMs: 200));
+            Assert.That(_client.Phase, Is.EqualTo(Phase.HeadStart));
+            _round.Advance(300);
+            yield return WaitForConditionOrTimeOut(() => _client.Phase == Phase.Running);
+            AssertOnTimeout("the client never heard the head start end");
+        }
+
+        [UnityTest]
+        public IEnumerator ARoundAlreadyRunningSaysSoAtStart()
+        {
+            yield return Begin(new RoundSettings(HeadStartMs: 200), before: r => r.Advance(300));
+            Assert.That(_round.Phase, Is.EqualTo(Phase.Running));
+            yield return WaitForConditionOrTimeOut(() => _client.Phase == Phase.Running);
+            AssertOnTimeout("a client joining a running round was left at HeadStart");
         }
     }
 

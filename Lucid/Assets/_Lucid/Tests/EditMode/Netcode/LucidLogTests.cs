@@ -41,5 +41,21 @@ namespace Lucid.Tests.EditMode.Netcode
         {
             Assert.That(() => LucidLog.Read(new MemoryStream(new byte[] { 1, 2, 3, 4, 5, 6 })), Throws.TypeOf<InvalidDataException>());
         }
+
+        [Test]
+        public void ACountFromTheFileIsDataNotAnAllocation()
+        {
+            // A negative player count is a bad file, and the caller catches
+            // InvalidDataException — not the ArgumentOutOfRange a List ctor throws.
+            var ms = new MemoryStream();
+            using (var w = new System.IO.BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+            {
+                w.Write(new[] { (byte)'L', (byte)'U', (byte)'C', (byte)'L' }); w.Write((ushort)1); w.Write("note");
+                for (int i = 0; i < 6; i++) w.Write(1);
+                w.Write(-1);
+            }
+            ms.Position = 0;
+            Assert.That(() => LucidLog.Read(ms), Throws.TypeOf<InvalidDataException>());
+        }
     }
 }

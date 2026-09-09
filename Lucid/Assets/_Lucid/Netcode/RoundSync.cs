@@ -36,6 +36,7 @@ namespace Lucid.Netcode
         readonly Dictionary<ulong, int> _sleeperOf = new Dictionary<ulong, int>();
         readonly Dictionary<ulong, ushort> _lastTelemetry = new Dictionary<ulong, ushort>();
         readonly List<DesyncNoticeMsg> _desyncs = new List<DesyncNoticeMsg>();
+        readonly HashSet<ulong> _desynced = new HashSet<ulong>();
         readonly HashSet<ulong> _dreamsReady = new HashSet<ulong>();
         ulong _nightmare;
         Phase _lastPhase;
@@ -76,6 +77,9 @@ namespace Lucid.Netcode
         public int BudgetStates { get; private set; }
         public int SleeperStatuses { get; private set; }
         public int DesyncNotices { get; private set; }
+        /// <summary>Mismatches after a client's first: hashes are cumulative, so one divergence is every later report too. Counted, not announced.</summary>
+        public int SuppressedDesyncs { get; private set; }
+        public int Faults { get; private set; }
         public SleeperStatusMsg LastSleeperStatus { get; private set; }
 
         /// <summary>Where a desync's .lucidlog goes; a test points it at a temp folder.</summary>
@@ -122,8 +126,10 @@ namespace Lucid.Netcode
             _sleeperOf.Clear();
             _lastTelemetry.Clear();
             _desyncs.Clear();
+            _desynced.Clear();
             _dreamsReady.Clear();
             _hashMatches = 0;
+            SuppressedDesyncs = 0;
             _lastPhase = round.Phase;
             _lastBudgetPoints = -1;
 
@@ -146,8 +152,23 @@ namespace Lucid.Netcode
             Start = msg;
             RoundStarted = true;
             RoundStartRpc(msg);
+            // A round that has already left its head start — a Sleeper who
+            // connected late in the dev scene, M1.4's resume — is told where
+            // it stands; RoundStart alone would leave the client at HeadStart.
+            if (round.Phase != Phase.HeadStart)
+                PhaseChangedRpc(new PhaseChangedMsg { Phase = (byte)round.Phase, AtServerTime = NetworkManager.ServerTime.Time });
             SendBudget();
         }
+
+        /// <summary>A test's hand on the wire: an event the host's log never held.</summary>
+        internal void BroadcastRaw(LatticeEventMsg m)
+        {
+            _ledger.Broadcast(m.Seq, m.PostHash);
+            LatticeEventRpc(m);
+        }
+
+        /// <summary>Broadcast handlers run on every client; only the host may have sent them (NGO proxies a client's ClientsAndHost through the server).</summary>
+        static bool FromHost(RpcParams rpc) => rpc.Receive.SenderClientId == NetworkManager.ServerClientId;
 
         /// <summary>201 for an event Core appended on this machine (the host's own Nightmare, the host's own dream).</summary>
         public void Broadcast(LatticeEvent e, ulong postHash)
@@ -215,15 +236,18 @@ namespace Lucid.Netcode
 
         internal void SendTelemetryRaw(TelemetryMsg t) => TelemetryRpc(t);
 
+        /// <summary>401 by hand, for a test that sends what the codec would refuse to build.</summary>
+        internal void SendPlaceRequestRaw(PlaceRequestMsg m) => PlaceRequestRpc(m);
+
         /// <summary>202, by hand: a test corrupts a hash to prove the host notices.</summary>
         internal void ReportHash(uint seq, ulong hash) => HashReportRpc(new HashReportMsg { Seq = seq, Hash = hash });
 
         // ---- 1xx: round lifecycle, host → all -------------------------------------------
 
         [Rpc(SendTo.ClientsAndHost)]
-        void RoundStartRpc(RoundStartMsg msg)
+        void RoundStartRpc(RoundStartMsg msg, RpcParams rpc = default)
         {
-            if (IsServer) return;
+            if (IsServer || !FromHost(rpc)) return;
             if (_codec == null) return;
 
             if (msg.RegistryHash != _registry.ContentHash())
@@ -248,15 +272,17 @@ namespace Lucid.Netcode
         }
 
         [Rpc(SendTo.ClientsAndHost)]
-        void PhaseChangedRpc(PhaseChangedMsg msg)
+        void PhaseChangedRpc(PhaseChangedMsg msg, RpcParams rpc = default)
         {
+            if (!FromHost(rpc)) return;
             if (!IsServer) _clientPhase = (Phase)msg.Phase;
             OnPhaseChanged?.Invoke(msg);
         }
 
         [Rpc(SendTo.ClientsAndHost)]
-        void SleeperStatusRpc(SleeperStatusMsg msg)
+        void SleeperStatusRpc(SleeperStatusMsg msg, RpcParams rpc = default)
         {
+            if (!FromHost(rpc)) return;
             SleeperStatuses++;
             LastSleeperStatus = msg;
             OnSleeperStatus?.Invoke(msg);
@@ -265,9 +291,9 @@ namespace Lucid.Netcode
         // ---- 2xx: the lattice --------------------------------------------------------------
 
         [Rpc(SendTo.ClientsAndHost)]
-        void LatticeEventRpc(LatticeEventMsg msg)
+        void LatticeEventRpc(LatticeEventMsg msg, RpcParams rpc = default)
         {
-            if (IsServer) return;
+            if (IsServer || !FromHost(rpc)) return;
             if (Mirror == null)
             {
                 Debug.LogError($"{name}: a lattice event before RoundStart (seq {msg.Seq})", this);
@@ -281,9 +307,13 @@ namespace Lucid.Netcode
                 Debug.LogError($"{name}: seq gap — got {msg.Seq}, expected {Mirror.NextSeq}", this);
                 return;
             }
-            if (r.Unknown)
+            if (r.Unknown || r.Faulted)
             {
-                Debug.LogError($"{name}: seq {msg.Seq} names a type or kind this registry has not got", this);
+                // Not applied, and the host must hear so rather than wait: a
+                // hash that cannot be the host's is the report (§5).
+                Faults++;
+                Debug.LogError($"{name}: seq {msg.Seq} {(r.Unknown ? "names a type or kind this registry has not got" : "cannot be applied to this lattice")}; reporting the fault", this);
+                HashReportRpc(new HashReportMsg { Seq = msg.Seq, Hash = ~msg.PostHash });
                 return;
             }
 
@@ -307,9 +337,16 @@ namespace Lucid.Netcode
                     Debug.LogWarning($"{name}: client {client} reported seq {msg.Seq}, which was never broadcast", this);
                     break;
                 case HashLedger.Verdict.Mismatch:
+                    if (!_desynced.Add(client))
+                    {
+                        // Every report after the first from a diverged client
+                        // mismatches too; one notice and one log per client.
+                        SuppressedDesyncs++;
+                        break;
+                    }
                     var notice = new DesyncNoticeMsg { Seq = msg.Seq, ClientId = client };
                     _desyncs.Add(notice);
-                    LastSavedLog = SaveLog($"desync at seq {msg.Seq} from client {client}: reported {msg.Hash:x16}");
+                    LastSavedLog = SaveLog(client, $"desync at seq {msg.Seq} from client {client}: reported {msg.Hash:x16}");
                     Debug.LogError($"{name}: DESYNC at seq {msg.Seq} from client {client}; log saved to {LastSavedLog}", this);
                     DesyncNoticeRpc(notice);
                     break;
@@ -317,20 +354,21 @@ namespace Lucid.Netcode
         }
 
         [Rpc(SendTo.ClientsAndHost)]
-        void DesyncNoticeRpc(DesyncNoticeMsg msg)
+        void DesyncNoticeRpc(DesyncNoticeMsg msg, RpcParams rpc = default)
         {
+            if (!FromHost(rpc)) return;
             DesyncNotices++;
             OnDesync?.Invoke(msg);
         }
 
         /// <summary>§5, §14: the automatic .lucidlog. Never throws into an RPC handler; a failed save is logged and the notice still goes out.</summary>
-        string SaveLog(string note)
+        string SaveLog(ulong client, string note)
         {
             try
             {
                 string folder = LogFolder ?? Path.Combine(Application.persistentDataPath, "lucidlogs");
                 Directory.CreateDirectory(folder);
-                string path = Path.Combine(folder, $"{DateTime.UtcNow:yyyyMMdd-HHmmss}-seq{_round.Log.NextSeq}.lucidlog");
+                string path = Path.Combine(folder, $"{DateTime.UtcNow:yyyyMMdd-HHmmss}-client{client}-seq{_round.Log.NextSeq}.lucidlog");
                 var players = new List<LucidLog.Player>();
                 foreach (SleeperState s in _round.Sleepers) players.Add(new LucidLog.Player(s.Id, s.Player.ToString()));
                 using (FileStream f = File.Create(path))
@@ -383,14 +421,26 @@ namespace Lucid.Netcode
         void TouchedExitRpc(TouchedExitMsg msg, RpcParams rpc = default)
         {
             ulong client = rpc.Receive.SenderClientId;
+            var target = RpcTarget.Single(client, RpcTargetUse.Temp);
             if (_round == null || !TrySleeper(client, out int sleeper))
             {
-                WakeVerdictRpc(new WakeVerdictMsg { Accepted = false, Reason = (byte)WakeVerdict.NotInDream }, RpcTarget.Single(client, RpcTargetUse.Temp));
+                WakeVerdictRpc(new WakeVerdictMsg { Accepted = false, Reason = (byte)WakeVerdict.NotInDream }, target);
                 return;
             }
 
-            WakeVerdict w = _round.TryWake(sleeper, new ConnectorRef(msg.Cube.ToCoord(), (Face)msg.Face));
-            WakeVerdictRpc(new WakeVerdictMsg { Accepted = w == WakeVerdict.Woke, Reason = (byte)w }, RpcTarget.Single(client, RpcTargetUse.Temp));
+            WakeVerdict w;
+            try
+            {
+                w = _round.TryWake(sleeper, new ConnectorRef(msg.Cube.ToCoord(), (Face)msg.Face));
+            }
+            catch (Exception e)
+            {
+                // §14: answered with an error rather than dropped, and logged with the message id.
+                Debug.LogError($"{name}: {Message.TouchedExit} from client {client} threw: {e}", this);
+                WakeVerdictRpc(new WakeVerdictMsg { Accepted = false, Reason = (byte)WakeVerdict.NotInDream }, target);
+                return;
+            }
+            WakeVerdictRpc(new WakeVerdictMsg { Accepted = w == WakeVerdict.Woke, Reason = (byte)w }, target);
             if (w == WakeVerdict.Woke)
             {
                 SleeperState s = _round.Sleepers[sleeper];
@@ -426,7 +476,19 @@ namespace Lucid.Netcode
                 return;
             }
 
-            PlaceVerdict v = _round.TryPlace(request);
+            PlaceVerdict v;
+            try
+            {
+                v = _round.TryPlace(request);
+            }
+            catch (Exception e)
+            {
+                // §14: the request is answered with an error rather than
+                // dropped, so the Nightmare's ghost never waits for ever.
+                Debug.LogError($"{name}: {Message.PlaceRequest} {msg.ReqId} from client {client} threw: {e}", this);
+                PlaceReplyRpc(new PlaceReplyMsg { ReqId = msg.ReqId, Verdict = (byte)PlaceError.NotADoor, TrappedDreamId = -1 }, target);
+                return;
+            }
             PlaceReplyRpc(new PlaceReplyMsg { ReqId = msg.ReqId, Verdict = (byte)v.Error, TrappedDreamId = (sbyte)v.TrappedSleeper }, target);
             if (v.Ok)
             {

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The netcode dev scene's panel (M0.8). A tool, not a screen of docs/UI.md:
-     its three words are a developer's, not a player's, and stay out of §14. -->
+     its words — the three here and the status line NetDreamScene writes —
+     are a developer's, not a player's, and stay out of §14. -->
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
   <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-tokens.uss" />
   <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-components.uss" />

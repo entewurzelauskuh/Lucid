@@ -171,7 +171,7 @@ ResumeSnapshot   H → C   chunked: chunkIndex, chunkCount, bytes   reliable
 
 - All payloads are `INetworkSerializable` structs with fixed layouts; no strings after `Hello` and `RoundStart`. Names are resolved from the `Players` list, cube types and skins from the shared registry order, which `contentHash` guarantees is identical.
 - `Coord`: `int8 x, y, z`. `localPos`: `uint16 × 3` at 1/256 m inside the 8 m cube. `yaw`: `uint8` (1.4°). `pitch`: `int8` (±90° in 0.7° steps). Times inside a round: `uint32` milliseconds.
-- Lattice event payloads are written by `Lucid.Core.EventLog.Write` and are byte-identical on the wire and in `.lucidlog`.
+- Lattice event payloads carry exactly the fields of `Lucid.Core.EventLog.Write` — the wire in NGO's serialisation with registry indices (§5), the `.lucidlog` in Core's own encoding with ids — and decode to the identical record, so a log replays to the hashes the wire reported. The two byte streams are not the same: §5's indices and this section's "no strings" rule out Core's encoding on the wire.
 - Unreliable messages stay under 1 KB so they never fragment; reliable messages may exceed the MTU (NGO fragments them) but `ResumeSnapshot` is chunked at 16 KB regardless.
 
 ### Bandwidth budget (4 Sleepers, worst case)

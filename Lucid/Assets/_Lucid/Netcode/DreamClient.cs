@@ -23,6 +23,7 @@ namespace Lucid.Netcode
         float _telemetryTimer;
         Coord _cube;
         bool _hasCube;
+        ConnectorRef? _lastTouched;
 
         public DreamClient(RoundSync sync, DreamInstance dream, Func<Vector3, Vector3, SleeperMotor> spawnSleeper)
         {
@@ -43,17 +44,31 @@ namespace Lucid.Netcode
 
         public SleeperMotor Sleeper { get; private set; }
         public bool Woke { get; private set; }
+        /// <summary>Which dream this machine is, from RoundStart: the index of its own client id among the Sleepers.</summary>
+        public int DreamId { get; private set; } = -1;
         public int Explorations { get; private set; }
         public int ExitTouches { get; private set; }
         public int TelemetrySent { get; private set; }
+        public TelemetryMsg LastTelemetry { get; private set; }
+
+        /// <summary>For a test: the door a touch report went out for, which a refused wake rolls back into.</summary>
+        internal void NoteTouched(ConnectorRef door) => _lastTouched = door;
         /// <summary>Where the body is, by the dream's own volumes; the start cube until it has stepped anywhere.</summary>
         public Coord Cube => _hasCube ? _cube : _dream.Start;
 
-        void OnRoundStarted(RoundStartMsg _)
+        void OnRoundStarted(RoundStartMsg start)
         {
+            // A new round: a new body, and the last one's waking is over.
+            Woke = false;
+            _hasCube = false;
+            _lastTouched = null;
+            DreamId = -1;
+            ulong me = _sync.NetworkManager.LocalClientId;
+            for (int i = 0; i < start.SleeperCount; i++) if (start.SleeperClient(i) == me) { DreamId = i; break; }
+
             _dream.Apply(_sync.Mirror.Lattice, _sync.Mirror.Derived);
             if (Sleeper == null) Sleeper = _spawn(_dream.SpawnPoint, _dream.SpawnFacing);
-            _sync.SendDreamReady(0);
+            _sync.SendDreamReady(DreamId);
         }
 
         void OnLatticeApplied(LatticeEventMsg _, MirrorResult r)
@@ -71,6 +86,7 @@ namespace Lucid.Netcode
         {
             if (Woke) return;
             ExitTouches++;
+            _lastTouched = door;
             _sync.SendTouchedExit(door);
         }
 
@@ -83,9 +99,9 @@ namespace Lucid.Netcode
         /// <summary>
         /// 311. Accepted: the Sleeper is awake and the body is done — M0.9's
         /// results and spectator view take it from here. Refused because a
-        /// placement beat the report (docs/NETCODE.md §14): the body is rolled
-        /// back into the room it stood in, from where the new cube's doorway
-        /// is the way on.
+        /// placement beat the report: "the client rolls the Sleeper back into
+        /// the doorway" (docs/NETCODE.md §6) — a metre inside the room, on the
+        /// door they touched, from where the new cube is the way on.
         /// </summary>
         internal void HandleWakeVerdict(WakeVerdictMsg verdict)
         {
@@ -97,9 +113,13 @@ namespace Lucid.Netcode
                 return;
             }
 
-            if ((WakeVerdict)verdict.Reason == WakeVerdict.NotAnExit && Sleeper != null)
-                Sleeper.Warp(_dream.transform.TransformPoint(DreamSpace.Origin(Cube)));
+            if ((WakeVerdict)verdict.Reason == WakeVerdict.NotAnExit && Sleeper != null && _lastTouched != null)
+                Sleeper.Warp(Doorway(_lastTouched.Value));
         }
+
+        /// <summary>A metre inside the room, in front of the door, in the dream's frame.</summary>
+        public Vector3 Doorway(ConnectorRef door) =>
+            _dream.transform.TransformPoint(DreamSpace.Origin(door.Cube) + DreamSpace.Direction(door.Face) * (CubeMetrics.Half - 1f));
 
         /// <summary>302 at 10 Hz, from the body's pose in the cube it is in.</summary>
         public void Tick(float dt)
@@ -109,20 +129,25 @@ namespace Lucid.Netcode
             if (_telemetryTimer < 1f / TelemetryHz) return;
             _telemetryTimer = 0f;
 
+            // Origin is the cube's floor centre; the wire's local position is
+            // from its south-west floor corner (docs/NETCODE.md §11), so x and
+            // z are shifted by half a cube and y is height above the floor.
             Vector3 local = Sleeper.Feet - _dream.transform.TransformPoint(DreamSpace.Origin(Cube));
-            _sync.SendTelemetry(new TelemetryMsg
+            var t = new TelemetryMsg
             {
                 Cube = WireCoord.From(Cube),
-                LocalX = Quantise(local.x), LocalY = Quantise(local.y), LocalZ = Quantise(local.z),
+                LocalX = Quantise(local.x + CubeMetrics.Half), LocalY = Quantise(local.y), LocalZ = Quantise(local.z + CubeMetrics.Half),
                 Yaw = (byte)Mathf.RoundToInt(Mathf.Repeat(Sleeper.transform.eulerAngles.y, 360f) / 360f * 255f),
                 Health = 100, Lives = 1, Status = (byte)SleeperStatus.InDream, Flags = 0,
-            });
+            };
+            _sync.SendTelemetry(t);
+            LastTelemetry = t;
             TelemetrySent++;
         }
 
-        /// <summary>Metres inside the cube to 1/256 m; the origin is the cube's south-west floor corner minus half a cube (docs/NETCODE.md §11).</summary>
+        /// <summary>Metres to 1/256 m, clamped to the sixteen bits.</summary>
         static ushort Quantise(float metres) =>
-            (ushort)Mathf.Clamp(Mathf.RoundToInt((metres + CubeMetrics.Half) * 256f), 0, ushort.MaxValue);
+            (ushort)Mathf.Clamp(Mathf.RoundToInt(metres * 256f), 0, ushort.MaxValue);
 
         public void Dispose()
         {
