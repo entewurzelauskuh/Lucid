@@ -178,7 +178,7 @@ Strings are the rules made visible; keep them exact so every screen says the sam
 - Results: "Everyone woke up" · "Woke at {time}" · "Consumed at {time}" · "Consumed by dawn" — the other two titles are "Dawn." and "Consumed" above
 - Spectator: "You're awake. Watch the others."
 - Nightmare view: "Building paused"
-- Edge flows: "The dream collapsed" · "The Nightmare fled" · "The dream will collapse for all Sleepers." · "Round in progress, {time} left" · "Steam is offline"
+- Edge flows: "The dream collapsed" · "The Nightmare fled" · "The dream will collapse for all Sleepers." · "Round in progress, {time} left" · "Steam is offline" · "Different version: update Lucid on Steam" · "Lobby is full" · "Protocol mismatch" (the three connection refusals, `docs/NETCODE.md` §2)
 - Readouts and hints: "depth {n} · exit {n}" (the Nightmare's Sleeper row, §8) · "{version} · Unity {engine}" (the build string, §3) · "1 per {n} s" (the budget's trickle rate, §8; n is whole seconds, or one decimal when the interval is not whole) · "Sleeper {n}" (a Sleeper who has no name yet, by seat — the Sandbox's, §12) · "you can accept invites from the overlay at any time" (§3)
 - Title: "LUCID" (the wordmark, §15) · "Host a dream" · "Join" · "Sandbox" · "Options" · "Quit"
 - Section captions, the one place uppercase is allowed (§15): PALETTE · PACKS · BUDGET · SLEEPERS · SESSION LEADERBOARD · THE NIGHTMARE

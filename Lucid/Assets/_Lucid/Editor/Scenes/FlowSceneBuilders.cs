@@ -38,7 +38,7 @@ namespace Lucid.Editor.Scenes
         public static readonly string[] BuildList =
         {
             BootPath, TitlePath, DreamPath,
-            GauntletSceneBuilder.ScenePath, FogDoorSceneBuilder.ScenePath,
+            GauntletSceneBuilder.ScenePath, FogDoorSceneBuilder.ScenePath, NetDreamSceneBuilder.ScenePath,
         };
 
         [MenuItem("Lucid/Build Flow Scenes")]
@@ -101,8 +101,17 @@ namespace Lucid.Editor.Scenes
             // round's settings per round (docs/UI.md §12).
             round.ConfigureUnbounded();
 
-            // The Nightmare's side (docs/UI.md §8): a camera the god view
-            // drives, the input that drives it, and the hands that build.
+            (GameObject rig, GameObject ui) = AddNightmare(dream, round);
+
+            var sandbox = dream.gameObject.AddComponent<SandboxScene>();
+            sandbox.Configure(Load<InputActionAsset>(GauntletSceneBuilder.InputActionsPath), rig, ui);
+        }
+
+        /// <summary>The Nightmare's side (docs/UI.md §8): the god view's camera and input, the hands that build, and the HUD. Shared with the netcode dev scene.</summary>
+        internal static (GameObject rig, GameObject ui) AddNightmare(DreamInstance dream, LocalRound round)
+        {
+            // A camera the god view drives, the input that drives it, and the
+            // hands that build.
             var rig = new GameObject("Nightmare");
             rig.transform.SetParent(dream.transform, false);
             var camera = rig.AddComponent<Camera>();
@@ -121,14 +130,12 @@ namespace Lucid.Editor.Scenes
             var hud = ui.AddComponent<NightmareHud>();
 
             controller.Configure(view, round, input, hud);
-
-            var sandbox = dream.gameObject.AddComponent<SandboxScene>();
-            sandbox.Configure(Load<InputActionAsset>(GauntletSceneBuilder.InputActionsPath), rig, ui);
+            return (rig, ui);
         }
 
         // ---- shared -------------------------------------------------------------
 
-        static DreamInstance Bedroom()
+        internal static DreamInstance Bedroom()
         {
             var go = new GameObject("Dream");
             var dream = go.AddComponent<DreamInstance>();
@@ -138,7 +145,7 @@ namespace Lucid.Editor.Scenes
         }
 
         /// <summary>A bedroom at night: one dim, cool light from above.</summary>
-        static void AddNightLight(Transform parent)
+        internal static void AddNightLight(Transform parent)
         {
             var light = new GameObject("Night").AddComponent<Light>();
             light.type = LightType.Point;
@@ -149,7 +156,7 @@ namespace Lucid.Editor.Scenes
             light.transform.localPosition = new Vector3(0f, CubeMetrics.Size - 1f, 0f);
         }
 
-        static T Load<T>(string path) where T : UnityEngine.Object
+        internal static T Load<T>(string path) where T : UnityEngine.Object
         {
             var asset = AssetDatabase.LoadAssetAtPath<T>(path);
             if (asset == null) throw new Exception($"scenes: nothing at {path}");

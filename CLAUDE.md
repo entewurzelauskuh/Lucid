@@ -6,7 +6,7 @@ Read in this order before doing anything: `docs/SPEC.md` (what the game is), `do
 
 ## Status
 
-**M0.1 through M0.7 and M0.9b are merged; M0.8 (#8) is next** (`docs/WORKPLAN.md` §4). Unity **6000.3.11f1** at `Lucid/`.
+**M0.1 through M0.9b are merged; M0.9 (#9) is next** (`docs/WORKPLAN.md` §4). Unity **6000.3.11f1** at `Lucid/`.
 
 - `Lucid.Core` implements `docs/CORE-API.md` in full — lattice, derivation, the placement and exploration rules, round, budget, powers and scoring. Nearly every item of its §12 test list is covered — depth on a loop is not (#84).
 - The cube pipeline runs end to end: `tools/build-cube.sh core` builds Straight, Corner, T, Cross and the Bedroom from `cube.spec.json`, validates each, and renders three previews apiece. Rebuilding changes nothing on disk.
@@ -16,17 +16,18 @@ Read in this order before doing anything: `docs/SPEC.md` (what the game is), `do
 - **The flow stands.** Boot holds `Services` and `GameFlow`; Title and Dream are loaded beside it and never load each other. `FlowTable` is the only place a transition is written down, and `GameFlow.Go` throws on one it lacks. The Title renders with the design system's tokens and real fonts — two families, two feature-frozen derivatives for figures — over the real bedroom; Sandbox is a Sleeper in that bedroom and Esc back, the shell M0.7 and M0.9b fill.
 - **The Nightmare builds.** The Sandbox opens in the god view: an orbit/top-down camera over the lattice with a layer cut-away that hides renderers and nothing else, a palette of the pack's connectors, a ghost that asks `Rules.ValidatePlace` every frame it stands and turns red with §14's verbatim reason, fog and exit doors lit as buildable on the god view only, and a budget and dawn timer read off a local `Round` — the host loop of `docs/CORE-API.md` §10 played on this machine. `PlacementCopy` is the one table from Core's nine refusals to the glossary's five strings.
 - **The Sandbox plays.** F5 drops the Nightmare into the lattice as a Sleeper and F5 brings the god view back; reaching an exit puts the Sleeper back in the bedroom rather than waking them, since there is no round to end. "Unlimited budget and no timer" are ordinary `RoundSettings` — no trickle, a dawn twenty-four days off, a budget nobody can spend — so every rule still runs and Core is unchanged; the HUD hides both readouts. The Sleeper's position reaches Core on every arrival, not only the first (`docs/DECISIONS.md`).
-- Still no networking — M0.8 builds it.
-- **PlayMode works and is proven to fail when it should** — before M0.4 the platform had never run a test, so `0/0 passed` and "nothing ran" looked identical. It carries the Sleeper's tests now; `Lucid.Netcode` remains a stub.
+- **The wire carries the round.** `Lucid.Netcode` is `docs/NETCODE.md` §12's M0.8 rows on Netcode for GameObjects over Unity Transport: `RoundSync` is the RPCs, every host handler one call into the one `Round`, every client a `LatticeMirror` that applies each event through Replay's own functions and reports its hash; a mismatch is a `DesyncNotice` and a `.lucidlog` on the host. `Approval` is §2's three refusals. `DreamClient` is a Sleeper's machine — the dream from the mirror, the body's reports up, verdicts down — and `NetDreamScene` the dev scene that hosts as the Nightmare or connects as a Sleeper. The wire's tests run a host and a client in one process on NGO's own harness (`docs/DECISIONS.md`, 2026-09-09).
+- **PlayMode works and is proven to fail when it should** — before M0.4 the platform had never run a test, so `0/0 passed` and "nothing ran" looked identical. It carries the Sleeper's and the wire's tests now.
 
 Things the tree does not tell you:
 
 - The editor path comes from `UNITY_PATH`. `tools/run-tests.sh`, `tools/build-cube.sh` and `tools/build-scenes.sh` all refuse to run while the editor holds the project, so ask the owner to close it rather than working around them.
 - `build-cube.sh` deliberately omits `-nographics`: previews need a graphics device, and the renderer degrades to writing no images rather than failing. `verify-generated.sh` inherits that, so it cannot run on a headless box (#70).
-- `verify-generated.sh` proves every generator still runs and still agrees its committed artefact is current. It is exactly as strong as the two comparators that decide whether to write — `CubeEquivalence` (#66) and `SceneSignature` (#67, #72) — so a hand edit to a field neither compares survives it: setting `m_Fog` in a scene by hand passes, setting `m_Text` does not. Run it when you touch a generator, and **commit** first rather than stashing, or it verifies the committed generator instead of yours.
+- `verify-generated.sh` proves every generator still runs and still agrees its committed artefact is current. It is exactly as strong as the three comparators that decide whether to write — `CubeEquivalence` (#66), `SceneSignature` (#67, #72) and `NetPrefabs.Matches` (the network prefab's components, pack and `GlobalObjectIdHash`) — so a hand edit to a field none compares survives it: setting `m_Fog` in a scene by hand passes, setting `m_Text` does not. Run it when you touch a generator, and **commit** first rather than stashing, or it verifies the committed generator instead of yours.
 - Driving Unity through the MCP bridge instead? Read the console for compile errors between every refresh and test run — the bridge has no compile guard and will happily run stale assemblies (`.claude/skills/pr-review/SKILL.md` §3).
 - The git remote is HTTPS. This machine has two GitHub accounts and the SSH key is the wrong one.
-- Steam is deferred, not blocked; see the pinned #28.
+- Steam is deferred, not blocked; see the pinned #28. Without it, two machines meet through `NetDream.unity`: open it, press Host on one and Connect on the other, or start a build with `--host` or `--connect <address>`. Multiplayer Play Mode (installed) runs a virtual player in the same editor for the same loop.
+- `com.unity.netcode.gameobjects` is in the manifest's `testables`, so NGO's own test assemblies compile — the wire's tests derive from its integration harness. `tools/run-tests.sh` still runs only `Lucid.Tests.*`; `LUCID_ALL_ASSEMBLIES=1` would now run NGO's suite too, which takes minutes.
 - Three scripts `docs/WORKPLAN.md` §2 plans are not written: `fetch-assets.py`, and `playtest-report.py` and `build-dev.sh`, both M0.9c. So rule 5's manifest half has no fetcher, which bites the first time a cube wants an asset that may not be committed — say so rather than reaching for it.
 
 ## Rules that do not bend
@@ -78,16 +79,16 @@ Unity is invoked in batch mode by these scripts: `Unity -batchmode -nographics -
 | `Lucid/Assets/_Lucid/Core/` | `Lucid.Core` — lattice, cube types, event log, rules, `Validate`, `Derive` |
 | `Lucid/Assets/_Lucid/Runtime/` | `Lucid.Runtime` — dream instance, Sleeper controller, Nightmare view, fog doors, traps, mobs, UI; `Input/` holds the action maps, `Dev/` the gauntlet, which is in Runtime so the editor script and the PlayMode tests build one course rather than two, `UI/` the stylesheets, screens, fonts and the three UI Toolkit elements (namespace `Lucid.Runtime.UI`), `Flow/` the Boot bootstrap, `Services`, `GameFlow` and its table, and `Nightmare/` the god view, the picker, the ghost, the local round and the controller |
 | `design-system/` | The interface's design system: tokens, components, icons, every screen mocked, and `unity/` with the paste-ready USS, UXML skeletons and the implementation guide. `docs/UI.md` wins where they disagree |
-| `Lucid/Assets/_Lucid/Netcode/` | `Lucid.Netcode` — `Approval`, `SessionState`, `RoundSync`, `LatticeMirror`, `DreamRelay`, transports (UTP dev, Facepunch Steam); message IDs from `docs/NETCODE.md` §12 |
+| `Lucid/Assets/_Lucid/Netcode/` | `Lucid.Netcode` — `Wire` (every §12 shape), `Codec`, `Hello` and `Approval`, `RoundSync` (the RPCs), `LatticeMirror` and `HashLedger` (§5's check, both ends), `DreamClient` (a Sleeper's machine), `NetSession` and `DevArgs` (the UTP door), `NetDreamScene` (the dev scene), and `RoundSync.prefab`, the one network prefab, generated. `SessionState`, `DreamRelay` and the Steam transport are M1 and M3 |
 | `Lucid/Assets/_Lucid/Editor/` | `Lucid.Editor` — `CubeBuilder`, `CubeValidator`, `AssetNormalizer`, scene setup scripts |
-| `Lucid/Assets/_Lucid/Scenes/` | generated scenes from `tools/build-scenes.sh`: `Boot.unity`, `Title.unity`, `Dream.unity` (the flow), `Gauntlet.unity`, `FogDoors.unity` (dev) — and it writes `EditorBuildSettings` and the UI's `PanelSettings` too |
+| `Lucid/Assets/_Lucid/Scenes/` | generated scenes from `tools/build-scenes.sh`: `Boot.unity`, `Title.unity`, `Dream.unity` (the flow), `Gauntlet.unity`, `FogDoors.unity`, `NetDream.unity` (dev) — and it writes `EditorBuildSettings`, the UI's `PanelSettings` and the `RoundSync` prefab too |
 | `Lucid/Assets/_Lucid/Templates/` | `CubeTemplate.prefab`. There is no `FogDoor.prefab`: a door's colliders and its quad stack follow from `CubeMetrics` and its state, so they are built in code like `SleeperRig`. The Start cube is a cube like any other, in the pack below |
 | `Lucid/Assets/_Lucid/Packs/<Pack>/` | content: `Cubes/<Name>/` folders, `Skins/`, `Mobs/`, the `DreamPack` asset |
 | `Lucid/Assets/_Lucid/Tests/` | `EditMode/` for Core and builder, `PlayMode/` for runtime and netcode |
 | `docs/` | `SPEC.md`, `UI.md`, `CORE-API.md`, `CUBE-SPEC.md`, `CHICANES.md`, `NETCODE.md`, `WORKPLAN.md`, `DECISIONS.md`, `HISTORY.md`, `cube-spec.schema.json`, `playtests/` (plans, template, session notes, csv) |
 | `tools/` | the scripts above |
 
-Assembly references: Runtime → Core; Netcode → Runtime, Core; Editor → everything; Tests → what they test. Core references nothing.
+Assembly references: Runtime → Core; Netcode → Runtime, Core, and NGO with its transport, collections and the Input System; Editor → everything; Tests → what they test. Core references nothing.
 
 ## Making a cube (short form; long form in `docs/SPEC.md` §17)
 

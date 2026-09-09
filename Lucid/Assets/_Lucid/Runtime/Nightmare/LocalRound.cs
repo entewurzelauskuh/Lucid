@@ -59,6 +59,14 @@ namespace Lucid.Runtime
         /// </summary>
         public event Action Applied;
 
+        /// <summary>
+        /// Core appended an event on this machine — a placement or an
+        /// exploration this round accepted — with the derived hash after it.
+        /// The host's netcode broadcasts it (docs/NETCODE.md §5); nothing
+        /// else listens.
+        /// </summary>
+        public event Action<LatticeEvent, ulong> EventAppended;
+
         internal void Configure(int headStartMs, int roundLengthMs, int startingBudget, int trickleIntervalMs)
         {
             _headStartMs = headStartMs;
@@ -155,6 +163,7 @@ namespace Lucid.Runtime
             if (!verdict.Ok) return verdict;
 
             _dream.Apply(Round.Lattice, Round.Derived);
+            EventAppended?.Invoke(Round.Log.Events[Round.Log.Events.Count - 1], Round.Derived.Hash);
             Applied?.Invoke();
             return verdict;
         }
@@ -165,6 +174,7 @@ namespace Lucid.Runtime
             if (Round.TryExplore(LocalSleeper, cube) == ExploreError.None)
             {
                 _dream.Apply(Round.Lattice, Round.Derived);
+                EventAppended?.Invoke(Round.Log.Events[Round.Log.Events.Count - 1], Round.Derived.Hash);
                 Applied?.Invoke();
             }
         }

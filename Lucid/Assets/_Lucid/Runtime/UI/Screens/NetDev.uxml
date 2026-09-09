@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The netcode dev scene's panel (M0.8). A tool, not a screen of docs/UI.md:
+     its words — the three here and the status line NetDreamScene writes —
+     are a developer's, not a player's, and stay out of §14. -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+  <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-tokens.uss" />
+  <Style src="project:///Assets/_Lucid/Runtime/UI/Styles/lucid-components.uss" />
+  <ui:VisualElement name="netdev-root" class="screen" picking-mode="Ignore">
+    <ui:VisualElement name="form" class="mist-panel mist-panel--chrome netdev">
+      <ui:Label text="NETDEV" class="micro-label" />
+      <ui:TextField name="address" value="127.0.0.1" class="netdev__address" />
+      <ui:Button name="host" text="Host" class="btn btn--primary" />
+      <ui:Button name="connect" text="Connect" class="btn btn--secondary" />
+    </ui:VisualElement>
+    <ui:Label name="status" class="netdev__status" picking-mode="Ignore" />
+  </ui:VisualElement>
+</ui:UXML>
