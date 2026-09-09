@@ -67,7 +67,10 @@ namespace Lucid.Netcode
             for (int i = 0; i < start.SleeperCount; i++) if (start.SleeperClient(i) == me) { DreamId = i; break; }
 
             _dream.Apply(_sync.Mirror.Lattice, _sync.Mirror.Derived);
+            // A body that never woke — dawn took it, or the round was cut
+            // short — is standing in cubes the new lattice has retired.
             if (Sleeper == null) Sleeper = _spawn(_dream.SpawnPoint, _dream.SpawnFacing);
+            else _dream.Respawn(Sleeper);
             _sync.SendDreamReady(DreamId);
         }
 
@@ -117,9 +120,16 @@ namespace Lucid.Netcode
                 Sleeper.Warp(Doorway(_lastTouched.Value));
         }
 
-        /// <summary>A metre inside the room, in front of the door, in the dream's frame.</summary>
-        public Vector3 Doorway(ConnectorRef door) =>
-            _dream.transform.TransformPoint(DreamSpace.Origin(door.Cube) + DreamSpace.Direction(door.Face) * (CubeMetrics.Half - 1f));
+        /// <summary>
+        /// A metre inside the room, in front of the door, in the dream's frame.
+        /// A vertical door has no "in front of" on the floor: the room's centre
+        /// then, which is off the shaft either way.
+        /// </summary>
+        public Vector3 Doorway(ConnectorRef door)
+        {
+            Vector3 inside = Faces.IsVertical(door.Face) ? Vector3.zero : DreamSpace.Direction(door.Face) * (CubeMetrics.Half - 1f);
+            return _dream.transform.TransformPoint(DreamSpace.Origin(door.Cube) + inside);
+        }
 
         /// <summary>302 at 10 Hz, from the body's pose in the cube it is in.</summary>
         public void Tick(float dt)

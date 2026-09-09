@@ -125,6 +125,16 @@ namespace Lucid.Tests.PlayMode.Netcode
             AssertOnTimeout("the next round did not put a body back, or left it awake");
             Assert.That(_dream.Cubes.Count, Is.EqualTo(1), "the last round's cubes survived into the next");
             Assert.That(_dreamClient.DreamId, Is.EqualTo(0));
+
+            // And a round that ends with the body still standing — no wake —
+            // puts it back in the bedroom rather than leave it over nothing.
+            SleeperMotor body = _dreamClient.Sleeper;
+            body.Warp(_dream.transform.TransformPoint(DreamSpace.Origin(new Coord(0, 3, 0))));
+            var third = new Round(new RoundSettings(HeadStartMs: 0), _host.Registry, Start, Rotation.R0, new[] { new PlayerId((int)ClientId) });
+            _host.BeginRound(third, m_ServerNetworkManager.LocalClientId, new[] { ClientId });
+            yield return WaitForConditionOrTimeOut(() => (body.Feet - _dream.SpawnPoint).magnitude < 0.5f);
+            AssertOnTimeout($"the standing body was not put back in the bedroom; feet at {body.Feet}");
+            Assert.That(_dreamClient.Sleeper == body, Is.True, "a second body was spawned beside the first");
         }
 
         [UnityTest]

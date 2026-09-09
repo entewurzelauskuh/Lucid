@@ -113,10 +113,12 @@ namespace Lucid.Netcode
             }
             // A fresh round now, not the one that has been ticking since the
             // scene loaded: RoundStart stamps t = 0 and the head start begins
-            // for both ends together.
-            _round.Restart(new RoundSettings());
+            // for both ends together. Anything the host built while waiting
+            // goes with the old round — a Sleeper who joins mid-lattice is
+            // M1.4's catch-up, not this scene's.
+            _round.Restart(_round.Round.Settings);
             _sync.BeginRound(_round.Round, _manager.LocalClientId, new[] { clientId });
-            Say($"round begun; Sleeper is client {clientId}");
+            Say($"round begun from the bedroom; Sleeper is client {clientId}");
         }
 
         /// <summary>A Sleeper's machine: the dream is built from what the host says, and a body walks it.</summary>

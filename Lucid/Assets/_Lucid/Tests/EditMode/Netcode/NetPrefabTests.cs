@@ -14,10 +14,8 @@ namespace Lucid.Tests.EditMode.Netcode
         [Test]
         public void TheCommittedPrefabCarriesItsGlobalObjectIdHash()
         {
-            string path = Path.Combine("..", NetPrefabs.RoundSyncPath).Replace("../Assets", "Assets");
             string yaml = File.ReadAllText(NetPrefabs.RoundSyncPath);
-            Assert.That(yaml, Does.Contain("GlobalObjectIdHash: "), "no NetworkObject in the prefab");
-            Assert.That(yaml, Does.Not.Contain("\n  GlobalObjectIdHash: 0\n"), "the prefab was committed before NGO hashed it");
+            Assert.That(yaml, Does.Match(@"\n  GlobalObjectIdHash: [1-9]\d*\n"), "the prefab was committed before NGO hashed it, or has no NetworkObject");
             Assert.That(yaml, Does.Contain("_pack: {fileID:"), "the prefab carries no pack");
         }
     }
