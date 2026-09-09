@@ -116,6 +116,15 @@ namespace Lucid.Tests.PlayMode.Netcode
             Assert.That(_round.Sleepers[0].Status, Is.EqualTo(SleeperStatus.Awake));
             Assert.That(_dreamClient.Sleeper == null, Is.True, "the body outlived the waking");
             Assert.That(_host.Desyncs, Is.Empty);
+
+            // A next round on the same wire (M0.9's loop, M1.4's resume): a new
+            // body in the bedroom, and the last round's waking forgotten.
+            var next = new Round(new RoundSettings(HeadStartMs: 0), _host.Registry, Start, Rotation.R0, new[] { new PlayerId((int)ClientId) });
+            _host.BeginRound(next, m_ServerNetworkManager.LocalClientId, new[] { ClientId });
+            yield return WaitForConditionOrTimeOut(() => _dreamClient.Sleeper != null && !_dreamClient.Woke);
+            AssertOnTimeout("the next round did not put a body back, or left it awake");
+            Assert.That(_dream.Cubes.Count, Is.EqualTo(1), "the last round's cubes survived into the next");
+            Assert.That(_dreamClient.DreamId, Is.EqualTo(0));
         }
 
         [UnityTest]
