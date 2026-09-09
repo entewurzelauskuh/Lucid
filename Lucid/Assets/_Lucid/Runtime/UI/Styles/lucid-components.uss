@@ -358,3 +358,4 @@
 .nightmare__layer-value { -unity-text-align: middle-center; margin-bottom: var(--sp-2); }
 .rejection { position: absolute; }
 .rejection--hidden { display: none; }
+.nightmare__readout--hidden { display: none; }   /* the Sandbox: no budget, no timer (docs/UI.md §12) */

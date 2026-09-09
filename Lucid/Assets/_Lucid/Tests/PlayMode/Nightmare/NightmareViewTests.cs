@@ -78,9 +78,6 @@ namespace Lucid.Tests.PlayMode.Nightmare
             Assert.That(cards.Query(className: "palette-tile").ToList(), Has.Count.EqualTo(4));
             Assert.That(cards.Query<Label>(name: "cost").ToList().Select(l => l.text), Is.All.EqualTo("1"));
 
-            // docs/UI.md §8's region table: the budget is top left, above the palette.
-            Assert.That(Hud().Root.Q("budget").worldBound.yMax, Is.LessThanOrEqualTo(cards.worldBound.yMin),
-                "the budget is not above the palette");
         }
 
         [UnityTest]
@@ -158,10 +155,21 @@ namespace Lucid.Tests.PlayMode.Nightmare
         [UnityTest]
         public IEnumerator TheBudgetAndTheTimerAreCores()
         {
+            // The Dream scene is the Sandbox's and shows neither; a round on
+            // the default settings shows both, and they are Core's numbers.
             yield return OpenTheSandbox();
             NightmareController c = Controller();
-            Round round = c.Round.Round;
+            c.Round.Restart(new RoundSettings());
             NightmareHud hud = Hud();
+            hud.Bind(c);
+            yield return null;
+            Round round = c.Round.Round;
+            Assert.That(c.Round.Unbounded, Is.False);
+            Assert.That(hud.ShowsRoundReadouts, Is.True, "a bounded round hides its readouts");
+            // docs/UI.md §8's region table: the budget is top left, above the palette.
+            Assert.That(hud.Root.Q("budget").resolvedStyle.display, Is.EqualTo(DisplayStyle.Flex));
+            Assert.That(hud.Root.Q("budget").worldBound.yMax, Is.LessThanOrEqualTo(hud.Root.Q("cube-cards").worldBound.yMin),
+                "the budget is not above the palette");
 
             Assert.That(hud.Root.Q<Label>("budget-value").text, Is.EqualTo(round.Budget.Points.ToString()));
             Assert.That(hud.Root.Q<Label>("budget-rate").text, Is.EqualTo("1 per 4 s"));
@@ -320,12 +328,13 @@ namespace Lucid.Tests.PlayMode.Nightmare
             Assert.That(hud.Covers(open), Is.False, $"the open screen at {open} is covered");
 
             // The dock is full height, so the two points above cannot tell a
-            // flipped y from a right one. The budget sits at the dock's top;
-            // the point over it must land on it and not on the cards below.
-            VisualElement budget = hud.Root.Q("budget");
-            VisualElement hit = hud.Under(Screen_(budget));
+            // flipped y from a right one. The first tile sits at the top of
+            // the cards; the point over it must land on it and not on the
+            // cards' empty bottom, where its mirror falls.
+            VisualElement first = hud.Root.Q("tile-core.corner");
+            VisualElement hit = hud.Under(Screen_(first));
             Assert.That(hit, Is.Not.Null);
-            Assert.That(hit == budget || budget.Contains(hit), Is.True, $"the point over the budget landed on '{hit.name}'");
+            Assert.That(hit == first || first.Contains(hit), Is.True, $"the point over the first tile landed on '{hit.name}'");
 
             // A label riding the ghost is read, never picked: were it pickable,
             // the guard would clear the hover it labels and the ghost would
@@ -457,6 +466,7 @@ namespace Lucid.Tests.PlayMode.Nightmare
             // entry is what the host loop consumes, and the feet are M0.6's.
             Sandbox().EnterSleeper();
             yield return null;
+            yield return new WaitForFixedUpdate();   // the bedroom's volume has noticed the new body
             Assert.That(Sandbox().Sleeper, Is.Not.Null);
             Assert.That(c.gameObject.activeInHierarchy, Is.False, "the god view is still up beside the Sleeper");
             Assert.That(Object.FindFirstObjectByType<NightmareHud>(FindObjectsInactive.Include).gameObject.activeInHierarchy,
@@ -466,12 +476,16 @@ namespace Lucid.Tests.PlayMode.Nightmare
             Assert.That(cameras[0].GetComponent<GodViewCamera>(), Is.Null, "the Sleeper is looking through the god view");
 
             c.Round.Dream.Cubes[tee].OnSleeperInside();
+            // Where they stand is the trap rule's input (docs/CORE-API.md §10),
+            // so the report has to move Core's Sleeper as well as explore.
+            // Read before the frame turns: the report is by hand, and the
+            // body it stands for is in the bedroom, whose volume reports that
+            // on its own first physics step. The physics path is
+            // SandboxTests' to prove.
+            Assert.That(round.Sleepers[LocalRound.LocalSleeper].Cube, Is.EqualTo(tee), "Core does not know where the Sleeper is");
             yield return null;
 
             Assert.That(round.Lattice.IsExplored(tee), Is.True, "Core never heard the Sleeper");
-            // Where they stand is the trap rule's input (docs/CORE-API.md §10),
-            // so the report has to move Core's Sleeper as well as explore.
-            Assert.That(round.Sleepers[LocalRound.LocalSleeper].Cube, Is.EqualTo(tee), "Core does not know where the Sleeper is");
             int fogAfter = round.Derived.Connectors.Count(k => k.Key.Cube == tee && k.Value == ConnectorState.Fog);
             Assert.That(fogAfter, Is.EqualTo(0), "the fog doors did not harden");
             Assert.That(c.Round.Dream.Cubes[tee].Doors.Values.Count(d => d.State == ConnectorState.Solid), Is.EqualTo(fogBefore),

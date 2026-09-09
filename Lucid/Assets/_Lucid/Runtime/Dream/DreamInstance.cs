@@ -34,6 +34,9 @@ namespace Lucid.Runtime
         /// <summary>A Sleeper set foot in this cube for the first time.</summary>
         public event Action<Coord> Explored;
 
+        /// <summary>A Sleeper set foot in this cube, first time or not: where they are now.</summary>
+        public event Action<Coord> SleeperArrived;
+
         /// <summary>A Sleeper walked into this exit door.</summary>
         public event Action<ConnectorRef> TouchedExit;
 
@@ -112,6 +115,7 @@ namespace Lucid.Runtime
                     if (coord == lattice.Start) standing.Exempt();
 
                     standing.Entered += OnCubeEntered;
+                    standing.Arrived += OnCubeArrived;
                     standing.DoorTouched += OnDoorTouched;
                 }
 
@@ -196,6 +200,7 @@ namespace Lucid.Runtime
                 if (cube == null) continue;
 
                 cube.Entered -= OnCubeEntered;
+                cube.Arrived -= OnCubeArrived;
                 cube.DoorTouched -= OnDoorTouched;
                 Destroy(cube.gameObject);
             }
@@ -238,6 +243,8 @@ namespace Lucid.Runtime
         }
 
         void OnCubeEntered(DreamCube cube) => Explored?.Invoke(cube.Coord);
+
+        void OnCubeArrived(DreamCube cube) => SleeperArrived?.Invoke(cube.Coord);
 
         void OnDoorTouched(DreamCube cube, Face face) =>
             TouchedExit?.Invoke(new ConnectorRef(cube.Coord, face));
