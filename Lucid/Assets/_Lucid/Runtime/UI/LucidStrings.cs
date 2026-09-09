@@ -76,6 +76,10 @@ namespace Lucid.Runtime.UI
         public const  string DreamWillCollapse = "The dream will collapse for all Sleepers.";
         public static string RoundInProgress(TimeSpan left) => $"Round in progress, {Clock(left)} left";
         public const  string SteamOffline = "Steam is offline";
+        // Connection refusals (docs/NETCODE.md §2), shown on the client that was turned away.
+        public const  string DifferentVersion = "Different version: update Lucid on Steam";
+        public const  string LobbyFull = "Lobby is full";
+        public const  string ProtocolMismatch = "Protocol mismatch";
 
         // --- Readouts ------------------------------------------------------------
         public static string Build(string version, string engine) => $"{version} · Unity {engine}";

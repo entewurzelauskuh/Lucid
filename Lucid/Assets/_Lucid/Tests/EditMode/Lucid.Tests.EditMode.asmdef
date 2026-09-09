@@ -8,7 +8,10 @@
         "Unity.InputSystem.TestFramework",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "Lucid.Runtime"
+        "Lucid.Runtime",
+        "Lucid.Netcode",
+        "Unity.Netcode.Runtime",
+        "Unity.Collections"
     ],
     "includePlatforms": [
         "Editor"
